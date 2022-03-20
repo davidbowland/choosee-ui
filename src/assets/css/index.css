@@ -1,0 +1,12 @@
+html {
+  background-color: #000;
+}
+
+.main-content {
+  background-color: #fff;
+  padding: 50px;
+}
+
+.main-heading {
+  text-align: center;
+}

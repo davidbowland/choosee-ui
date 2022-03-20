@@ -1,0 +1,98 @@
+{
+  "name": "choosee-ui",
+  "version": "1.0.0",
+  "description": "UI for choices",
+  "author": "David Bowland",
+  "engines": {
+    "node": "^16.0.0"
+  },
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidbowland/choosee-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/davidbowland/choosee-ui/issues"
+  },
+  "homepage": "https://github.com/davidbowland/choosee-ui#readme",
+  "scripts": {
+    "build": "npm run clean && gatsby build",
+    "clean": "rm -rf coverage && npm ci && gatsby clean",
+    "deploy": "DEVELOPMENT=true npm run build && ./scripts/deploy.sh",
+    "lint": "prettier --write . && eslint --fix . --resolve-plugins-relative-to .",
+    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install ; fi",
+    "start": "gatsby develop",
+    "serve": "npm run build && gatsby serve",
+    "test": "jest --colors",
+    "test:update-snapshots": "jest --colors -u"
+  },
+  "dependencies": {
+    "@aws-amplify/ui-react": "^2.1.6",
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@fontsource/fira-code": "^4.2.2",
+    "@fontsource/lato": "^4.2.2",
+    "@fontsource/rokkitt": "^4.2.2",
+    "@mdx-js/mdx": "^1.6.22",
+    "@mdx-js/react": "^1.6.22",
+    "@mui/icons-material": "^5.2.5",
+    "@mui/lab": "^5.0.0-alpha.64",
+    "@mui/material": "^5.2.8",
+    "aws-amplify": "^4.3.12",
+    "axios": "^0.21.1",
+    "babel-plugin-styled-components": "^1.12.0",
+    "crypto-browserify": "^3.12.0",
+    "fast-json-patch": "^3.1.0",
+    "gatsby": "^4.5.0",
+    "gatsby-legacy-polyfills": "^2.5.0",
+    "gatsby-plugin-alias-imports": "^1.0.5",
+    "gatsby-plugin-image": "^2.5.0",
+    "gatsby-plugin-sharp": "^4.5.0",
+    "gatsby-plugin-sitemap": "^5.5.0",
+    "gatsby-source-filesystem": "^4.5.0",
+    "gatsby-transformer-sharp": "^4.5.0",
+    "normalize.css": "^8.0.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-helmet": "^6.1.0",
+    "react-is": "^17.0.2",
+    "sass": "^1.32.11",
+    "stream-browserify": "^3.0.0",
+    "styled-components": "^5.2.3",
+    "typescript": "^4.2.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.0",
+    "@babel/preset-typescript": "^7.13.0",
+    "@testing-library/jest-dom": "^5.12.0",
+    "@testing-library/react": "^11.2.6",
+    "@types/jest": "^27.4.1",
+    "@types/react": "^17.0.39",
+    "@types/react-helmet": "^6.1.1",
+    "@types/styled-components": "^5.1.9",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "babel-jest": "^27.5.1",
+    "babel-preset-gatsby": "^1.4.0",
+    "eslint": "^7.24.0",
+    "eslint-config-prettier": "^8.2.0",
+    "eslint-plugin-react": "^7.23.2",
+    "husky": "^6.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.5.1",
+    "lint-staged": "^10.5.4",
+    "msw": "^0.29.0",
+    "prettier": "2.2.1",
+    "react-test-renderer": "^17.0.2"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "prettier --write --ignore-unknown",
+      "eslint --fix --resolve-plugins-relative-to .",
+      "jest --colors --findRelatedTests --coverageThreshold '{}'"
+    ],
+    "**/*": [
+      "prettier --write --ignore-unknown"
+    ]
+  }
+}
