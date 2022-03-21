@@ -16,6 +16,7 @@ import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import React, { useEffect, useState } from 'react'
 
+import Logo from '@components/logo'
 import { SignInButton } from './elements'
 import { AuthState, CognitoUserAmplify } from '@types'
 
@@ -23,9 +24,17 @@ export interface AuthenticatedProps {
   children: JSX.Element | JSX.Element[]
   initialAuthState: AuthState
   initialShowLogin: boolean
+  setInitialAuthState?: (value: AuthState) => void
+  setInitialShowLogin?: (value: boolean) => void
 }
 
-const Authenticated = ({ children, initialAuthState, initialShowLogin }: AuthenticatedProps): JSX.Element => {
+const Authenticated = ({
+  children,
+  initialAuthState,
+  initialShowLogin,
+  setInitialAuthState,
+  setInitialShowLogin,
+}: AuthenticatedProps): JSX.Element => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const [authState, setAuthState] = useState<AuthState>(initialAuthState)
   const [loggedInUser, setLoggedInUser] = useState<CognitoUserAmplify | undefined>(undefined)
@@ -123,6 +132,7 @@ const Authenticated = ({ children, initialAuthState, initialShowLogin }: Authent
     return (
       <main className="main-content">
         <section>
+          <Logo />
           <Authenticator initialState={authState} loginMechanisms={['phone_number']} signUpAttributes={['name']}>
             {({ user }) => {
               setLoggedInUser(user)
@@ -144,8 +154,20 @@ const Authenticated = ({ children, initialAuthState, initialShowLogin }: Authent
   }, [initialAuthState])
 
   useEffect(() => {
+    if (setInitialAuthState !== undefined) {
+      setInitialAuthState(authState)
+    }
+  }, [authState])
+
+  useEffect(() => {
     setShowLogin(initialShowLogin)
   }, [initialShowLogin])
+
+  useEffect(() => {
+    if (setInitialShowLogin !== undefined) {
+      setInitialShowLogin(showLogin)
+    }
+  }, [showLogin])
 
   useEffect(() => {
     setAnchorEl(null)

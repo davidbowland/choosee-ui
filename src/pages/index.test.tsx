@@ -27,7 +27,7 @@ describe('Index page', () => {
 
   test('expect rendering Index renders Authenticated', () => {
     render(<Index />)
-    expect(mocked(Authenticated)).toHaveBeenCalled()
+    expect(mocked(Authenticated)).toHaveBeenCalledTimes(1)
   })
 
   test('expect rendering Index renders SessionCreate', () => {

@@ -1,12 +1,12 @@
 import { Auth } from 'aws-amplify'
 import { navigate } from 'gatsby'
-import LoginIcon from '@mui/icons-material/Login'
 import TextsmsIcon from '@mui/icons-material/Textsms'
 import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined'
 import Alert from '@mui/material/Alert'
+import Backdrop from '@mui/material/Backdrop'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
-import Divider from '@mui/material/Divider'
+import CircularProgress from '@mui/material/CircularProgress'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import FormLabel from '@mui/material/FormLabel'
@@ -14,10 +14,10 @@ import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
 import Slider from '@mui/material/Slider'
 import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
 import React, { useEffect, useState } from 'react'
 
-import { FloatingFab } from './elements'
+import Logo from '@components/logo'
+import SignUpCta from '@components/sign-up-cta'
 import { createSession, textSession } from '@services/sessions'
 import { AuthState, NewSession, RestaurantType } from '@types'
 
@@ -30,6 +30,7 @@ export interface SessionCreateProps {
 
 const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Element => {
   const [address, setAddress] = useState('')
+  const [addressError, setAddressError] = useState<string | undefined>(undefined)
   const [choiceType, setChoiceType] = useState<RestaurantType>('restaurant')
   const [createVisible, setCreateVisible] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -38,21 +39,12 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
   const [requestText, setRequestText] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
 
-  const signInClick = () => {
-    setAuthState('signIn')
-    setShowLogin(true)
-  }
-
-  const signUpClick = () => {
-    setAuthState('signUp')
-    setShowLogin(true)
-  }
-
   const generateSession = async () => {
     if (!address) {
-      setErrorMessage('Please enter an address to begin')
+      setAddressError('Please enter your address to begin')
       return
     }
+    setAddressError(undefined)
 
     setIsLoading(true)
     try {
@@ -72,16 +64,14 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
       navigate(`/s/${session.sessionId}`)
     } catch (error: any) {
       console.error('generateSession', error)
-      setErrorMessage(`Error generating Choosee session: ${error?.message ?? 'Please try again later'}`)
+      if (error?.message === 'Invalid address') {
+        setAddressError(error?.message)
+      } else {
+        setErrorMessage('Error generating Choosee session. Please try again later.')
+      }
     }
     setIsLoading(false)
   }
-
-  useEffect(() => {
-    Auth.currentAuthenticatedUser()
-      .then(() => setCreateVisible(true))
-      .catch(() => null)
-  }, [])
 
   const renderAlerts = (): JSX.Element | null => {
     if (errorMessage) {
@@ -103,13 +93,17 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
   const renderCreate = (): JSX.Element => {
     return (
       <>
-        <p>
+        <Logo />
+        {renderAlerts()}
+        <div>
           <label>
             <TextField
               aria-readonly="true"
               autoComplete="postal-code"
               disabled={isLoading}
+              error={addressError !== undefined}
               fullWidth
+              helperText={addressError}
               label="Your address"
               name="address"
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
@@ -118,8 +112,9 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
               variant="filled"
             />
           </label>
-        </p>
-        <p>
+        </div>
+        <br />
+        <div>
           <label>
             Search radius (miles)
             <Slider
@@ -133,7 +128,7 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
               valueLabelDisplay="on"
             />
           </label>
-        </p>
+        </div>
         <p style={{ textAlign: 'center' }}>
           <FormControl>
             <FormLabel id="radio-buttons-group-label">Restaurant type</FormLabel>
@@ -163,63 +158,33 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
             label="Text me my session link for sharing"
           />
         </p>
-        <p>
-          <Button
-            data-amplify-analytics-name="generate-link-click"
-            data-amplify-analytics-on="click"
-            disabled={isLoading}
-            fullWidth
-            onClick={generateSession}
-            variant="contained"
-          >
-            {isLoading ? 'Loading...' : 'Choose restaurants'}
-          </Button>
-        </p>
+        <Button
+          data-amplify-analytics-name="generate-session-click"
+          data-amplify-analytics-on="click"
+          disabled={isLoading}
+          fullWidth
+          onClick={generateSession}
+          variant="contained"
+        >
+          {isLoading ? 'Loading...' : 'Choose restaurants'}
+        </Button>
         <p style={{ textAlign: 'center' }}>Sessions automatically expire after 24 hours</p>
       </>
     )
   }
 
-  const renderCta = (): JSX.Element => {
-    return (
-      <>
-        <p>
-          <Typography sx={{ textAlign: 'center' }} variant="h6">
-            Vote on where you want to eat tonight. Share a link for others to vote with you. Sign up or sign in to get
-            started.
-          </Typography>
-        </p>
-        <p>
-          <Button fullWidth onClick={signUpClick} variant="contained">
-            Sign up
-          </Button>
-        </p>
-        <p>
-          <Typography>
-            A free account is required to keep our costs low. We don&apos;t sell your information and deleting your
-            account is easy.
-          </Typography>
-        </p>
-        <p style={{ height: '100px' }}>
-          <FloatingFab aria-label="sign in" color="primary" onClick={signInClick}>
-            <LoginIcon />
-          </FloatingFab>
-        </p>
-      </>
-    )
-  }
+  useEffect(() => {
+    Auth.currentAuthenticatedUser()
+      .then(() => setCreateVisible(true))
+      .catch(() => null)
+  }, [])
 
   return (
     <>
-      <Typography sx={{ textAlign: 'center' }} variant="h2">
-        Choosee
-      </Typography>
-      <Typography sx={{ textAlign: 'center' }} variant="h4">
-        The restaurant choice helper
-      </Typography>
-      <Divider />
-      {renderAlerts()}
-      {createVisible ? renderCreate() : renderCta()}
+      {createVisible ? renderCreate() : <SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />}
+      <Backdrop open={isLoading} sx={{ color: '#fff', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   )
 }

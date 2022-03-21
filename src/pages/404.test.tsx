@@ -32,9 +32,15 @@ describe('404 error page', () => {
     expect(mocked(ServerErrorMessage)).toHaveBeenCalledTimes(1)
   })
 
-  test('expect no render when path begins /r/', () => {
-    window.location.pathname = '/r/aeiou'
+  test('expect no render when path begins /s/', () => {
+    window.location.pathname = '/s/aeiou'
     render(<NotFound />)
     expect(mocked(ServerErrorMessage)).toHaveBeenCalledTimes(0)
+  })
+
+  test('expect render when pathname has three slashes', () => {
+    window.location.pathname = '/s/aeiou/y'
+    render(<NotFound />)
+    expect(mocked(ServerErrorMessage)).toHaveBeenCalledTimes(1)
   })
 })

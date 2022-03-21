@@ -5,21 +5,26 @@ import React from 'react'
 import '@testing-library/jest-dom'
 import { act, screen, render } from '@testing-library/react'
 
+import Logo from '@components/logo'
 import { user } from '@test/__mocks__'
 import Authenticated from './index'
 
 jest.mock('aws-amplify')
 jest.mock('@aws-amplify/analytics')
 jest.mock('@aws-amplify/ui-react')
+jest.mock('@components/logo')
 
 describe('Authenticated component', () => {
   const authState = 'signIn'
   const consoleError = console.error
   const showLogin = false
+  const setInitialAuthState = jest.fn()
+  const setInitialShowLogin = jest.fn()
 
   beforeAll(() => {
-    mocked(Authenticator).mockImplementation(() => <></>)
     console.error = jest.fn()
+    mocked(Authenticator).mockReturnValue(<></>)
+    mocked(Logo).mockReturnValue(<></>)
   })
 
   afterAll(() => {
@@ -33,7 +38,12 @@ describe('Authenticated component', () => {
 
     test('expect title, sign in, and children', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -44,7 +54,7 @@ describe('Authenticated component', () => {
       expect(() => screen.getByText(/Cancel/i)).toThrow()
     })
 
-    test('expect clicking sign in shows authenticator', async () => {
+    test('expect clicking sign in shows Logo', async () => {
       render(
         <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
           <p>Testing children</p>
@@ -55,7 +65,27 @@ describe('Authenticated component', () => {
         signInButton.click()
       })
 
-      expect(mocked(Authenticator)).toHaveBeenCalled()
+      expect(mocked(Logo)).toHaveBeenCalledTimes(1)
+    })
+
+    test('expect clicking sign in shows authenticator', async () => {
+      render(
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
+          <p>Testing children</p>
+        </Authenticated>
+      )
+      const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
+      act(() => {
+        signInButton.click()
+      })
+
+      expect(setInitialShowLogin).toHaveBeenCalledWith(true)
+      expect(mocked(Authenticator)).toHaveBeenCalledTimes(1)
       expect(await screen.findByText(/Cancel/i)).toBeInTheDocument()
     })
 
@@ -67,7 +97,12 @@ describe('Authenticated component', () => {
       })
 
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -79,13 +114,18 @@ describe('Authenticated component', () => {
         logInCallback()
       })
 
-      expect(mocked(Authenticator)).toHaveBeenCalled()
+      expect(mocked(Authenticator)).toHaveBeenCalledTimes(1)
       expect(await screen.findByText(/Welcome, Steve/i)).toBeInTheDocument()
     })
 
     test('expect going back from login goes back', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -99,6 +139,7 @@ describe('Authenticated component', () => {
         goBackButton.click()
       })
 
+      expect(setInitialShowLogin).toHaveBeenCalledWith(false)
       expect(() => screen.getByText(/Cancel/i)).toThrow()
     })
   })
@@ -111,7 +152,12 @@ describe('Authenticated component', () => {
 
     test('expect welcome message', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -121,7 +167,12 @@ describe('Authenticated component', () => {
 
     test('expect working menu', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -136,7 +187,12 @@ describe('Authenticated component', () => {
 
     test('expect menu closes successfully', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -155,7 +211,12 @@ describe('Authenticated component', () => {
 
     test('expect selecting sign out signs the user out', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -176,7 +237,12 @@ describe('Authenticated component', () => {
 
     test('expect selecting delete account invokes delete function', async () => {
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -199,7 +265,12 @@ describe('Authenticated component', () => {
       ;(user.deleteUser as jest.Mock).mockImplementationOnce((callback) => callback('Thar be errors here'))
 
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )
@@ -222,7 +293,12 @@ describe('Authenticated component', () => {
       ;(user.deleteUser as jest.Mock).mockImplementationOnce((callback) => callback('Thar be errors here'))
 
       render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
           <p>Testing children</p>
         </Authenticated>
       )

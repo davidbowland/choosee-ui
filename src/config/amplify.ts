@@ -14,23 +14,26 @@ export const apiNameUnauthenticated = 'ChooseeAPIGatewayUnauthenticated'
 Amplify.configure({
   Auth: {
     identityPoolId,
+    mandatorySignIn: false,
     region: userPoolId.split('_')[0],
     userPoolId,
     userPoolWebClientId: appClientId,
-    mandatorySignIn: false,
   },
   API: {
     endpoints: [
       {
-        name: apiName,
-        endpoint: baseUrl,
         custom_header: async () => ({
           Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
         }),
+        endpoint: baseUrl,
+        name: apiName,
       },
       {
         name: apiNameUnauthenticated,
         endpoint: baseUrl,
+        custom_header: async () => ({
+          Authorization: '',
+        }),
       },
     ],
   },

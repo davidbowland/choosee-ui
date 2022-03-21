@@ -21,7 +21,12 @@ const Index = (): JSX.Element => {
         <title>Choosee | dbowland.com</title>
       </Helmet>
       <Container maxWidth="md">
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setAuthState}
+          setInitialShowLogin={setShowLogin}
+        >
           <main className="main-content" style={{ minHeight: '100vh' }}>
             <section>
               <SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />
