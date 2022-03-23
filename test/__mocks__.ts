@@ -1,18 +1,16 @@
-import { CognitoUserAmplify, DecisionObject, NewSession, Restaurant, StatusObject } from '@types'
+import { CognitoUserAmplify, DecisionObject, NewSession, PatchOperation, Restaurant, StatusObject } from '@types'
 
 export const choices: Restaurant[] = [
   {
     name: "Shakespeare's Pizza - Downtown",
-    pic:
-      'Aap_uECXKoGiIwCfoSYS6Ky6NcEiA3t0t-Tyko6HgQNNcNgRsMl2Rzl7ILZpem_hqo7Rg99xgf0qAwUrTT7rWoo31kGzhXyRBX1SBOMGiYMMVZHqOi_mw-nKqs9--bGa6Tz4K6QiJY3m8P0s7uFpvqqKX09nEiQ5wbwdMkb3t5ETLsu0QnbY',
+    pic: 'https://lh3.googleusercontent.com/places/Shakespeares',
     priceLevel: 2,
     rating: 4.6,
     vicinity: '225 South 9th Street, Columbia',
   },
   {
     name: 'Subway',
-    pic:
-      'Aap_uECX5Crf8Zv-Nqi9bwkZDiKuEZHmI5kfxoxaa9U6UVuHs3XPALntSg8EXsESgI455fjC7OmzZ18asy_yzI1fF2Et_XCB2BgRkZHjNJr9UhcLdmLKgkfbQxIl5oIbTacStmQ9HaDYUHn93tpreUPDT2bsvn3wCxt_8Zw4E_mSeTePGNg',
+    pic: 'https://lh3.googleusercontent.com/places/Subway',
     priceLevel: 1,
     rating: 3.8,
     vicinity: '503 East Nifong Boulevard Suite D, Columbia',
@@ -23,13 +21,15 @@ export const decisions: DecisionObject = {
   "Dave's Place": false,
 }
 
+export const jsonPatchOperations: PatchOperation[] = [{ op: 'replace', path: '/address', value: '90036' }]
+
 export const newSession: NewSession = {
   address: '90210',
   radius: 43_659,
   type: 'restaurant',
 }
 
-export const resturant: Restaurant = {
+export const restaurant: Restaurant = {
   name: "Dave's Place",
   openHours: undefined,
   pic:
@@ -42,16 +42,17 @@ export const resturant: Restaurant = {
 export const sessionId = 'aeio'
 
 export const statusDeciding: StatusObject = {
+  address: '90210',
   current: 'deciding',
-  pageId: 1,
+  pageId: 0,
 }
 
 export const user: CognitoUserAmplify = ({
   attributes: {
     email: '',
     name: 'Steve',
-    phone_number: '+1800JENNYCRAIG',
+    phone_number: '+18005551234',
   },
 } as unknown) as CognitoUserAmplify
 
-export const userId = '+1800JENNYCRAIG'
+export const userId = '+18005551234'

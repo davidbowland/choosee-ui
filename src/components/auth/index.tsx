@@ -1,6 +1,7 @@
 import { Auth } from 'aws-amplify'
 import { Authenticator } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import DeleteIcon from '@mui/icons-material/Delete'
 import LoginIcon from '@mui/icons-material/Login'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -17,7 +18,6 @@ import Typography from '@mui/material/Typography'
 import React, { useEffect, useState } from 'react'
 
 import Logo from '@components/logo'
-import { SignInButton } from './elements'
 import { AuthState, CognitoUserAmplify } from '@types'
 
 export interface AuthenticatedProps {
@@ -47,6 +47,11 @@ const Authenticated = ({
 
   const closeMenu = (): void => {
     setAnchorEl(null)
+  }
+
+  const signInClick = () => {
+    setAuthState('signIn')
+    setShowLogin(true)
   }
 
   const snackbarClose = (): void => {
@@ -121,9 +126,14 @@ const Authenticated = ({
         <Typography sx={{ flexGrow: 1 }} variant="h6">
           Choosee
         </Typography>
-        <SignInButton onClick={() => setShowLogin(true)} startIcon={<LoginIcon />} variant="outlined">
+        <Button
+          onClick={signInClick}
+          startIcon={<LoginIcon />}
+          sx={{ borderColor: '#fff', color: '#fff' }}
+          variant="outlined"
+        >
           Sign In
-        </SignInButton>
+        </Button>
       </>
     )
   }
@@ -140,7 +150,7 @@ const Authenticated = ({
             }}
           </Authenticator>
           <p style={{ textAlign: 'center' }}>
-            <Button onClick={() => setShowLogin(false)} variant="outlined">
+            <Button onClick={() => setShowLogin(false)} startIcon={<CancelOutlinedIcon />} variant="outlined">
               Cancel
             </Button>
           </p>

@@ -19,7 +19,8 @@ export interface DecisionObject {
 }
 
 export interface StatusObject {
-  current: 'deciding' | 'winner' | 'finished'
+  address: string
+  current: 'deciding' | 'winner' | 'finished' | 'expired'
   pageId: number
   winner?: Restaurant
 }

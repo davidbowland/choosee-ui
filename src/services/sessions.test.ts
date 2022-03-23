@@ -1,8 +1,8 @@
 import { Auth } from 'aws-amplify'
 import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
-import { choices, decisions, newSession, sessionId, statusDeciding, userId } from '@test/__mocks__'
-import { createSession, fetchChoices, fetchDecisions, fetchStatus, textSession } from './sessions'
+import { choices, decisions, jsonPatchOperations, newSession, sessionId, statusDeciding, userId } from '@test/__mocks__'
+import { createSession, fetchChoices, fetchDecisions, fetchStatus, textSession, updateDecisions } from './sessions'
 import { rest, server } from '@test/setup-server'
 
 const baseUrl = process.env.GATSBY_CHOOSEE_API_BASE_URL
@@ -117,6 +117,28 @@ describe('Sessions service', () => {
     test('expect endpoint called with body', async () => {
       await textSession(sessionId)
       expect(postEndpoint).toHaveBeenCalledWith({})
+    })
+  })
+
+  describe('updateDecisions', () => {
+    const patchEndpoint = jest.fn().mockReturnValue({})
+
+    beforeAll(() => {
+      server.use(
+        rest.patch(`${baseUrl}/sessions/:id/decisions/:user`, async (req, res, ctx) => {
+          const { id, user } = req.params
+          if (id !== sessionId || decodeURIComponent(user) !== userId) {
+            return res(ctx.status(400))
+          }
+          const body = patchEndpoint(req.body)
+          return res(body ? ctx.json(body) : ctx.status(400))
+        })
+      )
+    })
+
+    test('expect endpoint called with body', async () => {
+      await updateDecisions(sessionId, userId, jsonPatchOperations)
+      expect(patchEndpoint).toHaveBeenCalledWith(jsonPatchOperations)
     })
   })
 })
