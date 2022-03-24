@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Infrastructure for choices UI
+  Infrastructure for choosee UI
 
 Parameters:
   Environment:
@@ -16,12 +16,12 @@ Mappings:
     prod:
       bucketName: choosee-ui-source
       certificate: adce1a21-90b4-4120-8548-111215e582f0
-      domain: choices.dbowland.com
+      domain: choosee.dbowland.com
       zoneId: Z072422417XWM8PIXXSFA
     test:
       bucketName: choosee-ui-test
       certificate: 6a48cba7-feb9-4de5-8cbf-d383140fcdef
-      domain: choices.bowland.link
+      domain: choosee.bowland.link
       zoneId: Z01312547RGU1BYKIJXY
 
 Resources:

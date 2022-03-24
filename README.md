@@ -1,6 +1,6 @@
 # choosee-ui
 
-Gatsby and Amplify implementation of choices-session-api and choices-infrastructure. Example: <https://choices.dbowland.com/>
+Gatsby and Amplify implementation of choosee-session-api and choosee-infrastructure. Example: <https://choosee.dbowland.com/>
 
 ## Static Site
 

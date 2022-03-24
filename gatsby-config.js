@@ -12,7 +12,7 @@ if (process.env.DEVELOPMENT) {
 module.exports = {
   siteMetadata: {
     title: 'choosee-ui',
-    siteUrl: 'https://choices.bowland.link',
+    siteUrl: 'https://choosee.bowland.link',
   },
   plugins: [
     {
