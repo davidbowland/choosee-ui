@@ -26,7 +26,6 @@ export interface SessionProps {
 
 const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: SessionProps): JSX.Element => {
   const [choices, setChoices] = useState<Restaurant[]>([])
-  const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout | undefined>(undefined)
   const [decisions, setDecisions] = useState<DecisionObject>({})
   const [decisionsInitial, setDecisionsInitial] = useState<DecisionObject>({})
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -36,13 +35,6 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   const [pageId, setPageId] = useState(-2)
   const [restaurant, setRestaurant] = useState<Restaurant | undefined>(undefined)
   const [status, setStatus] = useState<StatusObject>({ address: '', current: 'deciding', pageId: -1 })
-
-  const cancelTimeout = () => {
-    if (currentTimeout) {
-      clearTimeout(currentTimeout)
-      setCurrentTimeout(undefined)
-    }
-  }
 
   const findNextRestaurant = (availableChoices: Restaurant[]): void => {
     const [firstRestaurant, ...otherChoices] = availableChoices
@@ -66,9 +58,6 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
     setRestaurant(undefined)
     if (choices.length > 0) {
       findNextRestaurant(choices)
-    } else {
-      await refreshDecisions()
-      await refreshStatus()
     }
   }
   const refreshChoices = async () => {
@@ -96,23 +85,18 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   }
 
   const refreshStatus = async () => {
-    if (status.current === 'winner' || status.current === 'finished') {
-      return
-    }
     setIsLoading(true)
 
     try {
       const currentStatus = await fetchStatus(sessionId)
       setStatus(currentStatus)
-      cancelTimeout()
       if (currentStatus.pageId !== pageId) {
         setIsWaiting(false)
         setPageId(currentStatus.pageId)
         await refreshChoices()
       } else if (currentStatus.current === 'deciding') {
         setIsWaiting(true)
-        const timeout = setTimeout(refreshStatus, delayBetweenRefreshMs)
-        setCurrentTimeout(timeout)
+        setTimeout(refreshStatus, delayBetweenRefreshMs)
         return
       }
     } catch (error) {
@@ -183,6 +167,12 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   useEffect(() => {
     refreshDecisions()
   }, [loggedInUser])
+
+  useEffect(() => {
+    if (!restaurant && choices.length === 0) {
+      refreshDecisions().then(() => refreshStatus())
+    }
+  }, [restaurant])
 
   useEffect(() => {
     Auth.currentAuthenticatedUser()
