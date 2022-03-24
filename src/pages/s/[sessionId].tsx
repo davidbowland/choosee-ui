@@ -29,14 +29,14 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
       <Helmet>
         <title>Choosee | dbowland.com</title>
       </Helmet>
-      <Container className="main-content" maxWidth="md">
+      <Container maxWidth="md">
         <Authenticated
           initialAuthState={authState}
           initialShowLogin={showLogin}
           setInitialAuthState={setAuthState}
           setInitialShowLogin={setShowLogin}
         >
-          <main style={{ minHeight: '100vh' }}>
+          <main className="main-content" style={{ minHeight: '90vh' }}>
             <section>
               <Session
                 initialUserId={userId}
