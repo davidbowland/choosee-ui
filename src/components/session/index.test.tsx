@@ -3,7 +3,7 @@ import * as gatsby from 'gatsby'
 import { mocked } from 'jest-mock'
 import React from 'react'
 import '@testing-library/jest-dom'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 
 import Logo from '@components/logo'
 import Session from './index'
@@ -354,13 +354,16 @@ describe('Session component', () => {
 
     describe('service errors', () => {
       test('expect error message on bad status', async () => {
+        mocked(Auth).currentAuthenticatedUser.mockResolvedValueOnce(user)
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
         mocked(sessionService).fetchStatus.mockResolvedValueOnce(({
           ...statusDeciding,
           current: 'bad_status',
         } as unknown) as StatusObject)
 
-        expect(await screen.findByText(/An error has occurred/i)).toBeInTheDocument()
+        await waitFor(async () => {
+          expect(await screen.findByText(/An error has occurred/i)).toBeInTheDocument()
+        })
       })
 
       test('expect error message when fetchChoices rejects', async () => {
