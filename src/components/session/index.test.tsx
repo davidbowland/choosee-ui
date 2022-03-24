@@ -21,11 +21,12 @@ describe('Session component', () => {
   const consoleError = console.error
   const mockSetAuthState = jest.fn()
   const mockSetShowLogin = jest.fn()
+  const restaurantNoPic = { ...restaurant, pic: undefined }
 
   beforeAll(() => {
     console.error = jest.fn()
 
-    mocked(Logo).mockReturnValue(<></>)
+    mocked(Logo).mockReturnValue(<>Logo</>)
     mocked(sessionService).fetchChoices.mockResolvedValue(choices)
     mocked(sessionService).fetchDecisions.mockResolvedValue(decisions)
     mocked(sessionService).fetchStatus.mockResolvedValue(statusDeciding)
@@ -224,6 +225,14 @@ describe('Session component', () => {
     })
 
     describe('choices', () => {
+      test('expect no restaurant picture shows RestaurantIcon', async () => {
+        mocked(sessionService).fetchChoices.mockResolvedValueOnce([restaurantNoPic])
+        mocked(sessionService).fetchDecisions.mockResolvedValue({})
+        render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        expect(await screen.findByTitle(/Restaurant icon/i)).toBeInTheDocument()
+      })
+
       test('expect waiting for voters message when choices exhausted', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
@@ -315,6 +324,17 @@ describe('Session component', () => {
         expect(await screen.findByText(/Dave's Place/i)).toBeInTheDocument()
       })
 
+      test('expect no winner picture shows RestaurantIcon', async () => {
+        render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+        mocked(sessionService).fetchStatus.mockResolvedValueOnce({
+          ...statusDeciding,
+          current: 'winner',
+          winner: restaurantNoPic,
+        })
+
+        expect(await screen.findByTitle(/Restaurant icon/i)).toBeInTheDocument()
+      })
+
       test('expect make new choices navigates', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
         mocked(sessionService).fetchStatus.mockResolvedValueOnce({
@@ -341,6 +361,13 @@ describe('Session component', () => {
         } as unknown) as StatusObject)
 
         expect(await screen.findByText(/An error has occurred/i)).toBeInTheDocument()
+      })
+
+      test('expect error message when fetchChoices rejects', async () => {
+        mocked(sessionService).fetchChoices.mockRejectedValueOnce(undefined)
+        render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        expect(await screen.findByText(/Error fetching choices/i)).toBeInTheDocument()
       })
     })
   })

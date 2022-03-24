@@ -40,6 +40,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout | undefined>(undefined)
   const [decisions, setDecisions] = useState<DecisionObject>({})
   const [decisionsInitial, setDecisionsInitial] = useState<DecisionObject>({})
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
   const [loggedInUser, setLoggedInUser] = useState<CognitoUserAmplify | undefined>(undefined)
@@ -107,6 +108,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
       setChoices(currentChoices)
     } catch (error) {
       console.error('refreshChoices', error)
+      setErrorMessage('Error fetching choices. Please reload the page and try again.')
     }
   }
 
@@ -228,6 +230,13 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
           </Typography>
         </>
       )
+    } else if (errorMessage) {
+      return (
+        <>
+          <Logo />
+          <Alert severity="error">{errorMessage}</Alert>
+        </>
+      )
     }
     return (
       <>
@@ -241,7 +250,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
               <CardMedia alt={`Photo of ${restaurant.name}`} component="img" height="200" image={restaurant.pic} />
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <RestaurantIcon fontSize="large" sx={{ height: 200 }} />
+                <RestaurantIcon fontSize="large" sx={{ height: 200 }} titleAccess="Restaurant icon" />
               </div>
             )}
             <CardContent>
@@ -290,7 +299,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
             <CardMedia alt={`Photo of ${winner.name}`} component="img" height="200" image={winner.pic} />
           ) : (
             <div style={{ textAlign: 'center' }}>
-              <RestaurantIcon fontSize="large" sx={{ height: 200 }} />
+              <RestaurantIcon fontSize="large" sx={{ height: 200 }} titleAccess="Restaurant icon" />
             </div>
           )}
           <CardContent>
