@@ -94,8 +94,8 @@ const Authenticated = ({
         >
           <MenuItem
             onClick={() => {
-              Auth.signOut()
               setLoggedInUser(undefined)
+              Auth.signOut().then(() => window.location.reload())
             }}
           >
             <LogoutIcon /> Sign out
@@ -108,7 +108,7 @@ const Authenticated = ({
                   console.error(err)
                 } else {
                   setLoggedInUser(undefined)
-                  Auth.signOut({ global: true })
+                  Auth.signOut({ global: true }).then(() => window.location.reload())
                 }
               })
             }}
