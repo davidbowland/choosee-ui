@@ -37,6 +37,7 @@ export interface SessionProps {
 
 const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: SessionProps): JSX.Element => {
   const [choices, setChoices] = useState<Restaurant[]>([])
+  const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout | undefined>(undefined)
   const [decisions, setDecisions] = useState<DecisionObject>({})
   const [decisionsInitial, setDecisionsInitial] = useState<DecisionObject>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -48,11 +49,11 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   const [userId, setUserId] = useState(initialUserId ?? '+1')
   const [userIdError, setUserIdError] = useState<string | undefined>(undefined)
 
-  const onUserIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitizedPhone = event.target.value.replace(/\D/g, '')
-    const phoneWithCountry = sanitizedPhone.replace(/^\+?1?/, '+1')
-    const trimmedPhone = phoneWithCountry.substring(0, 12)
-    setUserId(trimmedPhone)
+  const cancelTimeout = () => {
+    if (currentTimeout) {
+      clearTimeout(currentTimeout)
+      setCurrentTimeout(undefined)
+    }
   }
 
   const chooseClick = () => {
@@ -63,16 +64,6 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
     setUserIdError(undefined)
 
     setLoggedInUser(({ attributes: { phone_number: userId } } as unknown) as CognitoUserAmplify)
-  }
-
-  const signInClick = () => {
-    setAuthState('signIn')
-    setShowLogin(true)
-  }
-
-  const signUpClick = () => {
-    setAuthState('signUp')
-    setShowLogin(true)
   }
 
   const findNextRestaurant = (availableChoices: Restaurant[]): void => {
@@ -101,6 +92,13 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
       await refreshDecisions()
       await refreshStatus()
     }
+  }
+
+  const onUserIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitizedPhone = event.target.value.replace(/\D/g, '')
+    const phoneWithCountry = sanitizedPhone.replace(/^\+?1?/, '+1')
+    const trimmedPhone = phoneWithCountry.substring(0, 12)
+    setUserId(trimmedPhone)
   }
 
   const refreshChoices = async () => {
@@ -135,13 +133,15 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
     try {
       const currentStatus = await fetchStatus(sessionId)
       setStatus(currentStatus)
+      cancelTimeout()
       if (currentStatus.pageId !== pageId) {
         setIsWaiting(false)
         setPageId(currentStatus.pageId)
         await refreshChoices()
       } else if (currentStatus.current === 'deciding') {
         setIsWaiting(true)
-        setTimeout(refreshStatus, delayBetweenRefreshMs)
+        const timeout = setTimeout(refreshStatus, delayBetweenRefreshMs)
+        setCurrentTimeout(timeout)
         return
       }
     } catch (error) {
@@ -149,6 +149,16 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
       setStatus({ address: '', current: 'expired', pageId: 0 })
     }
     setIsLoading(false)
+  }
+
+  const signInClick = () => {
+    setAuthState('signIn')
+    setShowLogin(true)
+  }
+
+  const signUpClick = () => {
+    setAuthState('signUp')
+    setShowLogin(true)
   }
 
   const renderLogin = (): JSX.Element => {
