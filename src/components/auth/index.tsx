@@ -140,7 +140,7 @@ const Authenticated = ({
 
   const renderAuthenticator = (): JSX.Element => {
     return (
-      <main>
+      <main className="main-content">
         <section>
           <Logo />
           <Authenticator initialState={authState} loginMechanisms={['phone_number']} signUpAttributes={['name']}>
