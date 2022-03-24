@@ -327,7 +327,9 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
         <Logo />
         <Alert severity="error">Choices exhausted</Alert>
         <br />
-        <Typography variant="h6">All choices have been exhausted. You might be just a little too Choosee!</Typography>
+        <Typography sx={{ textAlign: 'center' }} variant="h6">
+          All choices have been exhausted. You might be just a little too Choosee!
+        </Typography>
         <br />
         <Button
           data-amplify-analytics-name="new-choices-click"
@@ -348,7 +350,9 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
         <Logo />
         <Alert severity="error">Session expired</Alert>
         <br />
-        <Typography variant="h6">The Choosee session you are trying to access is missing or has expired.</Typography>
+        <Typography sx={{ textAlign: 'center' }} variant="h6">
+          The Choosee session you are trying to access is missing or has expired.
+        </Typography>
         <br />
         <Button
           data-amplify-analytics-name="new-choices-click"

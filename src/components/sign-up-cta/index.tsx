@@ -1,11 +1,11 @@
 import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
 import LoginIcon from '@mui/icons-material/Login'
 import Button from '@mui/material/Button'
+import Fab from '@mui/material/Fab'
 import Typography from '@mui/material/Typography'
 import React from 'react'
 
 import Logo from '@components/logo'
-import { FloatingFab } from './elements'
 import { AuthState } from '@types'
 
 export interface SessionCreateProps {
@@ -51,9 +51,21 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Elem
         is easy.
       </Typography>
       <p style={{ height: '100px' }}>
-        <FloatingFab aria-label="sign in" color="primary" onClick={signInClick}>
+        <Fab
+          aria-label="sign in"
+          color="primary"
+          onClick={signInClick}
+          sx={{
+            bottom: 20,
+            left: 'auto',
+            margin: 0,
+            position: 'fixed',
+            right: 20,
+            top: 'auto',
+          }}
+        >
           <LoginIcon />
-        </FloatingFab>
+        </Fab>
       </p>
     </>
   )
