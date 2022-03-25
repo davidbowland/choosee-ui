@@ -138,7 +138,7 @@ describe('Session component', () => {
         name: 'White Castle',
         pic: 'https://lh3.googleusercontent.com/places/WhiteCastle',
         priceLevel: 1,
-        rating: 4,
+        rating: 1,
         vicinity: '3401 Clark Lane, Columbia',
       },
     ]
@@ -148,7 +148,7 @@ describe('Session component', () => {
       mocked(Auth).currentAuthenticatedUser.mockResolvedValue(user)
     })
 
-    describe('voting', () => {
+    describe('deciding', () => {
       test('expect first place shown when signed in', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 

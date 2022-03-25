@@ -1,13 +1,16 @@
 import CheckIcon from '@mui/icons-material/Check'
 import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded'
-import MonetizationOnRoundedIcon from '@mui/icons-material/MonetizationOnRounded'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
+import Rating from '@mui/material/Rating'
 import Typography from '@mui/material/Typography'
 import React from 'react'
 
@@ -48,16 +51,30 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
             </Typography>
             {place.rating !== undefined && (
               <div>
-                {Array.from({ length: Math.round(place.rating) }).map((_, index) => (
-                  <FavoriteRoundedIcon key={index} />
-                ))}
+                <Rating
+                  defaultValue={place.rating}
+                  emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                  getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                  icon={<FavoriteIcon fontSize="inherit" />}
+                  precision={0.5}
+                  readOnly
+                  sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
+                  value={place.rating}
+                />
               </div>
             )}
             {place.priceLevel !== undefined && (
               <div>
-                {Array.from({ length: Math.round(place.priceLevel) }).map((_, index) => (
-                  <MonetizationOnRoundedIcon key={index} />
-                ))}
+                <Rating
+                  emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
+                  getLabelText={(value: number) => `${value} Dollar${value !== 1 ? 's' : ''}`}
+                  icon={<MonetizationOnIcon fontSize="inherit" />}
+                  max={4}
+                  precision={0.5}
+                  readOnly
+                  sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
+                  value={place.priceLevel}
+                />
               </div>
             )}
           </CardContent>

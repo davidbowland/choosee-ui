@@ -1,6 +1,8 @@
 import { Link, navigate } from 'gatsby'
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded'
-import MonetizationOnRoundedIcon from '@mui/icons-material/MonetizationOnRounded'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -10,6 +12,7 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Rating from '@mui/material/Rating'
 import Typography from '@mui/material/Typography'
 import React from 'react'
 
@@ -44,7 +47,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
             {winner.formattedAddress ?? winner.vicinity}
           </Typography>
           {winner.internationalPhoneNumber && (
-            <Typography color="text.secondary" variant="body2">
+            <Typography>
               <Link to={`tel:${winner.internationalPhoneNumber.replace(/\D/g, '')}`}>
                 {winner.formattedPhoneNumber ?? winner.internationalPhoneNumber}
               </Link>
@@ -52,20 +55,34 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
           )}
           {winner.rating !== undefined && (
             <div>
-              {Array.from({ length: Math.round(winner.rating) }).map((_, index) => (
-                <FavoriteRoundedIcon key={index} />
-              ))}
+              <Rating
+                defaultValue={winner.rating}
+                emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                icon={<FavoriteIcon fontSize="inherit" />}
+                precision={0.5}
+                readOnly
+                sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
+                value={winner.rating}
+              />
             </div>
           )}
           {winner.priceLevel !== undefined && (
             <div>
-              {Array.from({ length: Math.round(winner.priceLevel) }).map((_, index) => (
-                <MonetizationOnRoundedIcon key={index} />
-              ))}
+              <Rating
+                emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
+                getLabelText={(value: number) => `${value} Dollar${value !== 1 ? 's' : ''}`}
+                icon={<MonetizationOnIcon fontSize="inherit" />}
+                max={4}
+                precision={0.5}
+                readOnly
+                sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
+                value={winner.priceLevel}
+              />
             </div>
           )}
           {winner.website && (
-            <Typography color="text.secondary" variant="body2">
+            <Typography>
               <Link to={winner.website}>Visit their website</Link>
             </Typography>
           )}
@@ -74,10 +91,10 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
               <FormControl sx={{ m: 1, minWidth: 120 }} variant="standard">
                 <InputLabel id="choice-hours-label">Hours</InputLabel>
                 <Select
-                  labelId="choice-hours-label"
                   id="choice-hours-select"
-                  value={winner.openHours[(new Date().getDay() + 7) % 8]}
                   label="Hours"
+                  labelId="choice-hours-label"
+                  value={winner.openHours[(new Date().getDay() + 7) % 8]}
                 >
                   {winner.openHours.map((hours, index) => (
                     <MenuItem key={index} value={hours}>
