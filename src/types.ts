@@ -3,15 +3,22 @@ export { Operation as PatchOperation } from 'fast-json-patch'
 
 export type AuthState = 'signIn' | 'signUp' | 'resetPassword'
 
-export type RestaurantType = 'restaurant' | 'meal_delivery' | 'meal_takeaway'
+export type PlaceType = 'restaurant' | 'meal_delivery' | 'meal_takeaway'
 
-export interface Restaurant {
+export interface Place {
   name: string
   openHours?: string[]
   pic?: string
   priceLevel: number
   rating: number
   vicinity: string
+}
+
+export interface PlaceDetails extends Place {
+  formattedAddress?: string
+  formattedPhoneNumber?: string
+  internationalPhoneNumber?: string
+  website?: string
 }
 
 export interface DecisionObject {
@@ -22,14 +29,15 @@ export interface StatusObject {
   address: string
   current: 'deciding' | 'winner' | 'finished' | 'expired'
   pageId: number
-  winner?: Restaurant
+  winner?: PlaceDetails
 }
 
 export interface NewSession {
   address: string
   expiration?: number
-  radius: number
-  type: RestaurantType
+  openNow?: boolean
+  type: PlaceType
+  voterCount: number
 }
 
 export interface StringObject {

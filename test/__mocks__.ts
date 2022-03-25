@@ -1,6 +1,14 @@
-import { CognitoUserAmplify, DecisionObject, NewSession, PatchOperation, Restaurant, StatusObject } from '@types'
+import {
+  CognitoUserAmplify,
+  DecisionObject,
+  NewSession,
+  PatchOperation,
+  Place,
+  PlaceDetails,
+  StatusObject,
+} from '@types'
 
-export const choices: Restaurant[] = [
+export const choices: Place[] = [
   {
     name: "Shakespeare's Pizza - Downtown",
     pic: 'https://lh3.googleusercontent.com/places/Shakespeares',
@@ -25,18 +33,33 @@ export const jsonPatchOperations: PatchOperation[] = [{ op: 'replace', path: '/a
 
 export const newSession: NewSession = {
   address: '90210',
-  radius: 43_659,
   type: 'restaurant',
+  voterCount: 2,
 }
 
-export const restaurant: Restaurant = {
+export const place: Place = {
   name: "Dave's Place",
-  openHours: undefined,
+  openHours: [
+    'Monday: 10:00 AM – 2:00 AM',
+    'Tuesday: 10:00 AM – 2:00 AM',
+    'Wednesday: 10:00 AM – 2:00 AM',
+    'Thursday: 10:00 AM – 2:00 AM',
+    'Friday: 10:00 AM – 2:00 AM',
+    'Saturday: 10:00 AM – 2:00 AM',
+    'Sunday: 10:00 AM – 2:00 AM',
+  ],
   pic:
     'Aap_uEDinckK9Ca3tIgxigpNxy1THsppgE5H9ie_tFEc5pDYIDTSC52cWtEWifvmRD6_jhRuo4IsiRY5AZK2Y6_NRv4i_vsANZZpvsXj4gfkT4iYwpAp_i7tVHYRAgJ03ki3JzRv5_ouIPOpa9_uYavGE5fdhADeXeGRhkZnGWPXu5RxJpD1',
   priceLevel: 1,
   rating: 2,
   vicinity: 'Columbia',
+}
+
+export const placeDetails: PlaceDetails = {
+  ...place,
+  formattedAddress: '65203, USA',
+  internationalPhoneNumber: '+18005550000',
+  website: 'https://dbowland.com/',
 }
 
 export const sessionId = 'aeio'

@@ -69,13 +69,17 @@ describe('SessionCreate component', () => {
       act(() => {
         fireEvent.change(addressInput, { target: { value: address } })
       })
-      const sliderInput = (await screen.findByLabelText(/Search radius in miles/i)) as HTMLInputElement
-      act(() => {
-        fireEvent.change(sliderInput, { target: { value: 15 } })
-      })
       const radioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
       act(() => {
         radioButton.click()
+      })
+      const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(sliderInput, { target: { value: 4 } })
+      })
+      const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
+      act(() => {
+        checkboxInput.click()
       })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
       act(() => {
@@ -84,8 +88,9 @@ describe('SessionCreate component', () => {
 
       expect(mocked(sessionService).createSession).toHaveBeenCalledWith({
         address: '90210',
-        radius: 24_140.1,
+        openNow: false,
         type: 'meal_takeaway',
+        voterCount: 4,
       })
     })
 

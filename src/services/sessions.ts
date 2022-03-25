@@ -1,11 +1,11 @@
 import { API } from 'aws-amplify'
 import { apiName, apiNameUnauthenticated } from '@config/amplify'
-import { DecisionObject, NewSession, PatchOperation, Restaurant, StatusObject, StringObject } from '@types'
+import { DecisionObject, NewSession, PatchOperation, Place, StatusObject, StringObject } from '@types'
 
 export const createSession = (session: NewSession): Promise<StringObject> =>
   API.post(apiName, '/sessions', { body: session })
 
-export const fetchChoices = (sessionId: string): Promise<Restaurant[]> =>
+export const fetchChoices = (sessionId: string): Promise<Place[]> =>
   API.get(apiNameUnauthenticated, `/sessions/${encodeURIComponent(sessionId)}/choices`, {})
 
 export const fetchDecisions = (sessionId: string, userId: string): Promise<DecisionObject> =>

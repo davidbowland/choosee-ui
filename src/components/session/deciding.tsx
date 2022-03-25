@@ -11,17 +11,17 @@ import CardMedia from '@mui/material/CardMedia'
 import Typography from '@mui/material/Typography'
 import React from 'react'
 
-import { Restaurant } from '@types'
+import { Place } from '@types'
 
 export interface DecidingProps {
   address: string
   makeChoice: (name: string, value: boolean) => void
-  restaurant: Restaurant
+  place: Place
 }
 
-const Deciding = ({ address, restaurant, makeChoice }: DecidingProps): JSX.Element => {
+const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element => {
   const onDecision = (_: any, value: number) => {
-    makeChoice(restaurant.name, value === 0)
+    makeChoice(place.name, value === 0)
   }
 
   return (
@@ -30,10 +30,10 @@ const Deciding = ({ address, restaurant, makeChoice }: DecidingProps): JSX.Eleme
         {address}
       </Typography>
       <br />
-      {restaurant && (
+      {place && (
         <Card sx={{ margin: 'auto', maxWidth: 350 }}>
-          {restaurant.pic ? (
-            <CardMedia alt={`Photo of ${restaurant.name}`} component="img" height="200" image={restaurant.pic} />
+          {place.pic ? (
+            <CardMedia alt={`Photo of ${place.name}`} component="img" height="200" image={place.pic} />
           ) : (
             <div style={{ textAlign: 'center' }}>
               <RestaurantIcon fontSize="large" sx={{ height: 200 }} titleAccess="Restaurant icon" />
@@ -41,28 +41,28 @@ const Deciding = ({ address, restaurant, makeChoice }: DecidingProps): JSX.Eleme
           )}
           <CardContent>
             <Typography gutterBottom variant="h5" component="div">
-              {restaurant.name}
+              {place.name}
             </Typography>
             <Typography color="text.secondary" variant="body2">
-              {restaurant.vicinity}
+              {place.vicinity}
             </Typography>
-            {restaurant.rating !== undefined && (
+            {place.rating !== undefined && (
               <div>
-                {Array.from({ length: Math.round(restaurant.rating) }).map((_, index) => (
+                {Array.from({ length: Math.round(place.rating) }).map((_, index) => (
                   <FavoriteRoundedIcon key={index} />
                 ))}
               </div>
             )}
-            {restaurant.priceLevel !== undefined && (
+            {place.priceLevel !== undefined && (
               <div>
-                {Array.from({ length: Math.round(restaurant.priceLevel) }).map((_, index) => (
+                {Array.from({ length: Math.round(place.priceLevel) }).map((_, index) => (
                   <MonetizationOnRoundedIcon key={index} />
                 ))}
               </div>
             )}
           </CardContent>
           <BottomNavigation onChange={onDecision} showLabels>
-            <BottomNavigationAction icon={<CheckIcon />} label="Let's eat" />
+            <BottomNavigationAction icon={<CheckIcon />} label="Sounds good" />
             <BottomNavigationAction icon={<DoNotDisturbIcon />} label="Maybe later" />
           </BottomNavigation>
         </Card>

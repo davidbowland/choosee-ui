@@ -1,4 +1,4 @@
-import { navigate } from 'gatsby'
+import { Link, navigate } from 'gatsby'
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded'
 import MonetizationOnRoundedIcon from '@mui/icons-material/MonetizationOnRounded'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
@@ -6,14 +6,18 @@ import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
 import Typography from '@mui/material/Typography'
 import React from 'react'
 
 import Logo from '@components/logo'
-import { Restaurant } from '@types'
+import { PlaceDetails } from '@types'
 
 export interface WinnerProps {
-  winner: Restaurant
+  winner: PlaceDetails
 }
 
 const Winner = ({ winner }: WinnerProps): JSX.Element => {
@@ -37,8 +41,15 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
             {winner.name}
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            {winner.vicinity}
+            {winner.formattedAddress ?? winner.vicinity}
           </Typography>
+          {winner.internationalPhoneNumber && (
+            <Typography color="text.secondary" variant="body2">
+              <Link to={`tel:${winner.internationalPhoneNumber.replace(/\D/g, '')}`}>
+                {winner.formattedPhoneNumber ?? winner.internationalPhoneNumber}
+              </Link>
+            </Typography>
+          )}
           {winner.rating !== undefined && (
             <div>
               {Array.from({ length: Math.round(winner.rating) }).map((_, index) => (
@@ -52,6 +63,30 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
                 <MonetizationOnRoundedIcon key={index} />
               ))}
             </div>
+          )}
+          {winner.website && (
+            <Typography color="text.secondary" variant="body2">
+              <Link to={winner.website}>Visit their website</Link>
+            </Typography>
+          )}
+          {winner.openHours && (
+            <Typography color="text.secondary" variant="body2">
+              <FormControl sx={{ m: 1, minWidth: 120 }} variant="standard">
+                <InputLabel id="choice-hours-label">Hours</InputLabel>
+                <Select
+                  labelId="choice-hours-label"
+                  id="choice-hours-select"
+                  value={winner.openHours[(new Date().getDay() + 7) % 8]}
+                  label="Hours"
+                >
+                  {winner.openHours.map((hours, index) => (
+                    <MenuItem key={index} value={hours}>
+                      {hours}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Typography>
           )}
         </CardContent>
       </Card>
