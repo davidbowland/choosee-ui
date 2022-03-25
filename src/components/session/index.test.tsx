@@ -8,7 +8,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import Logo from '@components/logo'
 import Session from './index'
 import * as sessionService from '@services/sessions'
-import { choices, decisions, restaurant, sessionId, statusDeciding, user, userId } from '@test/__mocks__'
+import { choices, decisions, place, placeDetails, sessionId, statusDeciding, user, userId } from '@test/__mocks__'
 import { StatusObject } from '@types'
 
 jest.mock('aws-amplify')
@@ -21,7 +21,7 @@ describe('Session component', () => {
   const consoleError = console.error
   const mockSetAuthState = jest.fn()
   const mockSetShowLogin = jest.fn()
-  const restaurantNoPic = { ...restaurant, pic: undefined }
+  const placeNoPic = { ...placeDetails, pic: undefined }
 
   beforeAll(() => {
     console.error = jest.fn()
@@ -149,7 +149,7 @@ describe('Session component', () => {
     })
 
     describe('voting', () => {
-      test('expect first restaurant shown when signed in', async () => {
+      test('expect first place shown when signed in', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByText(/90210/i)).toBeInTheDocument()
@@ -157,10 +157,10 @@ describe('Session component', () => {
         expect(mocked(sessionService).fetchDecisions).toHaveBeenCalledWith('aeio', '+18005551234')
       })
 
-      test('expect second restaurant shown when yes vote', async () => {
+      test('expect second place shown when yes vote', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
@@ -169,7 +169,7 @@ describe('Session component', () => {
         expect(await screen.findByText(/Subway/i)).toBeInTheDocument()
       })
 
-      test('expect second restaurant shown when no vote', async () => {
+      test('expect second place shown when no vote', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
@@ -181,7 +181,7 @@ describe('Session component', () => {
         expect(await screen.findByText(/Subway/i)).toBeInTheDocument()
       })
 
-      test('expect second restaurant shown when first in decisions', async () => {
+      test('expect second place shown when first in decisions', async () => {
         mocked(sessionService).fetchDecisions.mockResolvedValueOnce({ [choices[0].name]: true })
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
@@ -189,11 +189,11 @@ describe('Session component', () => {
         expect(await screen.findByText(/Subway/i)).toBeInTheDocument()
       })
 
-      test('expect second page fetched when last restaurant in decisions', async () => {
+      test('expect second page fetched when last choice in decisions', async () => {
         mocked(sessionService).fetchDecisions.mockResolvedValueOnce({ [choices[1].name]: true })
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
@@ -207,7 +207,7 @@ describe('Session component', () => {
       test('expect vote results passed to PATCH endpoint', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
@@ -225,8 +225,8 @@ describe('Session component', () => {
     })
 
     describe('choices', () => {
-      test('expect no restaurant picture shows RestaurantIcon', async () => {
-        mocked(sessionService).fetchChoices.mockResolvedValueOnce([restaurantNoPic])
+      test('expect no place picture shows RestaurantIcon', async () => {
+        mocked(sessionService).fetchChoices.mockResolvedValueOnce([placeNoPic])
         mocked(sessionService).fetchDecisions.mockResolvedValue({})
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
@@ -236,7 +236,7 @@ describe('Session component', () => {
       test('expect waiting for voters message when choices exhausted', async () => {
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
@@ -253,7 +253,7 @@ describe('Session component', () => {
         mocked(sessionService).fetchChoices.mockResolvedValueOnce(choices)
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
@@ -273,7 +273,7 @@ describe('Session component', () => {
         mocked(sessionService).fetchChoices.mockResolvedValueOnce(choices)
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
@@ -305,14 +305,14 @@ describe('Session component', () => {
         mocked(sessionService).fetchChoices.mockResolvedValueOnce(choices)
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Let's eat/i)) as HTMLButtonElement
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         act(() => {
           yesButton.click()
         })
         mocked(sessionService).fetchStatus.mockResolvedValueOnce({
           ...statusDeciding,
           current: 'winner',
-          winner: restaurant,
+          winner: placeDetails,
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
@@ -329,7 +329,7 @@ describe('Session component', () => {
         mocked(sessionService).fetchStatus.mockResolvedValueOnce({
           ...statusDeciding,
           current: 'winner',
-          winner: restaurantNoPic,
+          winner: placeNoPic,
         })
 
         expect(await screen.findByTitle(/Restaurant icon/i)).toBeInTheDocument()
@@ -340,7 +340,7 @@ describe('Session component', () => {
         mocked(sessionService).fetchStatus.mockResolvedValueOnce({
           ...statusDeciding,
           current: 'winner',
-          winner: restaurant,
+          winner: place,
         })
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement

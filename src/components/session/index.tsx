@@ -12,7 +12,7 @@ import Expired from './expired'
 import Finished from './finished'
 import LoginPrompt from './login-prompt'
 import { fetchChoices, fetchDecisions, fetchStatus, updateDecisions } from '@services/sessions'
-import { AuthState, CognitoUserAmplify, DecisionObject, Restaurant, StatusObject } from '@types'
+import { AuthState, CognitoUserAmplify, DecisionObject, Place, StatusObject } from '@types'
 import Winner from './winner'
 
 const delayBetweenRefreshMs = parseInt(process.env.GATSBY_DELAY_BETWEEN_REFRESH_MS, 10)
@@ -25,7 +25,7 @@ export interface SessionProps {
 }
 
 const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: SessionProps): JSX.Element => {
-  const [choices, setChoices] = useState<Restaurant[]>([])
+  const [choices, setChoices] = useState<Place[]>([])
   const [decisions, setDecisions] = useState<DecisionObject>({})
   const [decisionsInitial, setDecisionsInitial] = useState<DecisionObject>({})
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -33,20 +33,20 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   const [isWaiting, setIsWaiting] = useState(false)
   const [loggedInUser, setLoggedInUser] = useState<CognitoUserAmplify | undefined>(undefined)
   const [pageId, setPageId] = useState(-2)
-  const [restaurant, setRestaurant] = useState<Restaurant | undefined>(undefined)
+  const [place, setPlace] = useState<Place | undefined>(undefined)
   const [status, setStatus] = useState<StatusObject>({ address: '', current: 'deciding', pageId: -1 })
 
-  const findNextRestaurant = (availableChoices: Restaurant[]): void => {
-    const [firstRestaurant, ...otherChoices] = availableChoices
+  const findNextPlace = (availableChoices: Place[]): void => {
+    const [firstChoice, ...otherChoices] = availableChoices
     setChoices(otherChoices)
-    if (firstRestaurant.name in decisions) {
+    if (firstChoice.name in decisions) {
       if (otherChoices.length > 0) {
-        findNextRestaurant(otherChoices)
+        findNextPlace(otherChoices)
       } else {
         refreshDecisions().then(refreshStatus)
       }
     } else {
-      setRestaurant(firstRestaurant)
+      setPlace(firstChoice)
     }
   }
 
@@ -54,10 +54,10 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
     setDecisions({ ...decisions, [name]: value })
   }
 
-  const nextRestaurant = async () => {
-    setRestaurant(undefined)
+  const nextPlace = async () => {
+    setPlace(undefined)
     if (choices.length > 0) {
-      findNextRestaurant(choices)
+      findNextPlace(choices)
     }
   }
   const refreshChoices = async () => {
@@ -126,7 +126,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
         />
       )
     } else if (status?.current === 'deciding') {
-      if (restaurant === undefined) {
+      if (place === undefined) {
         return (
           <>
             <Logo />
@@ -136,7 +136,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
           </>
         )
       } else {
-        return <Deciding address={status.address} makeChoice={makeChoice} restaurant={restaurant} />
+        return <Deciding address={status.address} makeChoice={makeChoice} place={place} />
       }
     } else if (status?.current === 'winner' && status.winner) {
       return <Winner winner={status.winner} />
@@ -155,13 +155,13 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   }
 
   useEffect(() => {
-    if (restaurant === undefined && choices.length > 0 && loggedInUser) {
-      nextRestaurant()
+    if (place === undefined && choices.length > 0 && loggedInUser) {
+      nextPlace()
     }
   }, [choices])
 
   useEffect(() => {
-    nextRestaurant()
+    nextPlace()
   }, [decisions])
 
   useEffect(() => {
@@ -169,10 +169,10 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   }, [loggedInUser])
 
   useEffect(() => {
-    if (!restaurant && choices.length === 0) {
+    if (!place && choices.length === 0) {
       refreshDecisions().then(() => refreshStatus())
     }
-  }, [restaurant])
+  }, [place])
 
   useEffect(() => {
     Auth.currentAuthenticatedUser()
