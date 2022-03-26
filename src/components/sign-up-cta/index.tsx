@@ -1,9 +1,9 @@
-import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Fab from '@mui/material/Fab'
 import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
 import LoginIcon from '@mui/icons-material/Login'
 import React from 'react'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
 import { AuthState } from '@types'
@@ -28,31 +28,26 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Elem
   return (
     <>
       <Logo />
-      <br />
-      <Box margin="auto" maxWidth="400px">
+      <Stack margin="auto" maxWidth="400px" spacing={2}>
         <Typography sx={{ textAlign: 'center' }} variant="h6">
           Vote on where you want to eat tonight. Share a link for others to vote with you. Sign up or sign in to get
           started.
         </Typography>
-        <br />
-        <div>
-          <Button
-            data-amplify-analytics-name="sign-up-click"
-            data-amplify-analytics-on="click"
-            fullWidth
-            onClick={signUpClick}
-            startIcon={<FollowTheSignsIcon />}
-            variant="contained"
-          >
-            Sign up
-          </Button>
-        </div>
-        <br />
+        <Button
+          data-amplify-analytics-name="sign-up-click"
+          data-amplify-analytics-on="click"
+          fullWidth
+          onClick={signUpClick}
+          startIcon={<FollowTheSignsIcon />}
+          variant="contained"
+        >
+          Sign up
+        </Button>
         <Typography>
           A free account is required to keep our costs low. We don&apos;t sell your information and deleting your
           account is easy.
         </Typography>
-        <p style={{ height: '100px' }}>
+        <div style={{ height: '100px' }}>
           <Fab
             aria-label="sign in"
             color="primary"
@@ -68,8 +63,8 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Elem
           >
             <LoginIcon />
           </Fab>
-        </p>
-      </Box>
+        </div>
+      </Stack>
     </>
   )
 }

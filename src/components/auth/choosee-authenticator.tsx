@@ -2,6 +2,7 @@ import { Authenticator } from '@aws-amplify/ui-react'
 import Button from '@mui/material/Button'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import React from 'react'
+import Stack from '@mui/material/Stack'
 
 import { AuthState, CognitoUserAmplify } from '@types'
 import Logo from '@components/logo'
@@ -17,17 +18,19 @@ const ChooseeAuthenticator = ({ authState, setLoggedInUser, setShowLogin }: Choo
     <main className="main-content">
       <section>
         <Logo />
-        <Authenticator initialState={authState} loginMechanisms={['phone_number']} signUpAttributes={['name']}>
-          {({ user }) => {
-            setLoggedInUser(user)
-            return <></>
-          }}
-        </Authenticator>
-        <p style={{ textAlign: 'center' }}>
-          <Button onClick={() => setShowLogin(false)} startIcon={<CancelOutlinedIcon />} variant="outlined">
-            Cancel
-          </Button>
-        </p>
+        <Stack margin="auto" spacing={2}>
+          <Authenticator initialState={authState} loginMechanisms={['phone_number']} signUpAttributes={['name']}>
+            {({ user }) => {
+              setLoggedInUser(user)
+              return <></>
+            }}
+          </Authenticator>
+          <div style={{ textAlign: 'center' }}>
+            <Button onClick={() => setShowLogin(false)} startIcon={<CancelOutlinedIcon />} variant="outlined">
+              Cancel
+            </Button>
+          </div>
+        </Stack>
       </section>
     </main>
   )

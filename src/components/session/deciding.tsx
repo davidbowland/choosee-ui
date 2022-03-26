@@ -12,6 +12,7 @@ import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlin
 import Rating from '@mui/material/Rating'
 import React from 'react'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
 import { Place } from '@types'
@@ -28,18 +29,17 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
   }
 
   return (
-    <>
+    <Stack margin="auto" maxWidth="400px" spacing={2}>
       <Typography sx={{ textAlign: 'center' }} variant="h6">
         {address}
       </Typography>
-      <br />
       {place && (
-        <Card sx={{ margin: 'auto', maxWidth: 350 }}>
+        <Card sx={{ margin: 'auto', maxWidth: 400 }}>
           {place.pic ? (
             <CardMedia alt={`Photo of ${place.name}`} component="img" height="200" image={place.pic} />
           ) : (
             <div style={{ textAlign: 'center' }}>
-              <RestaurantIcon fontSize="large" sx={{ height: 200 }} titleAccess="Restaurant icon" />
+              <RestaurantIcon fontSize="large" sx={{ height: 300 }} titleAccess="Restaurant icon" />
             </div>
           )}
           <CardContent>
@@ -84,7 +84,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
           </BottomNavigation>
         </Card>
       )}
-    </>
+    </Stack>
   )
 }
 

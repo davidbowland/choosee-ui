@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import Alert from '@mui/material/Alert'
-import Backdrop from '@mui/material/Backdrop'
-import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -11,12 +9,14 @@ import FormLabel from '@mui/material/FormLabel'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
 import Slider from '@mui/material/Slider'
+import Snackbar from '@mui/material/Snackbar'
+import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 import { navigate } from 'gatsby'
 
 import { NewSession, PlaceType } from '@types'
 import { createSession, textSession } from '@services/sessions'
-import Alerts from './alerts'
 import Logo from '@components/logo'
 
 interface VoterIds {
@@ -63,7 +63,7 @@ const Create = (): JSX.Element => {
       }
       const session = await createSession(newSession)
       setErrorMessage(undefined)
-      setSuccessMessage('Session starting')
+      setSuccessMessage('Choosee voting session starting')
 
       await Promise.all(
         Array.from({ length: voterCount - 1 }).map((_, index: any) => {
@@ -80,7 +80,7 @@ const Create = (): JSX.Element => {
       if (error?.message === 'Invalid address') {
         setAddressError(error?.message)
       } else {
-        setErrorMessage('Error generating Choosee session. Please try again later.')
+        setErrorMessage('Error generating Choosee voting session. Please try again later.')
       }
     }
     setIsLoading(false)
@@ -93,70 +93,93 @@ const Create = (): JSX.Element => {
     setVoterIds({ ...voterIds, [index]: trimmedPhone })
   }
 
+  const snackbarErrorClose = (): void => {
+    setErrorMessage(undefined)
+  }
+
+  const snackbarSuccessClose = (): void => {
+    setSuccessMessage(undefined)
+  }
+
   return (
     <>
       <Logo />
-      <Box margin="auto" maxWidth="400px">
-        <Alerts errorMessage={errorMessage} successMessage={successMessage} />
-        <div>
-          <label>
-            <TextField
-              aria-readonly="true"
-              autoComplete="postal-code"
-              disabled={isLoading}
-              error={addressError !== undefined}
-              fullWidth
-              helperText={addressError}
-              label="Your address"
-              name="address"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
-              type="text"
-              value={address}
-              variant="filled"
-            />
-          </label>
-        </div>
-        <br />
-        <div>
-          <FormControl>
-            <FormLabel id="radio-buttons-group-label">Restaurant type</FormLabel>
-            <RadioGroup
-              name="controlled-radio-buttons-group"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setChoiceType(event.target.value as PlaceType)}
-              value={choiceType}
-            >
-              <FormControlLabel control={<Radio />} id="dine-in" label="Dine-in" value="restaurant" />
-              <FormControlLabel control={<Radio />} id="delivery" label="Delivery" value="meal_delivery" />
-              <FormControlLabel control={<Radio />} id="takeout" label="Takeout" value="meal_takeaway" />
-              <FormControlLabel control={<Radio />} id="bar" label="Bar" value="bar" />
-              <FormControlLabel control={<Radio />} id="cafe" label="Café" value="cafe" />
-              <FormControlLabel control={<Radio />} id="night-club" label="Night club" value="night_club" />
-            </RadioGroup>
-          </FormControl>
-        </div>
-        <div>
-          <FormControlLabel
-            control={<Checkbox checked={openNow} onClick={(event: any) => setOpenNow(event.target.checked)} />}
-            label="Only show choices currently open"
+      <Stack margin="auto" maxWidth="400px" spacing={2}>
+        <label>
+          <TextField
+            aria-readonly="true"
+            autoComplete="postal-code"
+            disabled={isLoading}
+            error={addressError !== undefined}
+            fullWidth
+            helperText={addressError}
+            label="Your address"
+            name="address"
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
+            type="text"
+            value={address}
+            variant="filled"
           />
-        </div>
-        <br />
-        <div>
-          <label>
-            Number of voters: {voterCount}
-            <Slider
-              aria-label="Number of voters"
-              defaultValue={voterCount}
-              marks={true}
-              max={10}
-              min={1}
-              onChange={(_: any, value: any) => setVoterCount(value)}
-              step={1}
-              sx={{ paddingTop: '35px' }}
-              valueLabelDisplay="auto"
+        </label>
+        <FormControl>
+          <FormLabel id="radio-buttons-group-label">Restaurant type</FormLabel>
+          <RadioGroup
+            name="controlled-radio-buttons-group"
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setChoiceType(event.target.value as PlaceType)}
+            value={choiceType}
+          >
+            <FormControlLabel
+              control={<Radio />}
+              disabled={isLoading}
+              id="dine-in"
+              label="Dine-in"
+              value="restaurant"
             />
-          </label>
-        </div>
+            <FormControlLabel
+              control={<Radio />}
+              disabled={isLoading}
+              id="delivery"
+              label="Delivery"
+              value="meal_delivery"
+            />
+            <FormControlLabel
+              control={<Radio />}
+              disabled={isLoading}
+              id="takeout"
+              label="Takeout"
+              value="meal_takeaway"
+            />
+            <FormControlLabel control={<Radio />} disabled={isLoading} id="bar" label="Bar" value="bar" />
+            <FormControlLabel control={<Radio />} disabled={isLoading} id="cafe" label="Café" value="cafe" />
+            <FormControlLabel
+              control={<Radio />}
+              disabled={isLoading}
+              id="night-club"
+              label="Night club"
+              value="night_club"
+            />
+          </RadioGroup>
+        </FormControl>
+        <FormControlLabel
+          control={<Checkbox checked={openNow} onClick={(event: any) => setOpenNow(event.target.checked)} />}
+          disabled={isLoading}
+          label="Only show choices currently open"
+        />
+        <label>
+          Number of voters: {voterCount}
+          <Slider
+            aria-label="Number of voters"
+            defaultValue={voterCount}
+            disabled={isLoading}
+            marks={true}
+            max={10}
+            min={1}
+            onChange={(_: any, value: any) => setVoterCount(value)}
+            step={1}
+            sx={{ paddingTop: '35px' }}
+            valueLabelDisplay="auto"
+          />
+        </label>
         {voterCount > 1 && (
           <Alert severity="info">
             You must distribute the session link to voters. Enter the phone number of other voters to text them the
@@ -164,42 +187,47 @@ const Create = (): JSX.Element => {
           </Alert>
         )}
         {Array.from({ length: voterCount - 1 }).map((_, index) => (
-          <div key={index}>
-            <br />
-            <label key={index}>
-              <TextField
-                aria-readonly="true"
-                error={voterIdErrors[index] !== undefined}
-                fullWidth
-                helperText={voterIdErrors[index]}
-                key={index}
-                label={`Voter #${index + 2} phone number (optional)`}
-                name="phone_number"
-                onChange={(event) => onVoterIdChange(index, event.target.value)}
-                placeholder="+10000000000"
-                type="tel"
-                value={voterIds[index]}
-                variant="filled"
-              />
-            </label>
-          </div>
+          <label key={index}>
+            <TextField
+              aria-readonly="true"
+              disabled={isLoading}
+              error={voterIdErrors[index] !== undefined}
+              fullWidth
+              helperText={voterIdErrors[index]}
+              key={index}
+              label={`Voter #${index + 2} phone number (optional)`}
+              name="phone_number"
+              onChange={(event) => onVoterIdChange(index, event.target.value)}
+              placeholder="+10000000000"
+              type="tel"
+              value={voterIds[index]}
+              variant="filled"
+            />
+          </label>
         ))}
-        <br />
         <Button
           data-amplify-analytics-name="generate-session-click"
           data-amplify-analytics-on="click"
           disabled={isLoading}
           fullWidth
           onClick={generateSession}
+          startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
           variant="contained"
         >
           {isLoading ? 'Loading...' : 'Choose restaurants'}
         </Button>
-        <p style={{ textAlign: 'center' }}>Sessions automatically expire after 24 hours</p>
-      </Box>
-      <Backdrop open={isLoading} sx={{ color: '#fff', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
+        <Typography style={{ textAlign: 'center' }}>Voting sessions automatically expire after 24 hours</Typography>
+      </Stack>
+      <Snackbar autoHideDuration={15_000} onClose={snackbarErrorClose} open={errorMessage !== undefined}>
+        <Alert onClose={snackbarErrorClose} severity="error">
+          {errorMessage}
+        </Alert>
+      </Snackbar>
+      <Snackbar autoHideDuration={5_000} onClose={snackbarSuccessClose} open={successMessage !== undefined}>
+        <Alert onClose={snackbarSuccessClose} severity="success">
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
 import FollowTheSignsOutlinedIcon from '@mui/icons-material/FollowTheSignsOutlined'
 import LoginIcon from '@mui/icons-material/Login'
+import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
@@ -51,27 +51,24 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
   return (
     <>
       <Logo />
-      <Box margin="auto" maxWidth="400px">
+      <Stack margin="auto" maxWidth="400px" spacing={2}>
         <Typography variant="h6">Enter your phone number to vote</Typography>
-        <div>
-          <label>
-            <TextField
-              aria-readonly="true"
-              autoComplete="tel"
-              error={userIdError !== undefined}
-              fullWidth
-              helperText={userIdError}
-              label="Your phone number"
-              name="phone_number"
-              onChange={onUserIdChange}
-              placeholder="+10000000000"
-              type="tel"
-              value={userId}
-              variant="filled"
-            />
-          </label>
-        </div>
-        <br />
+        <label>
+          <TextField
+            aria-readonly="true"
+            autoComplete="tel"
+            error={userIdError !== undefined}
+            fullWidth
+            helperText={userIdError}
+            label="Your phone number"
+            name="phone_number"
+            onChange={onUserIdChange}
+            placeholder="+10000000000"
+            type="tel"
+            value={userId}
+            variant="filled"
+          />
+        </label>
         <Button
           data-amplify-analytics-name="lets-choose-click"
           data-amplify-analytics-on="click"
@@ -82,7 +79,7 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
         >
           Let&apos;s choose!
         </Button>
-        <Typography sx={{ margin: '0.5em auto', textAlign: 'center' }} variant="h6">
+        <Typography sx={{ textAlign: 'center' }} variant="h6">
           -- or --
         </Typography>
         <Button
@@ -95,13 +92,13 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
         >
           Sign up
         </Button>
-        <Typography sx={{ margin: '0.5em auto', textAlign: 'center' }} variant="h6">
+        <Typography sx={{ textAlign: 'center' }} variant="h6">
           -- or --
         </Typography>
         <Button fullWidth onClick={signInClick} startIcon={<LoginIcon />} variant="contained">
           Sign in
         </Button>
-      </Box>
+      </Stack>
     </>
   )
 }

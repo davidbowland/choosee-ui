@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
 import React from 'react'
 import { mocked } from 'jest-mock'
@@ -95,6 +95,38 @@ describe('SessionCreate component', () => {
       })
     })
 
+    test('expect success message removed when closed', async () => {
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(addressInput, { target: { value: address } })
+      })
+      const radioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
+      act(() => {
+        radioButton.click()
+      })
+      const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(sliderInput, { target: { value: 4 } })
+      })
+      const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
+      act(() => {
+        checkboxInput.click()
+      })
+      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
+      act(() => {
+        chooseButton.click()
+      })
+      await waitFor(() => screen.findByText(/Choosee voting session starting/i))
+      const closeSnackbarButton = (await screen.findByLabelText(/Close/i, { selector: 'button' })) as HTMLButtonElement
+      act(() => {
+        closeSnackbarButton.click()
+      })
+
+      await expect(() => screen.findByText(/Choosee voting session starting/i)).rejects.toBeDefined()
+    })
+
     test('expect error when invalid phone number entered', async () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
@@ -147,6 +179,26 @@ describe('SessionCreate component', () => {
       })
 
       expect(await screen.findByText(/Please try again/i)).toBeInTheDocument()
+    })
+
+    test('expect closing error message removes it', async () => {
+      mocked(sessionService).createSession.mockRejectedValueOnce(undefined)
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(addressInput, { target: { value: address } })
+      })
+      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
+      act(() => {
+        chooseButton.click()
+      })
+      const closeSnackbarButton = (await screen.findByLabelText(/Close/i, { selector: 'button' })) as HTMLButtonElement
+      act(() => {
+        closeSnackbarButton.click()
+      })
+
+      await expect(() => screen.findByText(/Please try again/i)).rejects.toBeDefined()
     })
 
     test('expect createSession invalid address message displayed when present', async () => {
