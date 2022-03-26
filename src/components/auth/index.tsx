@@ -1,13 +1,13 @@
-import { Auth } from 'aws-amplify'
 import '@aws-amplify/ui-react/styles.css'
-import AppBar from '@mui/material/AppBar'
-import Toolbar from '@mui/material/Toolbar'
 import React, { useEffect, useState } from 'react'
+import AppBar from '@mui/material/AppBar'
+import { Auth } from 'aws-amplify'
+import Toolbar from '@mui/material/Toolbar'
 
+import { AuthState, CognitoUserAmplify } from '@types'
 import ChooseeAuthenticator from './choosee-authenticator'
 import LoggedInBar from './logged-in-bar'
 import LoggedOutBar from './logged-out-bar'
-import { AuthState, CognitoUserAmplify } from '@types'
 
 export interface AuthenticatedProps {
   children: JSX.Element | JSX.Element[]

@@ -1,14 +1,14 @@
-import DoneAllIcon from '@mui/icons-material/DoneAll'
-import FollowTheSignsOutlinedIcon from '@mui/icons-material/FollowTheSignsOutlined'
+import React, { useState } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import DoneAllIcon from '@mui/icons-material/DoneAll'
+import FollowTheSignsOutlinedIcon from '@mui/icons-material/FollowTheSignsOutlined'
 import LoginIcon from '@mui/icons-material/Login'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import React, { useState } from 'react'
 
-import Logo from '@components/logo'
 import { AuthState, CognitoUserAmplify } from '@types'
+import Logo from '@components/logo'
 
 export interface LoginPromptProps {
   initialUserId?: string
@@ -62,9 +62,9 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
               fullWidth
               helperText={userIdError}
               label="Your phone number"
-              placeholder="+10000000000"
               name="phone_number"
               onChange={onUserIdChange}
+              placeholder="+10000000000"
               type="tel"
               value={userId}
               variant="filled"

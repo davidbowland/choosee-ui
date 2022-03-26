@@ -1,6 +1,7 @@
 import { API } from 'aws-amplify'
-import { apiName, apiNameUnauthenticated } from '@config/amplify'
+
 import { DecisionObject, NewSession, PatchOperation, Place, StatusObject, StringObject } from '@types'
+import { apiName, apiNameUnauthenticated } from '@config/amplify'
 
 export const createSession = (session: NewSession): Promise<StringObject> =>
   API.post(apiName, '/sessions', { body: session })

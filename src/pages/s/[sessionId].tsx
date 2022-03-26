@@ -1,15 +1,15 @@
-import Container from '@mui/material/Container'
 import React, { useState } from 'react'
+import Container from '@mui/material/Container'
 import { Helmet } from 'react-helmet'
 
+import '@config/amplify'
+import { AuthState } from '@types'
 import Authenticated from '@components/auth'
 import Session from '@components/session'
-import { AuthState } from '@types'
 
-import '@config/amplify'
+import '@assets/css/index.css'
 import '@fontsource/rokkitt'
 import 'normalize.css'
-import '@assets/css/index.css'
 
 export interface SessionPageProps {
   params: {

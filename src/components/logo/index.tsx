@@ -1,6 +1,6 @@
 import Divider from '@mui/material/Divider'
-import Typography from '@mui/material/Typography'
 import React from 'react'
+import Typography from '@mui/material/Typography'
 
 const Logo = (): JSX.Element => (
   <>

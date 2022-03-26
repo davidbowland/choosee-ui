@@ -1,10 +1,10 @@
 import { Authenticator } from '@aws-amplify/ui-react'
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import Button from '@mui/material/Button'
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import React from 'react'
 
-import Logo from '@components/logo'
 import { AuthState, CognitoUserAmplify } from '@types'
+import Logo from '@components/logo'
 
 export interface ChooseeAuthenticatorProps {
   authState: AuthState

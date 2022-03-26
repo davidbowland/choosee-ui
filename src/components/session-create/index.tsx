@@ -1,9 +1,9 @@
-import { Auth } from 'aws-amplify'
 import React, { useEffect, useState } from 'react'
+import { Auth } from 'aws-amplify'
 
+import { AuthState } from '@types'
 import Create from './create'
 import SignUpCta from '@components/sign-up-cta'
-import { AuthState } from '@types'
 
 export interface SessionCreateProps {
   setAuthState: (state: AuthState) => void

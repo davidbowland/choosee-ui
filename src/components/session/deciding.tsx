@@ -1,18 +1,18 @@
-import CheckIcon from '@mui/icons-material/Check'
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
-import FavoriteIcon from '@mui/icons-material/Favorite'
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
-import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
-import RestaurantIcon from '@mui/icons-material/Restaurant'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
+import CheckIcon from '@mui/icons-material/Check'
+import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import Rating from '@mui/material/Rating'
-import Typography from '@mui/material/Typography'
 import React from 'react'
+import RestaurantIcon from '@mui/icons-material/Restaurant'
+import Typography from '@mui/material/Typography'
 
 import { Place } from '@types'
 
@@ -43,7 +43,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
             </div>
           )}
           <CardContent>
-            <Typography gutterBottom variant="h5" component="div">
+            <Typography component="div" gutterBottom variant="h5">
               {place.name}
             </Typography>
             <Typography color="text.secondary" variant="body2">

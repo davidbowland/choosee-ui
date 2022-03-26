@@ -1,8 +1,8 @@
-import { navigate } from 'gatsby'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
-import Typography from '@mui/material/Typography'
 import React from 'react'
+import Typography from '@mui/material/Typography'
+import { navigate } from 'gatsby'
 
 import Logo from '@components/logo'
 

@@ -1,14 +1,14 @@
-import { Auth } from 'aws-amplify'
-import * as gatsby from 'gatsby'
-import { mocked } from 'jest-mock'
-import React from 'react'
 import '@testing-library/jest-dom'
+import * as gatsby from 'gatsby'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { Auth } from 'aws-amplify'
+import React from 'react'
+import { mocked } from 'jest-mock'
 
-import Logo from '@components/logo'
-import Session from './index'
 import * as sessionService from '@services/sessions'
 import { choices, decisions, place, placeDetails, sessionId, statusDeciding, user, userId } from '@test/__mocks__'
+import Logo from '@components/logo'
+import Session from './index'
 import { StatusObject } from '@types'
 
 jest.mock('aws-amplify')
@@ -265,7 +265,9 @@ describe('Session component', () => {
           noButton.click()
         })
 
-        expect(await screen.findByText(/90210/i)).toBeInTheDocument()
+        await waitFor(async () => {
+          expect(await screen.findByText(/90210/i)).toBeInTheDocument()
+        })
         expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
       })
 
@@ -284,7 +286,9 @@ describe('Session component', () => {
           noButton.click()
         })
 
-        expect(await screen.findByText(/Choices exhausted/i)).toBeInTheDocument()
+        await waitFor(async () => {
+          expect(await screen.findByText(/Choices exhausted/i)).toBeInTheDocument()
+        })
       })
 
       test('expect make new choices navigates', async () => {

@@ -10,13 +10,8 @@ if (process.env.DEVELOPMENT) {
 }
 
 module.exports = {
-  siteMetadata: {
-    title: 'choosee-ui',
-    siteUrl: 'https://choosee.bowland.link',
-  },
   plugins: [
     {
-      resolve: 'gatsby-plugin-alias-imports',
       options: {
         alias: {
           '@assets': 'src/assets',
@@ -24,31 +19,36 @@ module.exports = {
           '@config': 'src/config',
           '@pages': 'src/pages',
           '@services': 'src/services',
-          '@types': 'src/types',
           '@test': 'test',
+          '@types': 'src/types',
         },
         extensions: ['js', 'jsx', 'ts', 'tsx'],
       },
+      resolve: 'gatsby-plugin-alias-imports',
     },
     'gatsby-plugin-image',
     'gatsby-plugin-sitemap',
     'gatsby-plugin-sharp',
     'gatsby-transformer-sharp',
     {
-      resolve: 'gatsby-source-filesystem',
+      __key: 'images',
       options: {
         name: 'images',
         path: 'src/assets/images/',
       },
-      __key: 'images',
+      resolve: 'gatsby-source-filesystem',
     },
     {
-      resolve: 'gatsby-source-filesystem',
+      __key: 'pages',
       options: {
         name: 'pages',
         path: 'src/pages/',
       },
-      __key: 'pages',
+      resolve: 'gatsby-source-filesystem',
     },
   ],
+  siteMetadata: {
+    siteUrl: 'https://choosee.bowland.link',
+    title: 'choosee-ui',
+  },
 }

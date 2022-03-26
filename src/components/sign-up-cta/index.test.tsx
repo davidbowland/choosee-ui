@@ -1,7 +1,7 @@
-import { mocked } from 'jest-mock'
-import React from 'react'
 import '@testing-library/jest-dom'
 import { act, render, screen } from '@testing-library/react'
+import React from 'react'
+import { mocked } from 'jest-mock'
 
 import Logo from '@components/logo'
 import SessionCreate from './index'

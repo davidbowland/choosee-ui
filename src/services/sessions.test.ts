@@ -106,7 +106,6 @@ describe('Sessions service', () => {
       server.use(
         rest.post(`${baseUrl}/sessions/:id/send-text/:to`, async (req, res, ctx) => {
           const { id, to } = req.params
-          console.log(req.params)
           if (id !== sessionId || to !== encodeURIComponent(toPhoneNumber)) {
             return res(ctx.status(400))
           }

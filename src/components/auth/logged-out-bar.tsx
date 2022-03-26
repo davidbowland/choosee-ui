@@ -1,7 +1,7 @@
-import LoginIcon from '@mui/icons-material/Login'
 import Button from '@mui/material/Button'
-import Typography from '@mui/material/Typography'
+import LoginIcon from '@mui/icons-material/Login'
 import React from 'react'
+import Typography from '@mui/material/Typography'
 
 import { AuthState } from '@types'
 

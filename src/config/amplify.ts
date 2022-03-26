@@ -12,13 +12,6 @@ export const apiName = 'ChooseeAPIGateway'
 export const apiNameUnauthenticated = 'ChooseeAPIGatewayUnauthenticated'
 
 Amplify.configure({
-  Auth: {
-    identityPoolId,
-    mandatorySignIn: false,
-    region: userPoolId.split('_')[0],
-    userPoolId,
-    userPoolWebClientId: appClientId,
-  },
   API: {
     endpoints: [
       {
@@ -29,13 +22,20 @@ Amplify.configure({
         name: apiName,
       },
       {
-        name: apiNameUnauthenticated,
-        endpoint: baseUrl,
         custom_header: async () => ({
           Authorization: '',
         }),
+        endpoint: baseUrl,
+        name: apiNameUnauthenticated,
       },
     ],
+  },
+  Auth: {
+    identityPoolId,
+    mandatorySignIn: false,
+    region: userPoolId.split('_')[0],
+    userPoolId,
+    userPoolWebClientId: appClientId,
   },
 })
 
@@ -46,8 +46,8 @@ const appId = process.env.GATSBY_PINPOINT_ID
 const analyticsConfig = {
   AWSPinpoint: {
     appId,
-    region: 'us-east-1',
     mandatorySignIn: false,
+    region: 'us-east-1',
   },
 }
 

@@ -1,20 +1,20 @@
 import { Link, navigate } from 'gatsby'
-import FavoriteIcon from '@mui/icons-material/Favorite'
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
-import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
-import RestaurantIcon from '@mui/icons-material/Restaurant'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import FavoriteIcon from '@mui/icons-material/Favorite'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
-import Select from '@mui/material/Select'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import Rating from '@mui/material/Rating'
-import Typography from '@mui/material/Typography'
 import React from 'react'
+import RestaurantIcon from '@mui/icons-material/Restaurant'
+import Select from '@mui/material/Select'
+import Typography from '@mui/material/Typography'
 
 import Logo from '@components/logo'
 import { PlaceDetails } from '@types'
@@ -40,7 +40,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
           </div>
         )}
         <CardContent>
-          <Typography gutterBottom variant="h5" component="div">
+          <Typography component="div" gutterBottom variant="h5">
             {winner.name}
           </Typography>
           <Typography color="text.secondary" variant="body2">

@@ -97,8 +97,8 @@ export default {
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@pages/(.*)$': '<rootDir>/src/pages/$1',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
-    '^@types$': '<rootDir>/src/types',
     '^@test/(.*)$': '<rootDir>/test/$1',
+    '^@types$': '<rootDir>/src/types',
     '@fontsource/rokkitt': '<rootDir>/__mocks__/file-mock.js',
   },
 

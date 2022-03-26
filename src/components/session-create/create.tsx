@@ -1,23 +1,23 @@
-import { navigate } from 'gatsby'
+import React, { useState } from 'react'
 import Alert from '@mui/material/Alert'
+import Backdrop from '@mui/material/Backdrop'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
+import CircularProgress from '@mui/material/CircularProgress'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import Backdrop from '@mui/material/Backdrop'
-import CircularProgress from '@mui/material/CircularProgress'
 import FormLabel from '@mui/material/FormLabel'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
 import Slider from '@mui/material/Slider'
 import TextField from '@mui/material/TextField'
-import React, { useState } from 'react'
+import { navigate } from 'gatsby'
 
+import { NewSession, PlaceType } from '@types'
+import { createSession, textSession } from '@services/sessions'
 import Alerts from './alerts'
 import Logo from '@components/logo'
-import { createSession, textSession } from '@services/sessions'
-import { NewSession, PlaceType } from '@types'
 
 interface VoterIds {
   [key: number]: string | undefined
@@ -170,13 +170,13 @@ const Create = (): JSX.Element => {
               <TextField
                 aria-readonly="true"
                 error={voterIdErrors[index] !== undefined}
-                key={index}
                 fullWidth
                 helperText={voterIdErrors[index]}
+                key={index}
                 label={`Voter #${index + 2} phone number (optional)`}
-                placeholder="+10000000000"
                 name="phone_number"
                 onChange={(event) => onVoterIdChange(index, event.target.value)}
+                placeholder="+10000000000"
                 type="tel"
                 value={voterIds[index]}
                 variant="filled"

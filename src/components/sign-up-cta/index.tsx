@@ -1,13 +1,13 @@
-import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
-import LoginIcon from '@mui/icons-material/Login'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Fab from '@mui/material/Fab'
-import Typography from '@mui/material/Typography'
+import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
+import LoginIcon from '@mui/icons-material/Login'
 import React from 'react'
+import Typography from '@mui/material/Typography'
 
-import Logo from '@components/logo'
 import { AuthState } from '@types'
+import Logo from '@components/logo'
 
 export interface SessionCreateProps {
   setAuthState: (state: AuthState) => void

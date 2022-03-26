@@ -1,8 +1,8 @@
-import React from 'react'
 import { Helmet } from 'react-helmet'
 import { Link } from 'gatsby'
+import React from 'react'
 
-import { ErrorHeader, ErrorMain, ErrorContents } from './elements'
+import { ErrorContents, ErrorHeader, ErrorMain } from './elements'
 
 export interface ServerErrorProps {
   children: React.ReactNode

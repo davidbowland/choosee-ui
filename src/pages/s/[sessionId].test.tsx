@@ -1,11 +1,11 @@
-import { mocked } from 'jest-mock'
-import React from 'react'
 import '@testing-library/jest-dom'
+import React from 'react'
+import { mocked } from 'jest-mock'
 import { render } from '@testing-library/react'
 
-import SessionPage from './[sessionId]'
 import Authenticated from '@components/auth'
 import Session from '@components/session'
+import SessionPage from './[sessionId]'
 import { sessionId } from '@test/__mocks__'
 
 jest.mock('@aws-amplify/analytics')

@@ -1,14 +1,14 @@
-import { Auth } from 'aws-amplify'
-import { mocked } from 'jest-mock'
-import React from 'react'
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { Auth } from 'aws-amplify'
+import React from 'react'
+import { mocked } from 'jest-mock'
 
-import Logo from '@components/logo'
-import SignUpCta from '@components/sign-up-cta'
-import SessionCreate from './index'
 import * as sessionService from '@services/sessions'
 import { sessionId, user } from '@test/__mocks__'
+import Logo from '@components/logo'
+import SessionCreate from './index'
+import SignUpCta from '@components/sign-up-cta'
 
 jest.mock('aws-amplify')
 jest.mock('@aws-amplify/analytics')

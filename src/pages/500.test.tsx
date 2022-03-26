@@ -1,6 +1,6 @@
-import { mocked } from 'jest-mock'
-import React from 'react'
 import '@testing-library/jest-dom'
+import React from 'react'
+import { mocked } from 'jest-mock'
 import { render } from '@testing-library/react'
 
 import InternalServerError from './500'
