@@ -21,7 +21,7 @@ describe('Session component', () => {
   const consoleError = console.error
   const mockSetAuthState = jest.fn()
   const mockSetShowLogin = jest.fn()
-  const placeNoPic = { ...placeDetails, pic: undefined }
+  const placeNoPic = { ...placeDetails, pic: undefined, priceLevel: 2, rating: 1 }
 
   beforeAll(() => {
     console.error = jest.fn()

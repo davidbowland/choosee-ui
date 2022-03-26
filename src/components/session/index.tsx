@@ -50,17 +50,17 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
     }
   }
 
-  const makeChoice = (name: string, value: boolean) => {
+  const makeChoice = (name: string, value: boolean): void => {
     setDecisions({ ...decisions, [name]: value })
   }
 
-  const nextPlace = async () => {
+  const nextPlace = async (): Promise<void> => {
     setPlace(undefined)
     if (choices.length > 0) {
       findNextPlace(choices)
     }
   }
-  const refreshChoices = async () => {
+  const refreshChoices = async (): Promise<void> => {
     try {
       const currentChoices = await fetchChoices(sessionId)
       setChoices(currentChoices)
@@ -84,7 +84,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
     }
   }
 
-  const refreshStatus = async () => {
+  const refreshStatus = async (): Promise<void> => {
     setIsLoading(true)
 
     try {

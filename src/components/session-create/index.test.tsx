@@ -45,6 +45,7 @@ describe('SessionCreate component', () => {
 
   describe('signed in', () => {
     const address = '90210'
+    const otherVoterPhone = '+18005551111'
 
     beforeAll(() => {
       mocked(Auth).currentAuthenticatedUser.mockResolvedValue(user)
@@ -94,23 +95,42 @@ describe('SessionCreate component', () => {
       })
     })
 
-    test('expect textSession called when checked', async () => {
+    test('expect error when invalid phone number entered', async () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
       act(() => {
         fireEvent.change(addressInput, { target: { value: address } })
       })
-      const checkboxInput = (await screen.findByLabelText(/Text me my session link for sharing/i)) as HTMLInputElement
+      const voterPhoneInput = (await screen.findByLabelText(/Voter #2 phone number/i)) as HTMLInputElement
       act(() => {
-        checkboxInput.click()
+        fireEvent.change(voterPhoneInput, { target: { value: '+12345' } })
       })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
       await act(async () => {
         await chooseButton.click()
       })
 
-      expect(mocked(sessionService).textSession).toHaveBeenCalledWith(sessionId)
+      expect(await screen.findByText(/Invalid phone number/i)).toBeInTheDocument()
+    })
+
+    test('expect textSession called when voter phone entered', async () => {
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(addressInput, { target: { value: address } })
+      })
+      const voterPhoneInput = (await screen.findByLabelText(/Voter #2 phone number/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(voterPhoneInput, { target: { value: otherVoterPhone } })
+      })
+      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
+      await act(async () => {
+        await chooseButton.click()
+      })
+
+      expect(mocked(sessionService).textSession).toHaveBeenCalledWith(sessionId, otherVoterPhone)
     })
 
     test('expect error message on createSession error', async () => {

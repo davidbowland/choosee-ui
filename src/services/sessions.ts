@@ -18,8 +18,8 @@ export const fetchDecisions = (sessionId: string, userId: string): Promise<Decis
 export const fetchStatus = (sessionId: string): Promise<StatusObject> =>
   API.get(apiNameUnauthenticated, `/sessions/${encodeURIComponent(sessionId)}/status`, {})
 
-export const textSession = (sessionId: string): Promise<StringObject> =>
-  API.post(apiName, `/sessions/${encodeURIComponent(sessionId)}/send-text`, { body: {} })
+export const textSession = (sessionId: string, voterId: string): Promise<StringObject> =>
+  API.post(apiName, `/sessions/${encodeURIComponent(sessionId)}/send-text/${encodeURIComponent(voterId)}`, { body: {} })
 
 export const updateDecisions = (
   sessionId: string,

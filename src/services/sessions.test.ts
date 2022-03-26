@@ -100,12 +100,14 @@ describe('Sessions service', () => {
 
   describe('textSession', () => {
     const postEndpoint = jest.fn().mockReturnValue({})
+    const toPhoneNumber = '+18005559999'
 
     beforeAll(() => {
       server.use(
-        rest.post(`${baseUrl}/sessions/:id/send-text`, async (req, res, ctx) => {
-          const { id } = req.params
-          if (id != sessionId) {
+        rest.post(`${baseUrl}/sessions/:id/send-text/:to`, async (req, res, ctx) => {
+          const { id, to } = req.params
+          console.log(req.params)
+          if (id !== sessionId || to !== encodeURIComponent(toPhoneNumber)) {
             return res(ctx.status(400))
           }
           const body = postEndpoint(req.body)
@@ -115,7 +117,7 @@ describe('Sessions service', () => {
     })
 
     test('expect endpoint called with body', async () => {
-      await textSession(sessionId)
+      await textSession(sessionId, toPhoneNumber)
       expect(postEndpoint).toHaveBeenCalledWith({})
     })
   })
