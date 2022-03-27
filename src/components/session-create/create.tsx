@@ -82,8 +82,8 @@ const Create = (): JSX.Element => {
       } else {
         setErrorMessage('Error generating Choosee voting session. Please try again later.')
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   const onVoterIdChange = (index: number, value: string): void => {
