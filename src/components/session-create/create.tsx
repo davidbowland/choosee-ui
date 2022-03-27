@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Checkbox from '@mui/material/Checkbox'
@@ -16,7 +16,7 @@ import Typography from '@mui/material/Typography'
 import { navigate } from 'gatsby'
 
 import { NewSession, PlaceType } from '@types'
-import { createSession, textSession } from '@services/sessions'
+import { createSession, fetchAddress, textSession } from '@services/sessions'
 import Logo from '@components/logo'
 
 interface VoterIds {
@@ -93,6 +93,15 @@ const Create = (): JSX.Element => {
     setVoterIds({ ...voterIds, [index]: trimmedPhone })
   }
 
+  const setLatLng = async (lat: number, lng: number): Promise<void> => {
+    try {
+      const fetchedAddress = await fetchAddress(lat, lng)
+      setAddress(fetchedAddress.address)
+    } catch (error) {
+      console.log('setLatLng', error)
+    }
+  }
+
   const snackbarErrorClose = (): void => {
     setErrorMessage(undefined)
   }
@@ -100,6 +109,16 @@ const Create = (): JSX.Element => {
   const snackbarSuccessClose = (): void => {
     setSuccessMessage(undefined)
   }
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatLng(pos.coords.latitude, pos.coords.longitude)
+      },
+      undefined,
+      { enableHighAccuracy: true }
+    )
+  }, [])
 
   return (
     <>

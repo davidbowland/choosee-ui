@@ -19,17 +19,35 @@ jest.mock('@services/sessions')
 
 describe('SessionCreate component', () => {
   const consoleError = console.error
+  const navigatorGeolocation = navigator.geolocation
+
+  const getCurrentPosition = jest.fn()
   const setAuthState = jest.fn()
   const setShowLogin = jest.fn()
 
   beforeAll(() => {
     console.error = jest.fn()
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (success: any) => {
+          const result = getCurrentPosition()
+          if (result) {
+            success(result)
+          }
+        },
+      },
+    })
     mocked(Logo).mockReturnValue(<></>)
     mocked(SignUpCta).mockReturnValue(<></>)
   })
 
   afterAll(() => {
     console.error = consoleError
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: navigatorGeolocation,
+    })
   })
 
   describe('signed out', () => {
@@ -45,11 +63,32 @@ describe('SessionCreate component', () => {
 
   describe('signed in', () => {
     const address = '90210'
+    const coords = { latitude: 38.897957, longitude: -77.03656 }
     const otherVoterPhone = '+18005551111'
 
     beforeAll(() => {
       mocked(Auth).currentAuthenticatedUser.mockResolvedValue(user)
       mocked(sessionService).createSession.mockResolvedValue({ sessionId })
+      mocked(sessionService).fetchAddress.mockResolvedValue({ address })
+    })
+
+    test('expect address populated when returned', async () => {
+      getCurrentPosition.mockReturnValueOnce({ coords })
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+
+      expect(mocked(sessionService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      expect(addressInput.value).toEqual(address)
+    })
+
+    test('expect no address populated when no result', async () => {
+      getCurrentPosition.mockReturnValueOnce({ coords })
+      mocked(sessionService).fetchAddress.mockRejectedValueOnce(undefined)
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+
+      expect(mocked(sessionService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      expect(addressInput.value).toEqual('')
     })
 
     test('expect error message when no address', async () => {

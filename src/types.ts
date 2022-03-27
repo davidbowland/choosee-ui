@@ -5,6 +5,10 @@ export type AuthState = 'signIn' | 'signUp' | 'resetPassword'
 
 export type PlaceType = 'restaurant' | 'meal_delivery' | 'meal_takeaway'
 
+export interface AddressResult {
+  address: string
+}
+
 export interface Place {
   name: string
   openHours?: string[]

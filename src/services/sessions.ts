@@ -1,10 +1,13 @@
 import { API } from 'aws-amplify'
 
-import { DecisionObject, NewSession, PatchOperation, Place, StatusObject, StringObject } from '@types'
+import { AddressResult, DecisionObject, NewSession, PatchOperation, Place, StatusObject, StringObject } from '@types'
 import { apiName, apiNameUnauthenticated } from '@config/amplify'
 
 export const createSession = (session: NewSession): Promise<StringObject> =>
   API.post(apiName, '/sessions', { body: session })
+
+export const fetchAddress = (lat: number, lng: number): Promise<AddressResult> =>
+  API.get(apiName, '/reverse-geocode', { queryStringParameters: { lat, lng } })
 
 export const fetchChoices = (sessionId: string): Promise<Place[]> =>
   API.get(apiNameUnauthenticated, `/sessions/${encodeURIComponent(sessionId)}/choices`, {})

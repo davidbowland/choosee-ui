@@ -2,7 +2,15 @@ import { Auth } from 'aws-amplify'
 import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
 import { choices, decisions, jsonPatchOperations, newSession, sessionId, statusDeciding, userId } from '@test/__mocks__'
-import { createSession, fetchChoices, fetchDecisions, fetchStatus, textSession, updateDecisions } from './sessions'
+import {
+  createSession,
+  fetchAddress,
+  fetchChoices,
+  fetchDecisions,
+  fetchStatus,
+  textSession,
+  updateDecisions,
+} from './sessions'
 import { rest, server } from '@test/setup-server'
 
 const baseUrl = process.env.GATSBY_CHOOSEE_API_BASE_URL
@@ -38,6 +46,32 @@ describe('Sessions service', () => {
       const result = await createSession(newSession)
       expect(postEndpoint).toHaveBeenCalledTimes(1)
       expect(result).toEqual(expectedResult)
+    })
+  })
+
+  describe('fetchAddress', () => {
+    const address = '90210'
+    const coords = {
+      lat: 38.897957,
+      lng: -77.03656,
+    }
+
+    beforeAll(() => {
+      server.use(
+        rest.get(`${baseUrl}/reverse-geocode`, async (req, res, ctx) => {
+          const lat = req.url.searchParams.get('lat')
+          const lng = req.url.searchParams.get('lng')
+          if (lat !== `${coords.lat}` || lng !== `${coords.lng}`) {
+            return res(ctx.status(400))
+          }
+          return res(ctx.json({ address }))
+        })
+      )
+    })
+
+    test('expect results from returned on fetch', async () => {
+      const result = await fetchAddress(coords.lat, coords.lng)
+      expect(result).toEqual({ address })
     })
   })
 
