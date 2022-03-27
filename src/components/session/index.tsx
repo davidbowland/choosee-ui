@@ -3,6 +3,7 @@ import Alert from '@mui/material/Alert'
 import { Auth } from 'aws-amplify'
 import Backdrop from '@mui/material/Backdrop'
 import CircularProgress from '@mui/material/CircularProgress'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import jsonpatch from 'fast-json-patch'
 
@@ -15,17 +16,24 @@ import LoginPrompt from './login-prompt'
 import Logo from '@components/logo'
 import Winner from './winner'
 
-const MAX_STATUS_REFRESH_COUNT = 200
+const MAX_STATUS_REFRESH_COUNT = 50
 const delayBetweenRefreshMs = parseInt(process.env.GATSBY_DELAY_BETWEEN_REFRESH_MS, 10)
 
 export interface SessionProps {
   initialUserId?: string
+  maxStatusRefreshCount?: number
   sessionId: string
   setAuthState: (value: AuthState) => void
   setShowLogin: (value: boolean) => void
 }
 
-const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: SessionProps): JSX.Element => {
+const Session = ({
+  initialUserId,
+  maxStatusRefreshCount = MAX_STATUS_REFRESH_COUNT,
+  sessionId,
+  setAuthState,
+  setShowLogin,
+}: SessionProps): JSX.Element => {
   const [choices, setChoices] = useState<Place[]>([])
   const [decisions, setDecisions] = useState<DecisionObject>({})
   const [decisionsInitial, setDecisionsInitial] = useState<DecisionObject>({})
@@ -98,7 +106,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
         await refreshChoices()
       } else if (currentStatus.current === 'deciding') {
         setIsWaiting(true)
-        if (statusCount < MAX_STATUS_REFRESH_COUNT) {
+        if (statusCount < maxStatusRefreshCount) {
           setStatusCount(statusCount + 1)
           setTimeout(refreshStatus, delayBetweenRefreshMs)
         }
@@ -135,9 +143,11 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
         return (
           <>
             <Logo />
-            <Typography sx={{ textAlign: 'center' }} variant="h6">
-              Loading...
-            </Typography>
+            {!isLoading && (
+              <Typography sx={{ textAlign: 'center' }} variant="h6">
+                Loading...
+              </Typography>
+            )}
           </>
         )
       } else {
@@ -189,13 +199,36 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   return (
     <>
       {renderSession()}
-      <Backdrop open={isLoading} sx={{ color: '#fff', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}>
-        {isWaiting && (
-          <Typography color="#fff" variant="h6">
-            Waiting for other voters&nbsp;
-          </Typography>
-        )}
-        <CircularProgress color="inherit" />
+      <Backdrop
+        open={isLoading}
+        sx={{ color: '#fff', textAlign: 'center', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
+      >
+        <Stack margin="auto" maxWidth="400px" spacing={2}>
+          {isWaiting ? (
+            <>
+              <Typography color="#fff" variant="h5">
+                Round {pageId + 1} complete
+              </Typography>
+              <Typography color="#fff" variant="h5">
+                {statusCount < maxStatusRefreshCount ? 'Waiting for other voters' : 'Please refresh the page'}
+              </Typography>
+            </>
+          ) : (
+            <Typography color="#fff" variant="h5">
+              Loading
+            </Typography>
+          )}
+          <div style={{ textAlign: 'center' }}>
+            <CircularProgress color="inherit" />
+          </div>
+          {isWaiting && (
+            <div>
+              <Typography color="#fff" variant="h6">
+                If other voters aren&apos;t actively voting, you can bookmark this page and come back later.
+              </Typography>
+            </div>
+          )}
+        </Stack>
       </Backdrop>
     </>
   )

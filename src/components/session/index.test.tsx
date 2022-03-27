@@ -249,6 +249,29 @@ describe('Session component', () => {
         expect(await screen.findByText(/Waiting for other voters/i)).toBeInTheDocument()
       })
 
+      test('expect refresh when refreshes exhausted', async () => {
+        render(
+          <Session
+            maxStatusRefreshCount={0}
+            sessionId={sessionId}
+            setAuthState={mockSetAuthState}
+            setShowLogin={mockSetShowLogin}
+          />
+        )
+
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
+        act(() => {
+          yesButton.click()
+        })
+        await screen.findByText(/Subway/i)
+        const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
+        act(() => {
+          noButton.click()
+        })
+
+        expect(await screen.findByText(/Please refresh the page/i)).toBeInTheDocument()
+      })
+
       test('expect second set of choices displayed when first exhausted', async () => {
         mocked(sessionService).fetchChoices.mockResolvedValueOnce(choices)
         render(<Session sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)

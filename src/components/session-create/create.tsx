@@ -98,7 +98,7 @@ const Create = (): JSX.Element => {
       const fetchedAddress = await fetchAddress(lat, lng)
       setAddress(fetchedAddress.address)
     } catch (error) {
-      console.log('setLatLng', error)
+      console.error('setLatLng', error)
     }
   }
 
