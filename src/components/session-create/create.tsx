@@ -115,13 +115,14 @@ const Create = (): JSX.Element => {
   }
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLatLng(pos.coords.latitude, pos.coords.longitude)
-      },
-      undefined,
-      { enableHighAccuracy: true }
-    )
+    navigator.geolocation &&
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLatLng(pos.coords.latitude, pos.coords.longitude)
+        },
+        undefined,
+        { enableHighAccuracy: true }
+      )
   }, [])
 
   return (
