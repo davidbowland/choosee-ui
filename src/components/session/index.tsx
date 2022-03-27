@@ -15,6 +15,7 @@ import LoginPrompt from './login-prompt'
 import Logo from '@components/logo'
 import Winner from './winner'
 
+const MAX_STATUS_REFRESH_COUNT = 200
 const delayBetweenRefreshMs = parseInt(process.env.GATSBY_DELAY_BETWEEN_REFRESH_MS, 10)
 
 export interface SessionProps {
@@ -35,6 +36,7 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
   const [pageId, setPageId] = useState(-2)
   const [place, setPlace] = useState<Place | undefined>(undefined)
   const [status, setStatus] = useState<StatusObject>({ address: '', current: 'deciding', pageId: -1 })
+  const [statusCount, setStatusCount] = useState(0)
 
   const findNextPlace = (availableChoices: Place[]): void => {
     const [firstChoice, ...otherChoices] = availableChoices
@@ -96,7 +98,10 @@ const Session = ({ initialUserId, sessionId, setAuthState, setShowLogin }: Sessi
         await refreshChoices()
       } else if (currentStatus.current === 'deciding') {
         setIsWaiting(true)
-        setTimeout(refreshStatus, delayBetweenRefreshMs)
+        if (statusCount < MAX_STATUS_REFRESH_COUNT) {
+          setStatusCount(statusCount + 1)
+          setTimeout(refreshStatus, delayBetweenRefreshMs)
+        }
         return
       }
     } catch (error) {
