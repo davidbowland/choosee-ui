@@ -19,6 +19,8 @@ import { NewSession, PlaceType } from '@types'
 import { createSession, fetchAddress, textSession } from '@services/sessions'
 import Logo from '@components/logo'
 
+const VOTES_PER_PAGE = 20
+
 interface VoterIds {
   [key: number]: string | undefined
 }
@@ -34,6 +36,7 @@ const Create = (): JSX.Element => {
   const [voterCount, setVoterCount] = useState(2)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
   const [voterIdErrors, setVoterIdErrors] = useState<VoterIds>({})
+  const [votesPerRound, setVotesPerRound] = useState(40)
 
   const generateSession = async (): Promise<void> => {
     if (!address) {
@@ -58,6 +61,7 @@ const Create = (): JSX.Element => {
       const newSession: NewSession = {
         address,
         openNow,
+        pagesPerRound: Math.round(votesPerRound / VOTES_PER_PAGE),
         type: choiceType,
         voterCount,
       }
@@ -184,6 +188,21 @@ const Create = (): JSX.Element => {
           disabled={isLoading}
           label="Only show choices currently open"
         />
+        <label>
+          Max votes per round: {votesPerRound}
+          <Slider
+            aria-label="Max votes per round"
+            defaultValue={votesPerRound}
+            disabled={isLoading}
+            marks={true}
+            max={60}
+            min={20}
+            onChange={(_: any, value: any) => setVotesPerRound(value)}
+            step={20}
+            sx={{ paddingTop: '35px' }}
+            valueLabelDisplay="auto"
+          />
+        </label>
         <label>
           Number of voters: {voterCount}
           <Slider

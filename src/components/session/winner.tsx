@@ -92,7 +92,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
                       id="choice-hours-select"
                       label="Hours"
                       labelId="choice-hours-label"
-                      value={winner.openHours[(new Date().getDay() + 7) % 8]}
+                      value={winner.openHours[(new Date().getDay() + 6) % 7]}
                     >
                       {winner.openHours.map((hours, index) => (
                         <MenuItem key={index} value={hours}>

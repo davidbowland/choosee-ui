@@ -113,13 +113,17 @@ describe('SessionCreate component', () => {
       act(() => {
         radioButton.click()
       })
-      const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-      act(() => {
-        fireEvent.change(sliderInput, { target: { value: 4 } })
-      })
       const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
       act(() => {
         checkboxInput.click()
+      })
+      const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(pagesSliderInput, { target: { value: 20 } })
+      })
+      const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+      act(() => {
+        fireEvent.change(voterSliderInput, { target: { value: 4 } })
       })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
       act(() => {
@@ -129,6 +133,7 @@ describe('SessionCreate component', () => {
       expect(mocked(sessionService).createSession).toHaveBeenCalledWith({
         address: '90210',
         openNow: false,
+        pagesPerRound: 1,
         type: 'meal_takeaway',
         voterCount: 4,
       })

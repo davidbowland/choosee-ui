@@ -40,6 +40,7 @@ export interface NewSession {
   address: string
   expiration?: number
   openNow?: boolean
+  pagesPerRound?: number
   type: PlaceType
   voterCount: number
 }
