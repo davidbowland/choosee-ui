@@ -3,6 +3,7 @@ import Alert from '@mui/material/Alert'
 import { Auth } from 'aws-amplify'
 import DeleteIcon from '@mui/icons-material/Delete'
 import IconButton from '@mui/material/IconButton'
+import { Link } from 'gatsby'
 import LogoutIcon from '@mui/icons-material/Logout'
 import Menu from '@mui/material/Menu'
 import MenuIcon from '@mui/icons-material/Menu'
@@ -48,7 +49,9 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
         <MenuIcon />
       </IconButton>
       <Typography sx={{ flexGrow: 1 }} variant="h6">
-        Choosee
+        <Link style={{ textDecoration: 'none' }} to="/">
+          Choosee
+        </Link>
       </Typography>
       <Typography component="div">Welcome, {loggedInUser?.attributes?.name}</Typography>
       <Menu

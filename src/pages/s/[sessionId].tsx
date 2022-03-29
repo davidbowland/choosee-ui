@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
-import Container from '@mui/material/Container'
 import { Helmet } from 'react-helmet'
+import Paper from '@mui/material/Paper'
 
 import '@config/amplify'
 import { AuthState } from '@types'
 import Authenticated from '@components/auth'
 import Session from '@components/session'
+import Themed from '@components/themed'
 
 import '@assets/css/index.css'
 import '@fontsource/rokkitt'
-import 'normalize.css'
 
 export interface SessionPageProps {
   params: {
@@ -25,11 +25,11 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
   const [showLogin, setShowLogin] = useState(false)
 
   return (
-    <>
+    <Themed>
       <Helmet>
         <title>Choosee | dbowland.com</title>
       </Helmet>
-      <Container maxWidth="md">
+      <Paper elevation={3} sx={{ margin: 'auto', maxWidth: '900px' }}>
         <Authenticated
           initialAuthState={authState}
           initialShowLogin={showLogin}
@@ -47,8 +47,8 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
             </section>
           </main>
         </Authenticated>
-      </Container>
-    </>
+      </Paper>
+    </Themed>
   )
 }
 

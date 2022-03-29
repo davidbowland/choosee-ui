@@ -1,5 +1,6 @@
 export { CognitoUserAmplify } from '@aws-amplify/ui'
 export { Operation as PatchOperation } from 'fast-json-patch'
+export { Theme } from '@mui/material/styles'
 
 export type AuthState = 'signIn' | 'signUp' | 'resetPassword'
 

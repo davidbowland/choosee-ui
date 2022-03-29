@@ -6,15 +6,18 @@ import { render } from '@testing-library/react'
 import Authenticated from '@components/auth'
 import Index from './index'
 import SessionCreate from '@components/session-create'
+import Themed from '@components/themed'
 
 jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
 jest.mock('@components/session-create')
+jest.mock('@components/themed')
 
 describe('Index page', () => {
   beforeAll(() => {
     mocked(Authenticated).mockImplementation(({ children }) => <>{children}</>)
     mocked(SessionCreate).mockReturnValue(<></>)
+    mocked(Themed).mockImplementation(({ children }) => <>{children}</>)
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { search: '' },

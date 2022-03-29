@@ -4,7 +4,7 @@ import React from 'react'
 
 import ServerErrorMessage from './index'
 
-describe('ServerErrorMessage component', () => {
+describe('Server error message component', () => {
   const title = 'server-error-message'
   const children = 'Nothing to see here'
 
