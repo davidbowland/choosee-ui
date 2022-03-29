@@ -6,16 +6,19 @@ import { render } from '@testing-library/react'
 import Authenticated from '@components/auth'
 import Session from '@components/session'
 import SessionPage from './[sessionId]'
+import Themed from '@components/themed'
 import { sessionId } from '@test/__mocks__'
 
 jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
 jest.mock('@components/session')
+jest.mock('@components/themed')
 
 describe('Session page', () => {
   beforeAll(() => {
     mocked(Authenticated).mockImplementation(({ children }): any => children)
     mocked(Session).mockReturnValue(<></>)
+    mocked(Themed).mockImplementation(({ children }) => <>{children}</>)
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { search: '' },

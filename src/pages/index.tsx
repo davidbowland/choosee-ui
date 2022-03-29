@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import Container from '@mui/material/Container'
 import { Helmet } from 'react-helmet'
+import Paper from '@mui/material/Paper'
 
 import '@config/amplify'
 import { AuthState } from '@types'
 import Authenticated from '@components/auth'
 import SessionCreate from '@components/session-create'
+import Themed from '@components/themed'
 
 import '@assets/css/index.css'
 import '@fontsource/rokkitt'
@@ -16,11 +17,11 @@ const Index = (): JSX.Element => {
   const [showLogin, setShowLogin] = useState(false)
 
   return (
-    <>
+    <Themed>
       <Helmet>
         <title>Choosee | dbowland.com</title>
       </Helmet>
-      <Container maxWidth="md">
+      <Paper elevation={3} sx={{ margin: 'auto', maxWidth: '900px' }}>
         <Authenticated
           initialAuthState={authState}
           initialShowLogin={showLogin}
@@ -33,8 +34,8 @@ const Index = (): JSX.Element => {
             </section>
           </main>
         </Authenticated>
-      </Container>
-    </>
+      </Paper>
+    </Themed>
   )
 }
 
