@@ -49,7 +49,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
         <MenuIcon />
       </IconButton>
       <Typography sx={{ flexGrow: 1 }} variant="h6">
-        <Link style={{ textDecoration: 'none' }} to="/">
+        <Link style={{ color: '#fff', textDecoration: 'none' }} to="/">
           Choosee
         </Link>
       </Typography>

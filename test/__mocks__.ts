@@ -6,9 +6,12 @@ import {
   PatchOperation,
   Place,
   PlaceDetails,
+  SessionData,
   StatusObject,
   Theme,
 } from '@types'
+
+export const choiceId = '123abc'
 
 export const choices: Place[] = [
   {
@@ -64,10 +67,28 @@ export const placeDetails: PlaceDetails = {
   website: 'https://dbowland.com/',
 }
 
+export const session: SessionData = {
+  address: 'Columbia, MO 65203, USA',
+  choiceId,
+  expiration: 1649131360051,
+  lastAccessed: 123456789,
+  location: {
+    lat: 38.9538484,
+    lng: -92.3714428,
+  },
+  openNow: false,
+  pagesPerRound: 1,
+  status: {
+    current: 'deciding',
+    pageId: 0,
+  },
+  type: 'restaurant',
+  voterCount: 2,
+}
+
 export const sessionId = 'aeio'
 
 export const statusDeciding: StatusObject = {
-  address: '90210',
   current: 'deciding',
   pageId: 0,
 }

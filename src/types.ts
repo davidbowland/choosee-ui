@@ -31,10 +31,22 @@ export interface DecisionObject {
 }
 
 export interface StatusObject {
-  address: string
   current: 'deciding' | 'winner' | 'finished' | 'expired'
   pageId: number
   winner?: PlaceDetails
+}
+
+export interface SessionData {
+  address: string
+  choiceId: string
+  expiration: number
+  lastAccessed: number
+  location: { lat: number; lng: number }
+  openNow: boolean
+  pagesPerRound: number
+  status: StatusObject
+  type: PlaceType
+  voterCount: number
 }
 
 export interface NewSession {

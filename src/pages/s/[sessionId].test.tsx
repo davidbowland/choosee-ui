@@ -4,9 +4,9 @@ import { mocked } from 'jest-mock'
 import { render } from '@testing-library/react'
 
 import Authenticated from '@components/auth'
-import Session from '@components/session'
 import SessionPage from './[sessionId]'
 import Themed from '@components/themed'
+import VoteSession from '@components/session'
 import { sessionId } from '@test/__mocks__'
 
 jest.mock('@aws-amplify/analytics')
@@ -17,7 +17,7 @@ jest.mock('@components/themed')
 describe('Session page', () => {
   beforeAll(() => {
     mocked(Authenticated).mockImplementation(({ children }): any => children)
-    mocked(Session).mockReturnValue(<></>)
+    mocked(VoteSession).mockReturnValue(<></>)
     mocked(Themed).mockImplementation(({ children }) => <>{children}</>)
     Object.defineProperty(window, 'location', {
       configurable: true,
@@ -36,12 +36,12 @@ describe('Session page', () => {
 
   test('expect rendering SessionPage renders Session', () => {
     render(<SessionPage params={{ sessionId }} />)
-    expect(mocked(Session)).toBeCalledWith(expect.objectContaining({ sessionId: 'aeio' }), {})
+    expect(mocked(VoteSession)).toBeCalledWith(expect.objectContaining({ sessionId: 'aeio' }), {})
   })
 
   test('expect "u" query string passed to SessionPage', () => {
     window.location.search = '?u=%2B18005551234'
     render(<SessionPage params={{ sessionId }} />)
-    expect(mocked(Session)).toHaveBeenCalledWith(expect.objectContaining({ initialUserId: '+18005551234' }), {})
+    expect(mocked(VoteSession)).toHaveBeenCalledWith(expect.objectContaining({ initialUserId: '+18005551234' }), {})
   })
 })

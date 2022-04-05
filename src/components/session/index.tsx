@@ -7,14 +7,15 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import jsonpatch from 'fast-json-patch'
 
-import { AuthState, CognitoUserAmplify, DecisionObject, Place, StatusObject } from '@types'
-import { fetchChoices, fetchDecisions, fetchStatus, updateDecisions } from '@services/sessions'
+import { AuthState, CognitoUserAmplify, DecisionObject, Place, SessionData } from '@types'
+import { fetchDecisions, fetchSession, updateDecisions } from '@services/sessions'
 import Deciding from './deciding'
 import Expired from './expired'
 import Finished from './finished'
 import LoginPrompt from './login-prompt'
 import Logo from '@components/logo'
 import Winner from './winner'
+import { fetchChoices } from '@services/maps'
 
 const MAX_STATUS_REFRESH_COUNT = 50
 const delayBetweenRefreshMs = parseInt(process.env.GATSBY_DELAY_BETWEEN_REFRESH_MS, 10)
@@ -43,7 +44,7 @@ const Session = ({
   const [loggedInUser, setLoggedInUser] = useState<CognitoUserAmplify | undefined>(undefined)
   const [pageId, setPageId] = useState(-2)
   const [place, setPlace] = useState<Place | undefined>(undefined)
-  const [status, setStatus] = useState<StatusObject>({ address: '', current: 'deciding', pageId: -1 })
+  const [session, setSession] = useState<SessionData>({ status: { current: 'deciding', pageId: -1 } } as any)
   const [statusCount, setStatusCount] = useState(0)
 
   const findNextPlace = (availableChoices: Place[]): void => {
@@ -70,9 +71,9 @@ const Session = ({
       findNextPlace(choices)
     }
   }
-  const refreshChoices = async (): Promise<void> => {
+  const refreshChoices = async (choiceId: string): Promise<void> => {
     try {
-      const currentChoices = await fetchChoices(sessionId)
+      const currentChoices = await fetchChoices(choiceId)
       setChoices(currentChoices)
     } catch (error) {
       console.error('refreshChoices', error)
@@ -98,13 +99,13 @@ const Session = ({
     setIsLoading(true)
 
     try {
-      const currentStatus = await fetchStatus(sessionId)
-      setStatus(currentStatus)
-      if (currentStatus.pageId !== pageId) {
+      const currentSession = await fetchSession(sessionId)
+      setSession(currentSession)
+      if (currentSession.status.pageId !== pageId) {
         setIsWaiting(false)
-        setPageId(currentStatus.pageId)
-        await refreshChoices()
-      } else if (currentStatus.current === 'deciding') {
+        setPageId(currentSession.status.pageId)
+        await refreshChoices(currentSession.choiceId)
+      } else if (currentSession.status.current === 'deciding') {
         setIsWaiting(true)
         if (statusCount < maxStatusRefreshCount) {
           setStatusCount(statusCount + 1)
@@ -114,7 +115,7 @@ const Session = ({
       }
     } catch (error) {
       console.error('reloadStatus', error)
-      setStatus({ address: '', current: 'expired', pageId: 0 })
+      setSession({ status: { current: 'expired', pageId: 0 } } as any)
     }
     setIsLoading(false)
   }
@@ -127,7 +128,7 @@ const Session = ({
           <Alert severity="error">{errorMessage}</Alert>
         </>
       )
-    } else if (status?.current === 'expired') {
+    } else if (session?.status.current === 'expired') {
       return <Expired />
     } else if (loggedInUser === undefined) {
       return (
@@ -138,7 +139,7 @@ const Session = ({
           setShowLogin={setShowLogin}
         />
       )
-    } else if (status?.current === 'deciding') {
+    } else if (session?.status.current === 'deciding') {
       if (place === undefined) {
         return (
           <>
@@ -151,11 +152,11 @@ const Session = ({
           </>
         )
       } else {
-        return <Deciding address={status.address} makeChoice={makeChoice} place={place} />
+        return <Deciding address={session.address} makeChoice={makeChoice} place={place} />
       }
-    } else if (status?.current === 'winner' && status.winner) {
-      return <Winner winner={status.winner} />
-    } else if (status?.current === 'finished') {
+    } else if (session?.status.current === 'winner' && session.status.winner) {
+      return <Winner winner={session.status.winner} />
+    } else if (session?.status.current === 'finished') {
       return <Finished />
     } else {
       return (

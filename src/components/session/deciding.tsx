@@ -39,7 +39,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
             <CardMedia alt={`Photo of ${place.name}`} component="img" height="200" image={place.pic} />
           ) : (
             <div style={{ textAlign: 'center' }}>
-              <RestaurantIcon fontSize="large" sx={{ height: 300 }} titleAccess="Restaurant icon" />
+              <RestaurantIcon fontSize="large" sx={{ height: 200 }} titleAccess="Restaurant icon" />
             </div>
           )}
           <CardContent>

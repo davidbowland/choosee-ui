@@ -1,19 +1,11 @@
 import { Auth } from 'aws-amplify'
 import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
-import { choices, decisions, jsonPatchOperations, newSession, sessionId, statusDeciding, userId } from '@test/__mocks__'
-import {
-  createSession,
-  fetchAddress,
-  fetchChoices,
-  fetchDecisions,
-  fetchStatus,
-  textSession,
-  updateDecisions,
-} from './sessions'
+import { createSession, fetchDecisions, fetchSession, textSession, updateDecisions } from './sessions'
+import { decisions, jsonPatchOperations, newSession, session, sessionId, userId } from '@test/__mocks__'
 import { rest, server } from '@test/setup-server'
 
-const baseUrl = process.env.GATSBY_CHOOSEE_API_BASE_URL
+const baseUrl = process.env.GATSBY_SESSION_API_BASE_URL
 jest.mock('@aws-amplify/analytics')
 
 describe('Sessions service', () => {
@@ -49,51 +41,6 @@ describe('Sessions service', () => {
     })
   })
 
-  describe('fetchAddress', () => {
-    const address = '90210'
-    const coords = {
-      lat: 38.897957,
-      lng: -77.03656,
-    }
-
-    beforeAll(() => {
-      server.use(
-        rest.get(`${baseUrl}/reverse-geocode`, async (req, res, ctx) => {
-          const lat = req.url.searchParams.get('lat')
-          const lng = req.url.searchParams.get('lng')
-          if (lat !== `${coords.lat}` || lng !== `${coords.lng}`) {
-            return res(ctx.status(400))
-          }
-          return res(ctx.json({ address }))
-        })
-      )
-    })
-
-    test('expect results from returned on fetch', async () => {
-      const result = await fetchAddress(coords.lat, coords.lng)
-      expect(result).toEqual({ address })
-    })
-  })
-
-  describe('fetchChoices', () => {
-    beforeAll(() => {
-      server.use(
-        rest.get(`${baseUrl}/sessions/:id/choices`, async (req, res, ctx) => {
-          const { id } = req.params
-          if (id !== sessionId) {
-            return res(ctx.status(400))
-          }
-          return res(ctx.json(choices))
-        })
-      )
-    })
-
-    test('expect results from returned on fetch', async () => {
-      const result = await fetchChoices(sessionId)
-      expect(result).toEqual(choices)
-    })
-  })
-
   describe('fetchDecisions', () => {
     beforeAll(() => {
       server.use(
@@ -113,22 +60,22 @@ describe('Sessions service', () => {
     })
   })
 
-  describe('fetchStatus', () => {
+  describe('fetchSession', () => {
     beforeAll(() => {
       server.use(
-        rest.get(`${baseUrl}/sessions/:id/status`, async (req, res, ctx) => {
+        rest.get(`${baseUrl}/sessions/:id`, async (req, res, ctx) => {
           const { id } = req.params
           if (id !== sessionId) {
             return res(ctx.status(400))
           }
-          return res(ctx.json(statusDeciding))
+          return res(ctx.json(session))
         })
       )
     })
 
     test('expect results from returned on fetch', async () => {
-      const result = await fetchStatus(sessionId)
-      expect(result).toEqual(statusDeciding)
+      const result = await fetchSession(sessionId)
+      expect(result).toEqual(session)
     })
   })
 

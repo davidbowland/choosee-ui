@@ -16,8 +16,9 @@ import Typography from '@mui/material/Typography'
 import { navigate } from 'gatsby'
 
 import { NewSession, PlaceType } from '@types'
-import { createSession, fetchAddress, textSession } from '@services/sessions'
+import { createSession, textSession } from '@services/sessions'
 import Logo from '@components/logo'
+import { fetchAddress } from '@services/maps'
 
 const VOTES_PER_PAGE = 20
 

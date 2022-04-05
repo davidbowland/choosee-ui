@@ -5,8 +5,8 @@ import Paper from '@mui/material/Paper'
 import '@config/amplify'
 import { AuthState } from '@types'
 import Authenticated from '@components/auth'
-import Session from '@components/session'
 import Themed from '@components/themed'
+import VoteSession from '@components/session'
 
 import '@assets/css/index.css'
 import '@fontsource/rokkitt'
@@ -38,7 +38,7 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
         >
           <main className="main-content" style={{ minHeight: '90vh' }}>
             <section>
-              <Session
+              <VoteSession
                 initialUserId={userId}
                 sessionId={params.sessionId}
                 setAuthState={setAuthState}

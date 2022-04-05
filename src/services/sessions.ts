@@ -1,29 +1,25 @@
 import { API } from 'aws-amplify'
 
-import { AddressResult, DecisionObject, NewSession, PatchOperation, Place, StatusObject, StringObject } from '@types'
-import { apiName, apiNameUnauthenticated } from '@config/amplify'
+import { DecisionObject, NewSession, PatchOperation, SessionData, StringObject } from '@types'
+import { sessionApiName, sessionApiNameUnauthenticated } from '@config/amplify'
 
 export const createSession = (session: NewSession): Promise<StringObject> =>
-  API.post(apiName, '/sessions', { body: session })
-
-export const fetchAddress = (lat: number, lng: number): Promise<AddressResult> =>
-  API.get(apiName, '/reverse-geocode', { queryStringParameters: { lat, lng } })
-
-export const fetchChoices = (sessionId: string): Promise<Place[]> =>
-  API.get(apiNameUnauthenticated, `/sessions/${encodeURIComponent(sessionId)}/choices`, {})
+  API.post(sessionApiName, '/sessions', { body: session })
 
 export const fetchDecisions = (sessionId: string, userId: string): Promise<DecisionObject> =>
   API.get(
-    apiNameUnauthenticated,
+    sessionApiNameUnauthenticated,
     `/sessions/${encodeURIComponent(sessionId)}/decisions/${encodeURIComponent(userId)}`,
     {}
   )
 
-export const fetchStatus = (sessionId: string): Promise<StatusObject> =>
-  API.get(apiNameUnauthenticated, `/sessions/${encodeURIComponent(sessionId)}/status`, {})
+export const fetchSession = (sessionId: string): Promise<SessionData> =>
+  API.get(sessionApiNameUnauthenticated, `/sessions/${encodeURIComponent(sessionId)}`, {})
 
 export const textSession = (sessionId: string, voterId: string): Promise<StringObject> =>
-  API.post(apiName, `/sessions/${encodeURIComponent(sessionId)}/send-text/${encodeURIComponent(voterId)}`, { body: {} })
+  API.post(sessionApiName, `/sessions/${encodeURIComponent(sessionId)}/send-text/${encodeURIComponent(voterId)}`, {
+    body: {},
+  })
 
 export const updateDecisions = (
   sessionId: string,
@@ -31,7 +27,7 @@ export const updateDecisions = (
   patchOperations: PatchOperation[]
 ): Promise<DecisionObject> =>
   API.patch(
-    apiNameUnauthenticated,
+    sessionApiNameUnauthenticated,
     `/sessions/${encodeURIComponent(sessionId)}/decisions/${encodeURIComponent(userId)}`,
     { body: patchOperations }
   )

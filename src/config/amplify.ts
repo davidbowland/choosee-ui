@@ -4,12 +4,14 @@ import { Analytics } from '@aws-amplify/analytics'
 const appClientId = process.env.GATSBY_COGNITO_APP_CLIENT_ID
 const userPoolId = process.env.GATSBY_COGNITO_USER_POOL_ID
 const identityPoolId = process.env.GATSBY_IDENTITY_POOL_ID
-const baseUrl = process.env.GATSBY_CHOOSEE_API_BASE_URL
+const mapsBaseUrl = process.env.GATSBY_MAPS_API_BASE_URL
+const sessionBaseUrl = process.env.GATSBY_SESSION_API_BASE_URL
 
 // Authorization
 
-export const apiName = 'ChooseeAPIGateway'
-export const apiNameUnauthenticated = 'ChooseeAPIGatewayUnauthenticated'
+export const mapsApiName = 'MapsAPIGateway'
+export const sessionApiName = 'SessionAPIGateway'
+export const sessionApiNameUnauthenticated = 'SessionAPIGatewayUnauthenticated'
 
 Amplify.configure({
   API: {
@@ -18,15 +20,22 @@ Amplify.configure({
         custom_header: async () => ({
           Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
         }),
-        endpoint: baseUrl,
-        name: apiName,
+        endpoint: mapsBaseUrl,
+        name: mapsApiName,
+      },
+      {
+        custom_header: async () => ({
+          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        }),
+        endpoint: sessionBaseUrl,
+        name: sessionApiName,
       },
       {
         custom_header: async () => ({
           Authorization: '',
         }),
-        endpoint: baseUrl,
-        name: apiNameUnauthenticated,
+        endpoint: sessionBaseUrl,
+        name: sessionApiNameUnauthenticated,
       },
     ],
   },

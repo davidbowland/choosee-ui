@@ -4,6 +4,7 @@ import { Auth } from 'aws-amplify'
 import React from 'react'
 import { mocked } from 'jest-mock'
 
+import * as mapsService from '@services/maps'
 import * as sessionService from '@services/sessions'
 import { sessionId, user } from '@test/__mocks__'
 import Logo from '@components/logo'
@@ -15,6 +16,7 @@ jest.mock('@aws-amplify/analytics')
 jest.mock('@components/logo')
 jest.mock('@components/sign-up-cta')
 jest.mock('gatsby')
+jest.mock('@services/maps')
 jest.mock('@services/sessions')
 
 describe('SessionCreate component', () => {
@@ -68,8 +70,8 @@ describe('SessionCreate component', () => {
 
     beforeAll(() => {
       mocked(Auth).currentAuthenticatedUser.mockResolvedValue(user)
+      mocked(mapsService).fetchAddress.mockResolvedValue({ address })
       mocked(sessionService).createSession.mockResolvedValue({ sessionId })
-      mocked(sessionService).fetchAddress.mockResolvedValue({ address })
     })
 
     test('expect address populated when returned', async () => {
@@ -77,17 +79,17 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
 
-      expect(mocked(sessionService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
       expect(addressInput.value).toEqual(address)
     })
 
     test('expect no address populated when no result', async () => {
       getCurrentPosition.mockReturnValueOnce({ coords })
-      mocked(sessionService).fetchAddress.mockRejectedValueOnce(undefined)
+      mocked(mapsService).fetchAddress.mockRejectedValueOnce(undefined)
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
 
-      expect(mocked(sessionService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
       expect(addressInput.value).toEqual('')
     })
 
