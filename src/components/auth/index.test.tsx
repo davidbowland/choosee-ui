@@ -73,7 +73,7 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         signInButton.click()
       })
 
@@ -92,7 +92,7 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         signInButton.click()
       })
 
@@ -119,10 +119,10 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         signInButton.click()
       })
-      act(() => {
+      await act(async () => {
         logInCallback()
       })
 
@@ -143,11 +143,11 @@ describe('Authenticated component', () => {
       )
 
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         signInButton.click()
       })
       const goBackButton = (await screen.findByText(/Cancel/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         goBackButton.click()
       })
 
@@ -189,7 +189,7 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         menuButton.click()
       })
 
@@ -209,11 +209,11 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         menuButton.click()
       })
       const menuBackdrop = screen.getByRole('presentation').firstChild as HTMLElement
-      act(() => {
+      await act(async () => {
         menuBackdrop.click()
       })
 
@@ -233,11 +233,11 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         menuButton.click()
       })
       const signOutButton = (await screen.findByText(/Sign out/i)) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         signOutButton.click()
       })
 
@@ -260,11 +260,11 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         menuButton.click()
       })
       const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         deleteAccountMenuOption.click()
       })
 
@@ -289,11 +289,11 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         menuButton.click()
       })
       const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         deleteAccountMenuOption.click()
       })
 
@@ -317,15 +317,15 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         menuButton.click()
       })
       const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         deleteAccountMenuOption.click()
       })
       const closeSnackbarButton = (await screen.findByLabelText(/Close/i, { selector: 'button' })) as HTMLButtonElement
-      act(() => {
+      await act(async () => {
         closeSnackbarButton.click()
       })
 

@@ -30,6 +30,10 @@ export interface DecisionObject {
   [key: string]: boolean
 }
 
+export interface Decision {
+  decisions: DecisionObject
+}
+
 export interface StatusObject {
   current: 'deciding' | 'winner' | 'finished' | 'expired'
   pageId: number

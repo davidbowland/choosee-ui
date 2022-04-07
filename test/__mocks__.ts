@@ -1,7 +1,7 @@
 /* eslint-disable sort-keys */
 import {
   CognitoUserAmplify,
-  DecisionObject,
+  Decision,
   NewSession,
   PatchOperation,
   Place,
@@ -30,8 +30,8 @@ export const choices: Place[] = [
   },
 ]
 
-export const decisions: DecisionObject = {
-  "Dave's Place": false,
+export const decisions: Decision = {
+  decisions: { "Dave's Place": false },
 }
 
 export const jsonPatchOperations: PatchOperation[] = [{ op: 'replace', path: '/address', value: '90036' }]

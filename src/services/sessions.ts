@@ -1,12 +1,12 @@
 import { API } from 'aws-amplify'
 
-import { DecisionObject, NewSession, PatchOperation, SessionData, StringObject } from '@types'
+import { Decision, NewSession, PatchOperation, SessionData, StringObject } from '@types'
 import { sessionApiName, sessionApiNameUnauthenticated } from '@config/amplify'
 
 export const createSession = (session: NewSession): Promise<StringObject> =>
   API.post(sessionApiName, '/sessions', { body: session })
 
-export const fetchDecisions = (sessionId: string, userId: string): Promise<DecisionObject> =>
+export const fetchDecision = (sessionId: string, userId: string): Promise<Decision> =>
   API.get(
     sessionApiNameUnauthenticated,
     `/sessions/${encodeURIComponent(sessionId)}/decisions/${encodeURIComponent(userId)}`,
@@ -25,7 +25,7 @@ export const updateDecisions = (
   sessionId: string,
   userId: string,
   patchOperations: PatchOperation[]
-): Promise<DecisionObject> =>
+): Promise<Decision> =>
   API.patch(
     sessionApiNameUnauthenticated,
     `/sessions/${encodeURIComponent(sessionId)}/decisions/${encodeURIComponent(userId)}`,

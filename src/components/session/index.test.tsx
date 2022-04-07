@@ -39,7 +39,7 @@ describe('Session component', () => {
 
     mocked(Logo).mockReturnValue(<>Logo</>)
     mocked(mapsService).fetchChoices.mockResolvedValue(choices)
-    mocked(sessionService).fetchDecisions.mockResolvedValue(decisions)
+    mocked(sessionService).fetchDecision.mockResolvedValue(decisions)
     mocked(sessionService).fetchSession.mockResolvedValue(session)
   })
 
@@ -65,7 +65,7 @@ describe('Session component', () => {
         mocked(sessionService).fetchSession.mockRejectedValueOnce(undefined)
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           newChoicesButton.click()
         })
 
@@ -85,11 +85,11 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
-        act(() => {
+        await act(async () => {
           fireEvent.change(userIdInput, { target: { value: '+1555' } })
         })
         const chooseButton = (await screen.findByText(/Let's choose!/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           chooseButton.click()
         })
 
@@ -100,17 +100,17 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
-        act(() => {
+        await act(async () => {
           fireEvent.change(userIdInput, { target: { value: userId } })
         })
         const chooseButton = (await screen.findByText(/Let's choose!/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           chooseButton.click()
         })
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Shakespeare's Pizza - Downtown/i)).toBeInTheDocument()
-        expect(mocked(sessionService).fetchDecisions).toHaveBeenCalledWith('aeio', '+18005551234')
+        expect(mocked(sessionService).fetchDecision).toHaveBeenCalledWith('aeio', '+18005551234')
       })
     })
 
@@ -119,7 +119,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const chooseButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           chooseButton.click()
         })
 
@@ -133,7 +133,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const chooseButton = (await screen.findByText(/Sign up/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           chooseButton.click()
         })
 
@@ -165,14 +165,14 @@ describe('Session component', () => {
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Shakespeare's Pizza - Downtown/i)).toBeInTheDocument()
-        expect(mocked(sessionService).fetchDecisions).toHaveBeenCalledWith('aeio', '+18005551234')
+        expect(mocked(sessionService).fetchDecision).toHaveBeenCalledWith('aeio', '+18005551234')
       })
 
       test('expect second place shown when yes vote', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
 
@@ -184,7 +184,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
@@ -193,7 +193,7 @@ describe('Session component', () => {
       })
 
       test('expect second place shown when first in decisions', async () => {
-        mocked(sessionService).fetchDecisions.mockResolvedValueOnce({ [choices[0].name]: true })
+        mocked(sessionService).fetchDecision.mockResolvedValueOnce({ decisions: { [choices[0].name]: true } })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
@@ -201,11 +201,11 @@ describe('Session component', () => {
       })
 
       test('expect second page fetched when last choice in decisions', async () => {
-        mocked(sessionService).fetchDecisions.mockResolvedValueOnce({ [choices[1].name]: true })
+        mocked(sessionService).fetchDecision.mockResolvedValueOnce({ decisions: { [choices[1].name]: true } })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
@@ -219,18 +219,18 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
         expect(mocked(sessionService).updateDecisions).toHaveBeenCalledWith('aeio', '+18005551234', [
-          { op: 'add', path: "/Shakespeare's Pizza - Downtown", value: true },
-          { op: 'add', path: '/Subway', value: false },
+          { op: 'add', path: "/decisions/Shakespeare's Pizza - Downtown", value: true },
+          { op: 'add', path: '/decisions/Subway', value: false },
         ])
       })
     })
@@ -238,7 +238,7 @@ describe('Session component', () => {
     describe('choices', () => {
       test('expect no place picture shows RestaurantIcon', async () => {
         mocked(mapsService).fetchChoices.mockResolvedValueOnce([placeNoPic])
-        mocked(sessionService).fetchDecisions.mockResolvedValue({})
+        mocked(sessionService).fetchDecision.mockResolvedValue({ decisions: {} })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByTitle(/Restaurant icon/i)).toBeInTheDocument()
@@ -248,12 +248,12 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
@@ -271,12 +271,12 @@ describe('Session component', () => {
         )
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
@@ -288,20 +288,18 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choicesPage2)
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
-        await waitFor(async () => {
-          expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
-        })
+        expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
       })
 
@@ -310,7 +308,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         mocked(sessionService).fetchSession.mockResolvedValueOnce({
@@ -319,13 +317,11 @@ describe('Session component', () => {
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
-        await waitFor(async () => {
-          expect(await screen.findByText(/Choices exhausted/i)).toBeInTheDocument()
-        })
+        expect(await screen.findByText(/Choices exhausted/i)).toBeInTheDocument()
       })
 
       test('expect make new choices navigates', async () => {
@@ -350,7 +346,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           yesButton.click()
         })
         mocked(sessionService).fetchSession.mockResolvedValueOnce({
@@ -363,11 +359,13 @@ describe('Session component', () => {
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           noButton.click()
         })
 
-        expect(await screen.findByText(/The winning decision is/i)).toBeInTheDocument()
+        await waitFor(async () => {
+          expect(await screen.findByText(/The winning decision is/i)).toBeInTheDocument()
+        })
         expect(await screen.findByText(/Dave's Place/i)).toBeInTheDocument()
       })
 
@@ -397,7 +395,7 @@ describe('Session component', () => {
         })
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement
-        act(() => {
+        await act(async () => {
           newChoicesButton.click()
         })
 

@@ -1,7 +1,7 @@
 import { Auth } from 'aws-amplify'
 import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
-import { createSession, fetchDecisions, fetchSession, textSession, updateDecisions } from './sessions'
+import { createSession, fetchDecision, fetchSession, textSession, updateDecisions } from './sessions'
 import { decisions, jsonPatchOperations, newSession, session, sessionId, userId } from '@test/__mocks__'
 import { rest, server } from '@test/setup-server'
 
@@ -41,7 +41,7 @@ describe('Sessions service', () => {
     })
   })
 
-  describe('fetchDecisions', () => {
+  describe('fetchDecision', () => {
     beforeAll(() => {
       server.use(
         rest.get(`${baseUrl}/sessions/:id/decisions/:user`, async (req, res, ctx) => {
@@ -55,7 +55,7 @@ describe('Sessions service', () => {
     })
 
     test('expect results from returned on fetch', async () => {
-      const result = await fetchDecisions(sessionId, userId)
+      const result = await fetchDecision(sessionId, userId)
       expect(result).toEqual(decisions)
     })
   })

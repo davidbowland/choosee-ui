@@ -36,7 +36,7 @@ describe('SignUpCta component', () => {
     render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
     const signUpButton = (await screen.findByText(/Sign up/i, { selector: 'button' })) as HTMLButtonElement
-    act(() => {
+    await act(async () => {
       signUpButton.click()
     })
 
@@ -48,7 +48,7 @@ describe('SignUpCta component', () => {
     render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
     const signInButton = (await screen.findByLabelText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-    act(() => {
+    await act(async () => {
       signInButton.click()
     })
 

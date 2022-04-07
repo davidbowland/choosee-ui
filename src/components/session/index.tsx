@@ -7,8 +7,8 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import jsonpatch from 'fast-json-patch'
 
-import { AuthState, CognitoUserAmplify, DecisionObject, Place, SessionData } from '@types'
-import { fetchDecisions, fetchSession, updateDecisions } from '@services/sessions'
+import { AuthState, CognitoUserAmplify, Decision, Place, SessionData } from '@types'
+import { fetchDecision, fetchSession, updateDecisions } from '@services/sessions'
 import Deciding from './deciding'
 import Expired from './expired'
 import Finished from './finished'
@@ -36,8 +36,8 @@ const Session = ({
   setShowLogin,
 }: SessionProps): JSX.Element => {
   const [choices, setChoices] = useState<Place[]>([])
-  const [decisions, setDecisions] = useState<DecisionObject>({})
-  const [decisionsInitial, setDecisionsInitial] = useState<DecisionObject>({})
+  const [decision, setDecision] = useState<Decision>({decisions: {}})
+  const [decisionInitial, setDecisionInitial] = useState<Decision>({decisions: {}})
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
@@ -50,7 +50,7 @@ const Session = ({
   const findNextPlace = (availableChoices: Place[]): void => {
     const [firstChoice, ...otherChoices] = availableChoices
     setChoices(otherChoices)
-    if (firstChoice.name in decisions) {
+    if (firstChoice.name in decision.decisions) {
       if (otherChoices.length > 0) {
         findNextPlace(otherChoices)
       } else {
@@ -62,7 +62,7 @@ const Session = ({
   }
 
   const makeChoice = (name: string, value: boolean): void => {
-    setDecisions({ ...decisions, [name]: value })
+    setDecision({ ...decision, decisions: { ...decision.decisions, [name]: value } })
   }
 
   const nextPlace = async (): Promise<void> => {
@@ -83,14 +83,14 @@ const Session = ({
 
   const refreshDecisions = async () => {
     if (loggedInUser) {
-      const jsonPatchOperations = jsonpatch.compare(decisionsInitial, decisions, true)
+      const jsonPatchOperations = jsonpatch.compare(decisionInitial, decision, true)
       if (jsonPatchOperations.length > 0) {
         await updateDecisions(sessionId, loggedInUser!.attributes!.phone_number, jsonPatchOperations)
-        setDecisionsInitial(decisions)
+        setDecisionInitial(decision)
       } else {
-        const currentDecisions = await fetchDecisions(sessionId, loggedInUser!.attributes!.phone_number)
-        setDecisions(currentDecisions)
-        setDecisionsInitial(currentDecisions)
+        const currentDecision = await fetchDecision(sessionId, loggedInUser!.attributes!.phone_number)
+        setDecision(currentDecision)
+        setDecisionInitial(currentDecision)
       }
     }
   }
@@ -178,7 +178,7 @@ const Session = ({
 
   useEffect(() => {
     nextPlace()
-  }, [decisions])
+  }, [decision])
 
   useEffect(() => {
     refreshDecisions()
