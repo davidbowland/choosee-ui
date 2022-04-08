@@ -47,6 +47,7 @@ export interface SessionData {
   lastAccessed: number
   location: { lat: number; lng: number }
   openNow: boolean
+  owner?: string
   pagesPerRound: number
   status: StatusObject
   type: PlaceType

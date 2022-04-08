@@ -14,6 +14,7 @@ import Expired from './expired'
 import Finished from './finished'
 import LoginPrompt from './login-prompt'
 import Logo from '@components/logo'
+import Owner from './owner'
 import Winner from './winner'
 import { fetchChoices } from '@services/maps'
 
@@ -36,8 +37,8 @@ const Session = ({
   setShowLogin,
 }: SessionProps): JSX.Element => {
   const [choices, setChoices] = useState<Place[]>([])
-  const [decision, setDecision] = useState<Decision>({decisions: {}})
-  const [decisionInitial, setDecisionInitial] = useState<Decision>({decisions: {}})
+  const [decision, setDecision] = useState<Decision>({ decisions: {} })
+  const [decisionInitial, setDecisionInitial] = useState<Decision>({ decisions: {} })
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
@@ -152,7 +153,12 @@ const Session = ({
           </>
         )
       } else {
-        return <Deciding address={session.address} makeChoice={makeChoice} place={place} />
+        return (
+          <Stack spacing={2}>
+            <Deciding address={session.address} makeChoice={makeChoice} place={place} />
+            {session.owner === loggedInUser?.attributes?.sub && <Owner sessionId={sessionId} />}
+          </Stack>
+        )
       }
     } else if (session?.status.current === 'winner' && session.status.winner) {
       return <Winner winner={session.status.winner} />

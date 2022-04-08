@@ -30,12 +30,22 @@ jest.mock('@services/sessions')
 
 describe('Session component', () => {
   const consoleError = console.error
+  const mockCopyToClipboard = jest.fn()
   const mockSetAuthState = jest.fn()
   const mockSetShowLogin = jest.fn()
   const placeNoPic = { ...placeDetails, pic: undefined, priceLevel: 2, rating: 1 }
 
   beforeAll(() => {
     console.error = jest.fn()
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: mockCopyToClipboard },
+    })
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { origin: 'https://dbowland.com' },
+    })
 
     mocked(Logo).mockReturnValue(<>Logo</>)
     mocked(mapsService).fetchChoices.mockResolvedValue(choices)
@@ -165,7 +175,7 @@ describe('Session component', () => {
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Shakespeare's Pizza - Downtown/i)).toBeInTheDocument()
-        expect(mocked(sessionService).fetchDecision).toHaveBeenCalledWith('aeio', '+18005551234')
+        expect(mocked(sessionService).fetchDecision).toHaveBeenCalledWith('aeio', '+15551234567')
       })
 
       test('expect second place shown when yes vote', async () => {
@@ -228,7 +238,7 @@ describe('Session component', () => {
           noButton.click()
         })
 
-        expect(mocked(sessionService).updateDecisions).toHaveBeenCalledWith('aeio', '+18005551234', [
+        expect(mocked(sessionService).updateDecisions).toHaveBeenCalledWith('aeio', '+15551234567', [
           { op: 'add', path: "/decisions/Shakespeare's Pizza - Downtown", value: true },
           { op: 'add', path: '/decisions/Subway', value: false },
         ])
@@ -337,6 +347,96 @@ describe('Session component', () => {
         })
 
         expect(mocked(gatsby).navigate).toHaveBeenCalledWith('/')
+      })
+    })
+
+    describe('owner', () => {
+      test('expect correct URL shown when logged in', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const urlInput: HTMLInputElement = (await screen.findByLabelText(/Session URL/i)) as HTMLInputElement
+        await waitFor(() => {
+          expect(urlInput.value).toEqual('https://dbowland.com/s/aeio')
+        })
+      })
+
+      test('expect owner section not shown to non-owner', async () => {
+        mocked(Auth).currentAuthenticatedUser.mockResolvedValueOnce({ ...user, attributes: { sub: 'another-user' } })
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        expect(screen.queryByLabelText(/Session URL/i)).not.toBeInTheDocument()
+      })
+
+      test('expect copy invokes writeText and displays message', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          copyLinkButton.click()
+        })
+
+        expect(mockCopyToClipboard).toHaveBeenCalled()
+        expect(await screen.findByText(/Link copied to clipboard/i)).toBeInTheDocument()
+      })
+
+      test('expect closing copy success message removes it', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          copyLinkButton.click()
+        })
+        const closeSnackbarButton = (await screen.findByLabelText(/Close/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          closeSnackbarButton.click()
+        })
+
+        expect(screen.queryByText(/Link copied to clipboard/i)).not.toBeInTheDocument()
+      })
+
+      test('expect copy throw displays error', async () => {
+        mockCopyToClipboard.mockImplementationOnce(() => {
+          throw new Error('A wild error appeared')
+        })
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          copyLinkButton.click()
+        })
+
+        expect(mockCopyToClipboard).toHaveBeenCalled()
+        expect(await screen.findByText(/Could not copy link to clipboard/i)).toBeInTheDocument()
+      })
+
+      test('expect closing error message removes it', async () => {
+        mockCopyToClipboard.mockImplementationOnce(() => {
+          throw new Error('A wild error appeared')
+        })
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          copyLinkButton.click()
+        })
+        const closeSnackbarButton = (await screen.findByLabelText(/Close/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          closeSnackbarButton.click()
+        })
+
+        expect(screen.queryByText(/Could not copy link to clipboard/i)).not.toBeInTheDocument()
       })
     })
 

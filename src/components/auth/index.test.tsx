@@ -63,7 +63,7 @@ describe('Authenticated component', () => {
       expect(await screen.findByText(/Testing children/i)).toBeInTheDocument()
       expect(await screen.findByText(/Choosee/i)).toBeInTheDocument()
       expect(await screen.findByText(/Sign In/i)).toBeInTheDocument()
-      expect(() => screen.getByText(/Cancel/i)).toThrow()
+      expect(screen.queryByText(/Cancel/i)).not.toBeInTheDocument()
     })
 
     test('expect clicking sign in shows Logo', async () => {
@@ -127,7 +127,7 @@ describe('Authenticated component', () => {
       })
 
       expect(mocked(Authenticator)).toHaveBeenCalledTimes(1)
-      expect(await screen.findByText(/Welcome, Steve/i)).toBeInTheDocument()
+      expect(await screen.findByText(/Welcome, Dave/i)).toBeInTheDocument()
     })
 
     test('expect going back from login goes back', async () => {
@@ -152,7 +152,7 @@ describe('Authenticated component', () => {
       })
 
       expect(setInitialShowLogin).toHaveBeenCalledWith(false)
-      expect(() => screen.getByText(/Cancel/i)).toThrow()
+      expect(screen.queryByText(/Cancel/i)).not.toBeInTheDocument()
     })
   })
 
@@ -174,7 +174,7 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
 
-      expect(await screen.findByText(/Welcome, Steve/i)).toBeInTheDocument()
+      expect(await screen.findByText(/Welcome, Dave/i)).toBeInTheDocument()
     })
 
     test('expect working menu', async () => {
@@ -244,7 +244,7 @@ describe('Authenticated component', () => {
       expect(user.deleteUser).not.toHaveBeenCalled()
       expect(mocked(Auth).signOut).toHaveBeenCalled()
       expect(await screen.findByText(/Sign in/i)).toBeInTheDocument()
-      expect(() => screen.getByText(/Welcome, Steve/i)).toThrow()
+      expect(screen.queryByText(/Welcome, Dave/i)).not.toBeInTheDocument()
       await waitFor(() => expect(mockLocationReload).toHaveBeenCalled())
     })
 
@@ -271,7 +271,7 @@ describe('Authenticated component', () => {
       expect(user.deleteUser).toHaveBeenCalled()
       expect(mocked(Auth).signOut).toHaveBeenCalled()
       expect(await screen.findByText(/Sign in/i)).toBeInTheDocument()
-      expect(() => screen.getByText(/Welcome, Steve/i)).toThrow()
+      expect(screen.queryByText(/Welcome, Dave/i)).not.toBeInTheDocument()
       await waitFor(() => expect(mockLocationReload).toHaveBeenCalled())
     })
 
