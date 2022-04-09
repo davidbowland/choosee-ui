@@ -156,7 +156,9 @@ const Session = ({
         return (
           <Stack spacing={2}>
             <Deciding address={session.address} makeChoice={makeChoice} place={place} />
-            {session.owner === loggedInUser?.attributes?.sub && <Owner sessionId={sessionId} />}
+            {session.owner === loggedInUser?.attributes?.sub && (
+              <Owner session={session} sessionId={sessionId} setSession={setSession} />
+            )}
           </Stack>
         )
       }

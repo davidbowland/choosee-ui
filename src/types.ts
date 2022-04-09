@@ -49,6 +49,7 @@ export interface SessionData {
   openNow: boolean
   owner?: string
   pagesPerRound: number
+  sessionId?: string
   status: StatusObject
   type: PlaceType
   voterCount: number

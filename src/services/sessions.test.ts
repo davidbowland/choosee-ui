@@ -1,7 +1,7 @@
 import { Auth } from 'aws-amplify'
 import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
-import { createSession, fetchDecision, fetchSession, textSession, updateDecisions } from './sessions'
+import { createSession, fetchDecision, fetchSession, textSession, updateDecisions, updateSession } from './sessions'
 import { decisions, jsonPatchOperations, newSession, session, sessionId, userId } from '@test/__mocks__'
 import { rest, server } from '@test/setup-server'
 
@@ -120,6 +120,28 @@ describe('Sessions service', () => {
 
     test('expect endpoint called with body', async () => {
       await updateDecisions(sessionId, userId, jsonPatchOperations)
+      expect(patchEndpoint).toHaveBeenCalledWith(jsonPatchOperations)
+    })
+  })
+
+  describe('updateSession', () => {
+    const patchEndpoint = jest.fn().mockReturnValue({})
+
+    beforeAll(() => {
+      server.use(
+        rest.patch(`${baseUrl}/sessions/:id`, async (req, res, ctx) => {
+          const { id } = req.params
+          if (id !== sessionId) {
+            return res(ctx.status(400))
+          }
+          const body = patchEndpoint(req.body)
+          return res(body ? ctx.json(body) : ctx.status(400))
+        })
+      )
+    })
+
+    test('expect endpoint called with body', async () => {
+      await updateSession(sessionId, jsonPatchOperations)
       expect(patchEndpoint).toHaveBeenCalledWith(jsonPatchOperations)
     })
   })

@@ -31,3 +31,6 @@ export const updateDecisions = (
     `/sessions/${encodeURIComponent(sessionId)}/decisions/${encodeURIComponent(userId)}`,
     { body: patchOperations }
   )
+
+export const updateSession = (sessionId: string, patchOperations: PatchOperation[]): Promise<SessionData> =>
+  API.patch(sessionApiName, `/sessions/${encodeURIComponent(sessionId)}`, { body: patchOperations })
