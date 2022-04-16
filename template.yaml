@@ -36,6 +36,13 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
       BucketName: !FindInMap [EnvironmentMap, !Ref Environment, bucketName]
+      Tags:
+        - Key: 'created-by'
+          Value: 'choosee-ui'
+        - Key: 'created-for'
+          Value: 'choosee'
+        - Key: 'environment'
+          Value: !Ref Environment
 
   UiBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -107,6 +114,13 @@ Resources:
             - Certificate: !FindInMap [EnvironmentMap, !Ref Environment, certificate]
           MinimumProtocolVersion: 'TLSv1.2_2018'
           SslSupportMethod: 'sni-only'
+      Tags:
+        - Key: 'created-by'
+          Value: 'choosee-ui'
+        - Key: 'created-for'
+          Value: 'choosee'
+        - Key: 'environment'
+          Value: !Ref Environment
 
   # DNS
 
