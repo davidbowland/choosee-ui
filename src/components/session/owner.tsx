@@ -88,7 +88,7 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
             defaultValue={workingSession.pagesPerRound * 20}
             disabled={isLoading}
             marks={true}
-            max={60}
+            max={40}
             min={20}
             onChange={(_: any, value: any) => setWorkingSession({ ...workingSession, pagesPerRound: value / 20 })}
             step={20}

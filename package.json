@@ -55,6 +55,7 @@
     "react-dom": "^17.0.1",
     "react-helmet": "^6.1.0",
     "react-is": "^17.0.2",
+    "react-material-ui-carousel": "^3.3.3",
     "sass": "^1.32.11",
     "stream-browserify": "^3.0.0",
     "styled-components": "^5.2.3",

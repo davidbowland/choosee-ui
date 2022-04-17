@@ -121,7 +121,7 @@ describe('SessionCreate component', () => {
       })
       const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
       await act(async () => {
-        fireEvent.change(pagesSliderInput, { target: { value: 20 } })
+        fireEvent.change(pagesSliderInput, { target: { value: 40 } })
       })
       const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
       await act(async () => {
@@ -135,7 +135,7 @@ describe('SessionCreate component', () => {
       expect(mocked(sessionService).createSession).toHaveBeenCalledWith({
         address: '90210',
         openNow: false,
-        pagesPerRound: 1,
+        pagesPerRound: 2,
         type: 'meal_takeaway',
         voterCount: 4,
       })

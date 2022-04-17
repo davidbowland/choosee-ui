@@ -37,7 +37,7 @@ const Create = (): JSX.Element => {
   const [voterCount, setVoterCount] = useState(2)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
   const [voterIdErrors, setVoterIdErrors] = useState<VoterIds>({})
-  const [votesPerRound, setVotesPerRound] = useState(40)
+  const [votesPerRound, setVotesPerRound] = useState(20)
 
   const generateSession = async (): Promise<void> => {
     if (!address) {
@@ -197,7 +197,7 @@ const Create = (): JSX.Element => {
             defaultValue={votesPerRound}
             disabled={isLoading}
             marks={true}
-            max={60}
+            max={40}
             min={20}
             onChange={(_: any, value: any) => setVotesPerRound(value)}
             step={20}

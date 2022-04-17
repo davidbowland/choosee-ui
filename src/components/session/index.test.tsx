@@ -444,7 +444,7 @@ describe('Session component', () => {
 
         const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
         await act(async () => {
-          fireEvent.change(pagesSliderInput, { target: { value: 60 } })
+          fireEvent.change(pagesSliderInput, { target: { value: 40 } })
         })
         const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
         await act(async () => {
@@ -461,7 +461,7 @@ describe('Session component', () => {
           { op: 'test', path: '/voterCount', value: 2 },
           { op: 'replace', path: '/voterCount', value: 4 },
           { op: 'test', path: '/pagesPerRound', value: 1 },
-          { op: 'replace', path: '/pagesPerRound', value: 3 },
+          { op: 'replace', path: '/pagesPerRound', value: 2 },
         ])
       })
 
