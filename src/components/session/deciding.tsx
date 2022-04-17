@@ -7,20 +7,25 @@ import CheckIcon from '@mui/icons-material/Check'
 import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import { Link } from 'gatsby'
+import MenuItem from '@mui/material/MenuItem'
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import Rating from '@mui/material/Rating'
 import React from 'react'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
+import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
-import { Place } from '@types'
+import { PlaceDetails } from '@types'
 
 export interface DecidingProps {
   address: string
   makeChoice: (name: string, value: boolean) => void
-  place: Place
+  place: PlaceDetails
 }
 
 const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element => {
@@ -47,8 +52,15 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
               {place.name}
             </Typography>
             <Typography color="text.secondary" variant="body2">
-              {place.vicinity}
+              {place.formattedAddress ?? place.vicinity}
             </Typography>
+            {place.internationalPhoneNumber && (
+              <Typography>
+                <Link to={`tel:${place.internationalPhoneNumber.replace(/\D/g, '')}`}>
+                  {place.formattedPhoneNumber ?? place.internationalPhoneNumber}
+                </Link>
+              </Typography>
+            )}
             {place.priceLevel !== undefined && (
               <div>
                 <Rating
@@ -64,22 +76,48 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
               </div>
             )}
             {place.rating !== undefined && (
-              <div>
-                <Rating
-                  defaultValue={place.rating}
-                  emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                  getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
-                  icon={<FavoriteIcon fontSize="inherit" />}
-                  precision={0.5}
-                  readOnly
-                  sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
-                  value={place.rating}
-                />
-              </div>
+              <>
+                <div>
+                  <Rating
+                    defaultValue={place.rating}
+                    emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                    getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                    icon={<FavoriteIcon fontSize="inherit" />}
+                    precision={0.5}
+                    readOnly
+                    sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
+                    value={place.rating}
+                  />
+                </div>
+                {place.ratingsTotal && (
+                  <Typography color="text.secondary" variant="caption">
+                    based on {place.ratingsTotal.toLocaleString()} ratings
+                  </Typography>
+                )}
+              </>
             )}
-            {place.ratingsTotal && (
-              <Typography color="text.secondary" variant="caption">
-                based on {place.ratingsTotal.toLocaleString()} ratings
+            {place.website && (
+              <Typography>
+                <Link to={place.website}>Visit their website</Link>
+              </Typography>
+            )}
+            {place.openHours && (
+              <Typography color="text.secondary" variant="body2">
+                <FormControl sx={{ m: 1, minWidth: 120 }} variant="standard">
+                  <InputLabel id="choice-hours-label">Hours</InputLabel>
+                  <Select
+                    id="choice-hours-select"
+                    label="Hours"
+                    labelId="choice-hours-label"
+                    value={place.openHours[(new Date().getDay() + 6) % 7]}
+                  >
+                    {place.openHours.map((hours, index) => (
+                      <MenuItem key={index} value={hours}>
+                        {hours}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Typography>
             )}
           </CardContent>

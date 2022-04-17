@@ -10,7 +10,10 @@ export interface AddressResult {
   address: string
 }
 
-export interface Place {
+export interface PlaceDetails {
+  formattedAddress?: string
+  formattedPhoneNumber?: string
+  internationalPhoneNumber?: string
   name: string
   openHours?: string[]
   photos: string[]
@@ -18,12 +21,6 @@ export interface Place {
   rating: number
   ratingsTotal?: number
   vicinity: string
-}
-
-export interface PlaceDetails extends Place {
-  formattedAddress?: string
-  formattedPhoneNumber?: string
-  internationalPhoneNumber?: string
   website?: string
 }
 

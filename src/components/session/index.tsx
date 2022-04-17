@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import jsonpatch from 'fast-json-patch'
 
-import { AuthState, CognitoUserAmplify, Decision, Place, SessionData } from '@types'
+import { AuthState, CognitoUserAmplify, Decision, PlaceDetails, SessionData } from '@types'
 import { fetchDecision, fetchSession, updateDecisions } from '@services/sessions'
 import Deciding from './deciding'
 import Expired from './expired'
@@ -36,7 +36,7 @@ const Session = ({
   setAuthState,
   setShowLogin,
 }: SessionProps): JSX.Element => {
-  const [choices, setChoices] = useState<Place[]>([])
+  const [choices, setChoices] = useState<PlaceDetails[]>([])
   const [decision, setDecision] = useState<Decision>({ decisions: {} })
   const [decisionInitial, setDecisionInitial] = useState<Decision>({ decisions: {} })
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -44,11 +44,11 @@ const Session = ({
   const [isWaiting, setIsWaiting] = useState(false)
   const [loggedInUser, setLoggedInUser] = useState<CognitoUserAmplify | undefined>(undefined)
   const [pageId, setPageId] = useState(-2)
-  const [place, setPlace] = useState<Place | undefined>(undefined)
+  const [place, setPlace] = useState<PlaceDetails | undefined>(undefined)
   const [session, setSession] = useState<SessionData>({ status: { current: 'deciding', pageId: -1 } } as any)
   const [statusCount, setStatusCount] = useState(0)
 
-  const findNextPlace = (availableChoices: Place[]): void => {
+  const findNextPlace = (availableChoices: PlaceDetails[]): void => {
     const [firstChoice, ...otherChoices] = availableChoices
     setChoices(otherChoices)
     if (firstChoice.name in decision.decisions) {

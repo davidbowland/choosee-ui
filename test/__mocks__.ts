@@ -4,7 +4,6 @@ import {
   Decision,
   NewSession,
   PatchOperation,
-  Place,
   PlaceDetails,
   SessionData,
   StatusObject,
@@ -13,7 +12,7 @@ import {
 
 export const choiceId = '123abc'
 
-export const choices: Place[] = [
+export const choices: PlaceDetails[] = [
   {
     name: "Shakespeare's Pizza - Downtown",
     photos: ['https://lh3.googleusercontent.com/places/Shakespeares'],
@@ -43,7 +42,7 @@ export const newSession: NewSession = {
   voterCount: 2,
 }
 
-export const place: Place = {
+export const place: PlaceDetails = {
   name: "Dave's Place",
   openHours: [
     'Monday: 10:00 AM – 2:00 AM',
