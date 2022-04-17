@@ -49,6 +49,20 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
             <Typography color="text.secondary" variant="body2">
               {place.vicinity}
             </Typography>
+            {place.priceLevel !== undefined && (
+              <div>
+                <Rating
+                  emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
+                  getLabelText={(value: number) => `${value} Dollar${value !== 1 ? 's' : ''}`}
+                  icon={<MonetizationOnIcon fontSize="inherit" />}
+                  max={4}
+                  precision={0.5}
+                  readOnly
+                  sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
+                  value={place.priceLevel}
+                />
+              </div>
+            )}
             {place.rating !== undefined && (
               <div>
                 <Rating
@@ -63,19 +77,10 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
                 />
               </div>
             )}
-            {place.priceLevel !== undefined && (
-              <div>
-                <Rating
-                  emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
-                  getLabelText={(value: number) => `${value} Dollar${value !== 1 ? 's' : ''}`}
-                  icon={<MonetizationOnIcon fontSize="inherit" />}
-                  max={4}
-                  precision={0.5}
-                  readOnly
-                  sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
-                  value={place.priceLevel}
-                />
-              </div>
+            {place.ratingsTotal && (
+              <Typography color="text.secondary" variant="caption">
+                based on {place.ratingsTotal.toLocaleString()} ratings
+              </Typography>
             )}
           </CardContent>
           <BottomNavigation onChange={onDecision} showLabels>

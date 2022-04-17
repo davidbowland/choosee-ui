@@ -19,6 +19,7 @@ export const choices: Place[] = [
     pic: 'https://lh3.googleusercontent.com/places/Shakespeares',
     priceLevel: 2,
     rating: 4.6,
+    ratingsTotal: 2060,
     vicinity: '225 South 9th Street, Columbia',
   },
   {

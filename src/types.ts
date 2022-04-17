@@ -16,6 +16,7 @@ export interface Place {
   pic?: string
   priceLevel: number
   rating: number
+  ratingsTotal?: number
   vicinity: string
 }
 
