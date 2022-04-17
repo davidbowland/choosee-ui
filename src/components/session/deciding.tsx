@@ -35,8 +35,8 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
       </Typography>
       {place && (
         <Card sx={{ margin: 'auto', maxWidth: 400 }}>
-          {place.pic ? (
-            <CardMedia alt={`Photo of ${place.name}`} component="img" height="200" image={place.pic} />
+          {place.photos[0] ? (
+            <CardMedia alt={`Photo of ${place.name}`} component="img" height="200" image={place.photos[0]} />
           ) : (
             <div style={{ textAlign: 'center' }}>
               <RestaurantIcon fontSize="large" sx={{ height: 200 }} titleAccess="Restaurant icon" />

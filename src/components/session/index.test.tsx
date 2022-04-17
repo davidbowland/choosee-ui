@@ -33,7 +33,7 @@ describe('Session component', () => {
   const mockCopyToClipboard = jest.fn()
   const mockSetAuthState = jest.fn()
   const mockSetShowLogin = jest.fn()
-  const placeNoPic = { ...placeDetails, pic: undefined, priceLevel: 2, rating: 1 }
+  const placeNoPic = { ...placeDetails, photos: [], priceLevel: 2, rating: 1 }
 
   beforeAll(() => {
     console.error = jest.fn()
@@ -157,7 +157,7 @@ describe('Session component', () => {
     const choicesPage2 = [
       {
         name: 'White Castle',
-        pic: 'https://lh3.googleusercontent.com/places/WhiteCastle',
+        photos: ['https://lh3.googleusercontent.com/places/WhiteCastle'],
         priceLevel: 1,
         rating: 1,
         vicinity: '3401 Clark Lane, Columbia',

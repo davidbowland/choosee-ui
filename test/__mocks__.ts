@@ -16,7 +16,7 @@ export const choiceId = '123abc'
 export const choices: Place[] = [
   {
     name: "Shakespeare's Pizza - Downtown",
-    pic: 'https://lh3.googleusercontent.com/places/Shakespeares',
+    photos: ['https://lh3.googleusercontent.com/places/Shakespeares'],
     priceLevel: 2,
     rating: 4.6,
     ratingsTotal: 2060,
@@ -24,7 +24,7 @@ export const choices: Place[] = [
   },
   {
     name: 'Subway',
-    pic: 'https://lh3.googleusercontent.com/places/Subway',
+    photos: ['https://lh3.googleusercontent.com/places/Subway'],
     priceLevel: 1,
     rating: 3.8,
     vicinity: '503 East Nifong Boulevard Suite D, Columbia',
@@ -54,8 +54,9 @@ export const place: Place = {
     'Saturday: 10:00 AM – 2:00 AM',
     'Sunday: 10:00 AM – 2:00 AM',
   ],
-  pic:
+  photos: [
     'Aap_uEDinckK9Ca3tIgxigpNxy1THsppgE5H9ie_tFEc5pDYIDTSC52cWtEWifvmRD6_jhRuo4IsiRY5AZK2Y6_NRv4i_vsANZZpvsXj4gfkT4iYwpAp_i7tVHYRAgJ03ki3JzRv5_ouIPOpa9_uYavGE5fdhADeXeGRhkZnGWPXu5RxJpD1',
+  ],
   priceLevel: 1,
   rating: 2,
   vicinity: 'Columbia',

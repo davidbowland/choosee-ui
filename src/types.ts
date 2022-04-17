@@ -13,7 +13,7 @@ export interface AddressResult {
 export interface Place {
   name: string
   openHours?: string[]
-  pic?: string
+  photos: string[]
   priceLevel: number
   rating: number
   ratingsTotal?: number
