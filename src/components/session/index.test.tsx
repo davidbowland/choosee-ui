@@ -438,6 +438,46 @@ describe('Session component', () => {
 
         expect(screen.queryByText(/Could not copy link to clipboard/i)).not.toBeInTheDocument()
       })
+
+      test('expect updateSession invoked with patched Session', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
+        await act(async () => {
+          fireEvent.change(pagesSliderInput, { target: { value: 60 } })
+        })
+        const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+        await act(async () => {
+          fireEvent.change(voterSliderInput, { target: { value: 4 } })
+        })
+        const updateButton = (await screen.findByText(/Update vote options/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        await act(async () => {
+          updateButton.click()
+        })
+
+        expect(mocked(sessionService).updateSession).toHaveBeenCalledWith(sessionId, [
+          { op: 'test', path: '/voterCount', value: 2 },
+          { op: 'replace', path: '/voterCount', value: 4 },
+          { op: 'test', path: '/pagesPerRound', value: 1 },
+          { op: 'replace', path: '/pagesPerRound', value: 3 },
+        ])
+      })
+
+      test('expect error message when updateSession rejects', async () => {
+        mocked(sessionService).updateSession.mockRejectedValueOnce(undefined)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const updateButton = (await screen.findByText(/Update vote options/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        await act(async () => {
+          updateButton.click()
+        })
+
+        expect(await screen.findByText(/Error updating vote session/i)).toBeInTheDocument()
+      })
     })
 
     describe('winner', () => {
