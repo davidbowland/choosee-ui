@@ -55,18 +55,6 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
                   </Link>
                 </Typography>
               )}
-              {winner.rating !== undefined && (
-                <Rating
-                  defaultValue={winner.rating}
-                  emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                  getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
-                  icon={<FavoriteIcon fontSize="inherit" />}
-                  precision={0.5}
-                  readOnly
-                  sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
-                  value={winner.rating}
-                />
-              )}
               {winner.priceLevel !== undefined && (
                 <Rating
                   emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
@@ -77,6 +65,18 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
                   readOnly
                   sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
                   value={winner.priceLevel}
+                />
+              )}
+              {winner.rating !== undefined && (
+                <Rating
+                  defaultValue={winner.rating}
+                  emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                  getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                  icon={<FavoriteIcon fontSize="inherit" />}
+                  precision={0.5}
+                  readOnly
+                  sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
+                  value={winner.rating}
                 />
               )}
               {winner.website && (
