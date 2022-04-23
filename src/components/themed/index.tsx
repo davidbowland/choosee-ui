@@ -6,7 +6,7 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 import '@config/amplify'
 
 import '@assets/css/index.css'
-import '@fontsource/rokkitt'
+import '@fontsource/roboto'
 
 export interface ThemedProps {
   children: JSX.Element | JSX.Element[]

@@ -8,9 +8,6 @@ import Authenticated from '@components/auth'
 import SessionCreate from '@components/session-create'
 import Themed from '@components/themed'
 
-import '@assets/css/index.css'
-import '@fontsource/rokkitt'
-
 const Index = (): JSX.Element => {
   const [authState, setAuthState] = useState<AuthState>('signIn')
   const [showLogin, setShowLogin] = useState(false)
