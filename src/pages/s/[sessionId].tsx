@@ -8,9 +8,6 @@ import Authenticated from '@components/auth'
 import Themed from '@components/themed'
 import VoteSession from '@components/session'
 
-import '@assets/css/index.css'
-import '@fontsource/rokkitt'
-
 export interface SessionPageProps {
   params: {
     sessionId: string
