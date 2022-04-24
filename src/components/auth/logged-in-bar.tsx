@@ -1,14 +1,20 @@
 import React, { useState } from 'react'
+import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded'
 import Alert from '@mui/material/Alert'
 import { Auth } from 'aws-amplify'
+import Box from '@mui/material/Box'
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import DeleteIcon from '@mui/icons-material/Delete'
+import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import { Link } from 'gatsby'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemIcon from '@mui/material/ListItemIcon'
+import ListItemText from '@mui/material/ListItemText'
 import LogoutIcon from '@mui/icons-material/Logout'
-import Menu from '@mui/material/Menu'
-import MenuIcon from '@mui/icons-material/Menu'
-import MenuItem from '@mui/material/MenuItem'
 import Snackbar from '@mui/material/Snackbar'
+import SwipeableDrawer from '@mui/material/SwipeableDrawer'
 import Typography from '@mui/material/Typography'
 
 import { CognitoUserAmplify } from '@types'
@@ -19,15 +25,15 @@ export interface LoggedInBarProps {
 }
 
 const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.Element => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [showDeleteErrorSnackbar, setShowDeleteErrorSnackbar] = useState(false)
 
   const closeMenu = (): void => {
-    setAnchorEl(null)
+    setIsDrawerOpen(false)
   }
 
-  const openMenu = (event: React.MouseEvent<HTMLElement>): void => {
-    setAnchorEl(event.currentTarget)
+  const openMenu = (): void => {
+    setIsDrawerOpen(true)
   }
 
   const snackbarClose = (): void => {
@@ -36,6 +42,12 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
 
   return (
     <>
+      <Typography sx={{ flexGrow: 1 }} variant="h6">
+        <Link style={{ color: '#fff', textDecoration: 'none' }} to="/">
+          Choosee
+        </Link>
+      </Typography>
+      <Typography component="div">Welcome, {loggedInUser?.attributes?.name}</Typography>
       <IconButton
         aria-controls="menu-appbar"
         aria-haspopup="true"
@@ -44,57 +56,60 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
         edge="start"
         onClick={openMenu}
         size="large"
-        sx={{ mr: 2 }}
+        sx={{ ml: 0.5 }}
       >
-        <MenuIcon />
+        <AccountCircleRoundedIcon />
       </IconButton>
-      <Typography sx={{ flexGrow: 1 }} variant="h6">
-        <Link style={{ color: '#fff', textDecoration: 'none' }} to="/">
-          Choosee
-        </Link>
-      </Typography>
-      <Typography component="div">Welcome, {loggedInUser?.attributes?.name}</Typography>
-      <Menu
-        anchorEl={anchorEl}
-        anchorOrigin={{
-          horizontal: 'right',
-          vertical: 'top',
-        }}
-        id="menu-appbar"
-        keepMounted
-        onClose={closeMenu}
-        open={Boolean(anchorEl)}
-        transformOrigin={{
-          horizontal: 'right',
-          vertical: 'top',
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            closeMenu()
-            setLoggedInUser(undefined)
-            Auth.signOut().then(() => window.location.reload())
-          }}
-        >
-          <LogoutIcon /> Sign out
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            loggedInUser?.deleteUser((err) => {
-              if (err) {
-                setShowDeleteErrorSnackbar(true)
-                console.error(err)
-              } else {
+      <SwipeableDrawer anchor="right" onClose={closeMenu} onOpen={openMenu} open={isDrawerOpen}>
+        <Box onClick={closeMenu} role="presentation" sx={{ width: 250 }}>
+          <List>
+            <ListItem
+              button
+              onClick={() => {
                 closeMenu()
                 setLoggedInUser(undefined)
-                Auth.signOut({ global: true }).then(() => window.location.reload())
-              }
-            })
-          }}
-        >
-          <DeleteIcon /> Delete account
-        </MenuItem>
-      </Menu>
+                Auth.signOut().then(() => window.location.reload())
+              }}
+            >
+              <ListItemIcon>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="Sign out" />
+            </ListItem>
+          </List>
+          <List>
+            <ListItem button>
+              <ListItemIcon>
+                <CloseRoundedIcon />
+              </ListItemIcon>
+              <ListItemText primary="Close" />
+            </ListItem>
+          </List>
+          <Divider />
+          <List>
+            <ListItem
+              button
+              onClick={() => {
+                loggedInUser?.deleteUser((err) => {
+                  if (err) {
+                    setShowDeleteErrorSnackbar(true)
+                    console.error(err)
+                  } else {
+                    closeMenu()
+                    setLoggedInUser(undefined)
+                    Auth.signOut({ global: true }).then(() => window.location.reload())
+                  }
+                })
+              }}
+            >
+              <ListItemIcon>
+                <DeleteIcon />
+              </ListItemIcon>
+              <ListItemText primary="Delete account" />
+            </ListItem>
+          </List>
+        </Box>
+      </SwipeableDrawer>
       <Snackbar autoHideDuration={6000} onClose={snackbarClose} open={showDeleteErrorSnackbar}>
         <Alert onClose={snackbarClose} severity="error" sx={{ width: '100%' }}>
           There was a problem deleting your account. Please try again later.

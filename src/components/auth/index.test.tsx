@@ -197,30 +197,6 @@ describe('Authenticated component', () => {
       expect(await screen.findByText(/Delete account/i)).toBeVisible()
     })
 
-    test('expect menu closes successfully', async () => {
-      render(
-        <Authenticated
-          initialAuthState={authState}
-          initialShowLogin={showLogin}
-          setInitialAuthState={setInitialAuthState}
-          setInitialShowLogin={setInitialShowLogin}
-        >
-          <p>Testing children</p>
-        </Authenticated>
-      )
-      const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
-      const menuBackdrop = screen.getByRole('presentation').firstChild as HTMLElement
-      await act(async () => {
-        menuBackdrop.click()
-      })
-
-      expect(await screen.findByText(/Sign out/i)).not.toBeVisible()
-      expect(await screen.findByText(/Delete account/i)).not.toBeVisible()
-    })
-
     test('expect selecting sign out signs the user out', async () => {
       render(
         <Authenticated
