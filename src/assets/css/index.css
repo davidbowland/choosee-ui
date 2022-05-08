@@ -27,6 +27,9 @@
   .amplify-button[data-variation='link'] {
     --amplify-components-button-link-color: #66b3ff;
   }
+  .amplify-heading {
+    --amplify-components-heading-color: #fff;
+  }
   .amplify-label {
     --amplify-components-field-label-color: #fff;
   }
@@ -51,5 +54,8 @@
   }
   .amplify-tabs-item:hover {
     --amplify-components-tabs-item-hover-color: #90caf9;
+  }
+  .amplify-text {
+    --amplify-components-text-color: #fff;
   }
 }
