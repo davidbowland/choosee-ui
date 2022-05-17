@@ -17,7 +17,7 @@
   "homepage": "https://github.com/davidbowland/choosee-ui#readme",
   "scripts": {
     "build": "npm run clean && gatsby build",
-    "clean": "rm -rf coverage && npm ci && gatsby clean",
+    "clean": "rm -rf .cache coverage public && npm ci && gatsby clean",
     "deploy": "DEVELOPMENT=true npm run build && ./scripts/deploy.sh",
     "lint": "prettier --write . && eslint --fix . --resolve-plugins-relative-to .",
     "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install ; fi",
