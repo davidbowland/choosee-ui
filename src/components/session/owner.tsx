@@ -112,7 +112,7 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
           />
         </label>
         <Button
-          data-amplify-analytics-name="generate-session-click"
+          data-amplify-analytics-name="update-session-click"
           data-amplify-analytics-on="click"
           disabled={isLoading}
           fullWidth
