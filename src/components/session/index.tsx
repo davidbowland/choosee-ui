@@ -82,16 +82,26 @@ const Session = ({
     }
   }
 
-  const refreshDecisions = async () => {
+  const refreshDecisions = async (): Promise<void> => {
     if (loggedInUser) {
       const jsonPatchOperations = jsonpatch.compare(decisionInitial, decision, true)
       if (jsonPatchOperations.length > 0) {
-        await updateDecisions(sessionId, loggedInUser!.attributes!.phone_number, jsonPatchOperations)
-        setDecisionInitial(decision)
+        try {
+          await updateDecisions(sessionId, loggedInUser!.attributes!.phone_number, jsonPatchOperations)
+          setDecisionInitial(decision)
+        } catch (error) {
+          console.error('refreshDecisions', error)
+          setErrorMessage('Error saving decisions. Please reload the page and try again.')
+        }
       } else {
-        const currentDecision = await fetchDecision(sessionId, loggedInUser!.attributes!.phone_number)
-        setDecision(currentDecision)
-        setDecisionInitial(currentDecision)
+        try {
+          const currentDecision = await fetchDecision(sessionId, loggedInUser!.attributes!.phone_number)
+          setDecision(currentDecision)
+          setDecisionInitial(currentDecision)
+        } catch (error) {
+          console.error('refreshDecisions', error)
+          setErrorMessage('Error fetching decisions. Please reload the page and try again.')
+        }
       }
     }
   }
@@ -115,7 +125,7 @@ const Session = ({
         return
       }
     } catch (error) {
-      console.error('reloadStatus', error)
+      console.error('refreshStatus', error)
       setSession({ status: { current: 'expired', pageId: 0 } } as any)
     }
     setIsLoading(false)

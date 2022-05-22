@@ -225,6 +225,13 @@ describe('Session component', () => {
         expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
       })
 
+      test('expect error mesage when fetch fails', async () => {
+        mocked(sessionService).fetchDecision.mockRejectedValueOnce(undefined)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        expect(await screen.findByText(/Error fetching decisions/i)).toBeInTheDocument()
+      })
+
       test('expect vote results passed to PATCH endpoint', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
@@ -242,6 +249,23 @@ describe('Session component', () => {
           { op: 'add', path: "/decisions/Shakespeare's Pizza - Downtown", value: true },
           { op: 'add', path: '/decisions/Subway', value: false },
         ])
+      })
+
+      test('expect error message when PATCH endpoint rejects', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+        mocked(sessionService).updateDecisions.mockRejectedValueOnce(undefined)
+
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
+        await act(async () => {
+          yesButton.click()
+        })
+        await screen.findByText(/Subway/i)
+        const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
+        await act(async () => {
+          noButton.click()
+        })
+
+        expect(await screen.findByText(/Error saving decisions/i)).toBeInTheDocument()
       })
     })
 
