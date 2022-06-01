@@ -30,8 +30,7 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Elem
       <Logo />
       <Stack margin="auto" maxWidth="400px" spacing={2}>
         <Typography sx={{ textAlign: 'center' }} variant="h6">
-          Vote on where you want to eat tonight. Share a link for others to vote with you. Sign up or sign in to get
-          started.
+          Vote on where you want to eat. Share a link for others to vote with you. Sign up or sign in to get started.
         </Typography>
         <Button
           data-amplify-analytics-name="sign-up-click"
