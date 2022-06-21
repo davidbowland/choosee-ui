@@ -1,4 +1,4 @@
-import { Authenticator } from '@aws-amplify/ui-react'
+import { Authenticator, ThemeProvider, defaultDarkModeOverride } from '@aws-amplify/ui-react'
 import Button from '@mui/material/Button'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import React from 'react'
@@ -14,9 +14,14 @@ export interface ChooseeAuthenticatorProps {
 }
 
 const ChooseeAuthenticator = ({ authState, setLoggedInUser, setShowLogin }: ChooseeAuthenticatorProps): JSX.Element => {
+  const theme = {
+    name: 'dark-mode-theme',
+    overrides: [defaultDarkModeOverride],
+  }
+
   return (
-    <main className="main-content">
-      <section>
+    <section style={{ padding: '50px' }}>
+      <ThemeProvider colorMode="system" theme={theme}>
         <Logo />
         <Stack margin="auto" spacing={2}>
           <Authenticator initialState={authState} loginMechanisms={['phone_number']} signUpAttributes={['name']}>
@@ -31,8 +36,8 @@ const ChooseeAuthenticator = ({ authState, setLoggedInUser, setShowLogin }: Choo
             </Button>
           </div>
         </Stack>
-      </section>
-    </main>
+      </ThemeProvider>
+    </section>
   )
 }
 

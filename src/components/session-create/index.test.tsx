@@ -79,8 +79,8 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
 
+      await waitFor(() => expect(addressInput.value).toEqual(address))
       expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
-      expect(addressInput.value).toEqual(address)
     })
 
     test('expect no address populated when no result', async () => {
@@ -89,7 +89,9 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
 
-      expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      await waitFor(() =>
+        expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      )
       expect(addressInput.value).toEqual('')
     })
 

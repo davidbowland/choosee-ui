@@ -11,3 +11,5 @@ process.env.GATSBY_IDENTITY_POOL_ID = 'us-east-2:iujhgvd56yhjm98uygt'
 process.env.GATSBY_MAPS_API_BASE_URL = 'http://localhost'
 process.env.GATSBY_PINPOINT_ID = 'efvswertyu8ujmnb'
 process.env.GATSBY_SESSION_API_BASE_URL = 'http://localhost'
+
+window.URL.createObjectURL = jest.fn()

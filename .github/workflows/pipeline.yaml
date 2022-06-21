@@ -29,16 +29,13 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v2
-      - name: Install Node 16
+      - name: Install Node 18
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
-      - name: Install NPM 8
-        run: npm install -g npm@8
+          node-version: 18.x
 
       - name: Install and audit packages
-        run: npm ci
-        # run: npm ci && npm audit --audit-level=critical
+        run: npm ci && npm audit --audit-level=critical
         env:
           NODE_ENV: test
       - name: Run tests
@@ -53,12 +50,10 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v2
 
-      - name: Install Node 16
+      - name: Install Node 18
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
-      - name: Install NPM 8
-        run: npm install -g npm@8
+          node-version: 18.x
       - name: Build Gatsby site
         run: npm run build
         env:
@@ -102,12 +97,10 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v2
 
-      - name: Install Node 16
+      - name: Install Node 18
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
-      - name: Install NPM 8
-        run: npm install -g npm@8
+          node-version: 18.x
       - name: Build Gatsby site
         run: npm run build
         env:
@@ -151,12 +144,10 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v2
 
-      - name: Install Node 16
+      - name: Install Node 18
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
-      - name: Install NPM 8
-        run: npm install -g npm@8
+          node-version: 18.x
       - name: Build Gatsby site
         run: npm run build
         env:
@@ -196,12 +187,10 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v2
-      - name: Install Node 16
+      - name: Install Node 18
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
-      - name: Install NPM 8
-        run: npm install -g npm@8
+          node-version: 18.x
 
       - name: Set git name and email
         run: |

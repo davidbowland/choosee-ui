@@ -183,7 +183,7 @@ describe('Session component', () => {
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         await act(async () => {
-          yesButton.click()
+          await yesButton.click()
         })
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
@@ -195,7 +195,7 @@ describe('Session component', () => {
 
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
         await act(async () => {
-          noButton.click()
+          await noButton.click()
         })
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
@@ -237,12 +237,12 @@ describe('Session component', () => {
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         await act(async () => {
-          yesButton.click()
+          await yesButton.click()
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
         await act(async () => {
-          noButton.click()
+          await noButton.click()
         })
 
         expect(mocked(sessionService).updateDecisions).toHaveBeenCalledWith('aeio', '+15551234567', [
@@ -252,17 +252,17 @@ describe('Session component', () => {
       })
 
       test('expect error message when PATCH endpoint rejects', async () => {
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
         mocked(sessionService).updateDecisions.mockRejectedValueOnce(undefined)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
         await act(async () => {
-          yesButton.click()
+          await yesButton.click()
         })
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
         await act(async () => {
-          noButton.click()
+          await noButton.click()
         })
 
         expect(await screen.findByText(/Error saving decisions/i)).toBeInTheDocument()
@@ -271,6 +271,7 @@ describe('Session component', () => {
 
     describe('choices', () => {
       test('expect no place picture shows RestaurantIcon', async () => {
+        mocked(mapsService).fetchChoices.mockResolvedValueOnce([placeNoPic])
         mocked(mapsService).fetchChoices.mockResolvedValueOnce([placeNoPic])
         mocked(sessionService).fetchDecision.mockResolvedValue({ decisions: {} })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)

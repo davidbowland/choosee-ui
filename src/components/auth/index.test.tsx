@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
+import { Authenticator, ThemeProvider } from '@aws-amplify/ui-react'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
-import { Authenticator } from '@aws-amplify/ui-react'
 import React from 'react'
 import { mocked } from 'jest-mock'
 
@@ -26,6 +26,7 @@ describe('Authenticated component', () => {
   beforeAll(() => {
     mocked(Auth).signOut.mockResolvedValue({})
     mocked(Authenticator).mockReturnValue(<></>)
+    mocked(ThemeProvider).mockImplementation(({ children }) => children as unknown as JSX.Element)
     mocked(Logo).mockReturnValue(<></>)
 
     console.error = jest.fn()
@@ -40,6 +41,35 @@ describe('Authenticated component', () => {
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { replace: windowLocationReload },
+    })
+  })
+
+  describe('theme', () => {
+    beforeAll(() => {
+      mocked(Auth).currentAuthenticatedUser.mockRejectedValue(undefined)
+    })
+
+    test('expect system color mode', async () => {
+      render(
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
+          <p>Testing children</p>
+        </Authenticated>
+      )
+
+      const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
+      await act(async () => {
+        signInButton.click()
+      })
+
+      expect(mocked(ThemeProvider)).toHaveBeenCalledWith(
+        expect.objectContaining({ colorMode: 'system' }),
+        expect.anything()
+      )
     })
   })
 
@@ -103,7 +133,9 @@ describe('Authenticated component', () => {
 
     test('expect logging in sets the user', async () => {
       const logInCallback = jest.fn()
-      mocked(Authenticator).mockImplementationOnce(({ children }) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      mocked(Authenticator).mockImplementationOnce(({ children }: unknown) => {
         logInCallback.mockImplementation(() => children && children({ signOut: jest.fn(), user }))
         return <></>
       })

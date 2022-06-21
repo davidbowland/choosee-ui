@@ -45,7 +45,7 @@ describe('Sessions service', () => {
     beforeAll(() => {
       server.use(
         rest.get(`${baseUrl}/sessions/:id/decisions/:user`, async (req, res, ctx) => {
-          const { id, user } = req.params
+          const { id, user } = req.params as { id: string; user: string }
           if (id !== sessionId || decodeURIComponent(user) !== userId) {
             return res(ctx.status(400))
           }
@@ -87,7 +87,7 @@ describe('Sessions service', () => {
       server.use(
         rest.post(`${baseUrl}/sessions/:id/send-text/:to`, async (req, res, ctx) => {
           const { id, to } = req.params
-          if (id !== sessionId || to !== encodeURIComponent(toPhoneNumber)) {
+          if (id !== sessionId || to !== toPhoneNumber) {
             return res(ctx.status(400))
           }
           const body = postEndpoint(req.body)
@@ -108,7 +108,7 @@ describe('Sessions service', () => {
     beforeAll(() => {
       server.use(
         rest.patch(`${baseUrl}/sessions/:id/decisions/:user`, async (req, res, ctx) => {
-          const { id, user } = req.params
+          const { id, user } = req.params as { id: string; user: string }
           if (id !== sessionId || decodeURIComponent(user) !== userId) {
             return res(ctx.status(400))
           }

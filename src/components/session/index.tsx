@@ -55,7 +55,7 @@ const Session = ({
       if (otherChoices.length > 0) {
         findNextPlace(otherChoices)
       } else {
-        refreshDecisions().then(refreshStatus)
+        refreshDecisions().then(() => refreshStatus())
       }
     } else {
       setPlace(firstChoice)

@@ -10,7 +10,7 @@ const Index = (): JSX.Element => {
   const [showLogin, setShowLogin] = useState(false)
 
   return (
-    <>
+    <main style={{ minHeight: '90vh' }}>
       <Helmet>
         <title>Choosee | dbowland.com</title>
       </Helmet>
@@ -20,13 +20,11 @@ const Index = (): JSX.Element => {
         setInitialAuthState={setAuthState}
         setInitialShowLogin={setShowLogin}
       >
-        <main className="main-content" style={{ minHeight: '90vh' }}>
-          <section>
-            <SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />
-          </section>
-        </main>
+        <section style={{ padding: '50px' }}>
+          <SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />
+        </section>
       </Authenticated>
-    </>
+    </main>
   )
 }
 

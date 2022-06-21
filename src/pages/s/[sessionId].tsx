@@ -19,7 +19,7 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
   const [showLogin, setShowLogin] = useState(false)
 
   return (
-    <>
+    <main style={{ minHeight: '90vh' }}>
       <Helmet>
         <title>Choosee | dbowland.com</title>
       </Helmet>
@@ -29,18 +29,16 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
         setInitialAuthState={setAuthState}
         setInitialShowLogin={setShowLogin}
       >
-        <main className="main-content" style={{ minHeight: '90vh' }}>
-          <section>
-            <VoteSession
-              initialUserId={userId}
-              sessionId={params.sessionId}
-              setAuthState={setAuthState}
-              setShowLogin={setShowLogin}
-            />
-          </section>
-        </main>
+        <section style={{ padding: '50px' }}>
+          <VoteSession
+            initialUserId={userId}
+            sessionId={params.sessionId}
+            setAuthState={setAuthState}
+            setShowLogin={setShowLogin}
+          />
+        </section>
       </Authenticated>
-    </>
+    </main>
   )
 }
 
