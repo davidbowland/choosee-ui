@@ -189,14 +189,13 @@ const Session = ({
   }
 
   useEffect(() => {
-    if (place === undefined && choices.length > 0 && loggedInUser) {
+    if (
+      (place === undefined && choices.length > 0 && loggedInUser) ||
+      decision.decisions[place?.name ?? ''] !== undefined
+    ) {
       nextPlace()
     }
-  }, [choices])
-
-  useEffect(() => {
-    nextPlace()
-  }, [decision])
+  }, [choices, decision])
 
   useEffect(() => {
     refreshDecisions()
