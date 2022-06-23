@@ -28,7 +28,7 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
     }
     setUserIdError(undefined)
 
-    setLoggedInUser(({ attributes: { phone_number: userId } } as unknown) as CognitoUserAmplify)
+    setLoggedInUser({ attributes: { phone_number: userId } } as unknown as CognitoUserAmplify)
   }
 
   const onUserIdChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
