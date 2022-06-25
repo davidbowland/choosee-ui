@@ -121,6 +121,10 @@ describe('SessionCreate component', () => {
       await act(async () => {
         checkboxInput.click()
       })
+      const milesSliderInput = (await screen.findByLabelText(/Max distance to restaurant/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(milesSliderInput, { target: { value: 1 } })
+      })
       const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
       await act(async () => {
         fireEvent.change(pagesSliderInput, { target: { value: 40 } })
@@ -138,6 +142,8 @@ describe('SessionCreate component', () => {
         address: '90210',
         openNow: false,
         pagesPerRound: 2,
+        radius: 1_609.34,
+        rankBy: 'prominence',
         type: 'meal_takeaway',
         voterCount: 4,
       })
@@ -150,9 +156,13 @@ describe('SessionCreate component', () => {
       await act(async () => {
         fireEvent.change(addressInput, { target: { value: address } })
       })
-      const radioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
+      const typeRadioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
       await act(async () => {
-        radioButton.click()
+        typeRadioButton.click()
+      })
+      const rankRadioButton = (await screen.findByLabelText(/Closest first/i)) as HTMLInputElement
+      await act(async () => {
+        rankRadioButton.click()
       })
       const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
       await act(async () => {

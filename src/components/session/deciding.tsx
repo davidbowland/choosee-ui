@@ -1,3 +1,4 @@
+import React, { useRef } from 'react'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Card from '@mui/material/Card'
@@ -15,7 +16,6 @@ import MenuItem from '@mui/material/MenuItem'
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import Rating from '@mui/material/Rating'
-import React from 'react'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
 import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
@@ -30,8 +30,11 @@ export interface DecidingProps {
 }
 
 const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element => {
+  const cardRef = useRef<HTMLDivElement>(null)
+
   const onDecision = (_: any, value: number) => {
     makeChoice(place.name, value === 0)
+    cardRef.current && cardRef.current.scrollIntoView()
   }
 
   return (
@@ -40,7 +43,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
         {address}
       </Typography>
       {place && (
-        <Card sx={{ margin: 'auto', maxWidth: 400 }}>
+        <Card ref={cardRef} sx={{ margin: 'auto', maxWidth: 400 }}>
           {place.photos.length > 0 ? (
             <Carousel>
               {place.photos.map((photo, index) => (

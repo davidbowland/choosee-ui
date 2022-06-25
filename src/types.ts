@@ -6,6 +6,8 @@ export type AuthState = 'signIn' | 'signUp' | 'resetPassword'
 
 export type PlaceType = 'restaurant' | 'meal_delivery' | 'meal_takeaway'
 
+export type RankByType = 'distance' | 'prominence'
+
 export interface AddressResult {
   address: string
 }
@@ -58,6 +60,8 @@ export interface NewSession {
   expiration?: number
   openNow?: boolean
   pagesPerRound?: number
+  radius?: number
+  rankBy?: string
   type: PlaceType
   voterCount: number
 }

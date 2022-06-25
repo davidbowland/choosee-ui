@@ -37,6 +37,7 @@ describe('Session component', () => {
 
   beforeAll(() => {
     console.error = jest.fn()
+    window.HTMLElement.prototype.scrollIntoView = jest.fn()
 
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -190,6 +191,17 @@ describe('Session component', () => {
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Subway/i)).toBeInTheDocument()
+      })
+
+      test('expect window scrolled on vote', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
+        await act(async () => {
+          await yesButton.click()
+        })
+
+        expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith()
       })
 
       test('expect second place shown when no vote', async () => {

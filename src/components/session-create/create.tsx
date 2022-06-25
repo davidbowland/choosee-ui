@@ -15,11 +15,12 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { navigate } from 'gatsby'
 
-import { NewSession, PlaceType } from '@types'
+import { NewSession, PlaceType, RankByType } from '@types'
 import { createSession, textSession } from '@services/sessions'
 import Logo from '@components/logo'
 import { fetchAddress } from '@services/maps'
 
+const METERS_PER_MILE = 1609.34
 const VOTES_PER_PAGE = 20
 
 interface VoterIds {
@@ -33,6 +34,8 @@ const Create = (): JSX.Element => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [openNow, setOpenNow] = useState(true)
+  const [radius, setRadius] = useState(30)
+  const [rankBy, setRankBy] = useState<RankByType>('prominence')
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
   const [voterCount, setVoterCount] = useState(2)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
@@ -63,6 +66,8 @@ const Create = (): JSX.Element => {
         address,
         openNow,
         pagesPerRound: Math.round(votesPerRound / VOTES_PER_PAGE),
+        radius: rankBy === 'prominence' ? radius * METERS_PER_MILE : undefined,
+        rankBy,
         type: choiceType,
         voterCount,
       }
@@ -147,9 +152,9 @@ const Create = (): JSX.Element => {
           />
         </label>
         <FormControl>
-          <FormLabel id="radio-buttons-group-label">Restaurant type</FormLabel>
+          <FormLabel id="restaurant-type-group-label">Restaurant type</FormLabel>
           <RadioGroup
-            name="controlled-radio-buttons-group"
+            name="restaurant-type-radio-buttons-group"
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => setChoiceType(event.target.value as PlaceType)}
             value={choiceType}
           >
@@ -190,6 +195,46 @@ const Create = (): JSX.Element => {
           disabled={isLoading}
           label="Only show choices currently open"
         />
+        <FormControl>
+          <FormLabel id="sort-by-group-label">Sort by</FormLabel>
+          <RadioGroup
+            name="sort-by-radio-buttons-group"
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setRankBy(event.target.value as RankByType)}
+            value={rankBy}
+          >
+            <FormControlLabel
+              control={<Radio />}
+              disabled={isLoading}
+              id="sort-prominence"
+              label="Most prominent first"
+              value="prominence"
+            />
+            <FormControlLabel
+              control={<Radio />}
+              disabled={isLoading}
+              id="sort-distance"
+              label="Closest first"
+              value="distance"
+            />
+          </RadioGroup>
+        </FormControl>
+        {rankBy === 'prominence' && (
+          <label>
+            Maximum distance: {radius} {radius === 1 ? 'mile' : 'miles'}
+            <Slider
+              aria-label="Max distance to restaurant"
+              defaultValue={radius}
+              disabled={isLoading}
+              marks={true}
+              max={30}
+              min={1}
+              onChange={(_: any, value: any) => setRadius(value)}
+              step={1}
+              sx={{ paddingTop: '35px' }}
+              valueLabelDisplay="auto"
+            />
+          </label>
+        )}
         <label>
           Max votes per round: {votesPerRound}
           <Slider
