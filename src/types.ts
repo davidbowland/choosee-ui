@@ -46,6 +46,8 @@ export interface SessionData {
   expiration: number
   lastAccessed: number
   location: { lat: number; lng: number }
+  maxPrice: number
+  minPrice: number
   openNow: boolean
   owner?: string
   pagesPerRound: number
@@ -58,6 +60,8 @@ export interface SessionData {
 export interface NewSession {
   address: string
   expiration?: number
+  maxPrice?: number
+  minPrice?: number
   openNow?: boolean
   pagesPerRound?: number
   radius?: number

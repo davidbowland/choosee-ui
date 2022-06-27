@@ -125,6 +125,14 @@ describe('SessionCreate component', () => {
       await act(async () => {
         fireEvent.change(milesSliderInput, { target: { value: 1 } })
       })
+      const maxPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[1] as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(maxPriceSliderInput, { target: { value: 3 } })
+      })
+      const minPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[0] as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
+      })
       const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
       await act(async () => {
         fireEvent.change(pagesSliderInput, { target: { value: 40 } })
@@ -140,6 +148,8 @@ describe('SessionCreate component', () => {
 
       expect(mocked(sessionService).createSession).toHaveBeenCalledWith({
         address: '90210',
+        maxPrice: 3,
+        minPrice: 2,
         openNow: false,
         pagesPerRound: 2,
         radius: 1_609.34,

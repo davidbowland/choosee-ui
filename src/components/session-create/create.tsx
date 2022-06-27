@@ -34,6 +34,7 @@ const Create = (): JSX.Element => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [openNow, setOpenNow] = useState(true)
+  const [priceRange, setPriceRange] = useState<number[]>([1, 4])
   const [radius, setRadius] = useState(30)
   const [rankBy, setRankBy] = useState<RankByType>('prominence')
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
@@ -64,6 +65,8 @@ const Create = (): JSX.Element => {
     try {
       const newSession: NewSession = {
         address,
+        maxPrice: priceRange[1],
+        minPrice: priceRange[0],
         openNow,
         pagesPerRound: Math.round(votesPerRound / VOTES_PER_PAGE),
         radius: rankBy === 'prominence' ? radius * METERS_PER_MILE : undefined,
@@ -235,6 +238,23 @@ const Create = (): JSX.Element => {
             />
           </label>
         )}
+        <label>
+          Price range
+          <Slider
+            aria-label="Price range"
+            defaultValue={priceRange}
+            disabled={isLoading}
+            marks={[
+              { label: 'Cheapest', value: 1 },
+              { label: 'Priciest', value: 4 },
+            ]}
+            max={4}
+            min={1}
+            onChange={(_: any, value: any) => setPriceRange(value)}
+            step={1}
+            valueLabelDisplay="auto"
+          />
+        </label>
         <label>
           Max votes per round: {votesPerRound}
           <Slider
