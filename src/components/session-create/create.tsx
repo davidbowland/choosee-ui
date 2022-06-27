@@ -252,7 +252,6 @@ const Create = (): JSX.Element => {
             min={1}
             onChange={(_: any, value: any) => setPriceRange(value)}
             step={1}
-            valueLabelDisplay="auto"
           />
         </label>
         <label>
