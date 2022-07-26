@@ -107,7 +107,9 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
               )}
               {place.website && (
                 <Typography>
-                  <Link to={place.website}>Visit their website</Link>
+                  <Link target="_blank" to={place.website}>
+                    Visit their website
+                  </Link>
                 </Typography>
               )}
               {place.openHours && (

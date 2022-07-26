@@ -81,7 +81,9 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
               )}
               {winner.website && (
                 <Typography>
-                  <Link to={winner.website}>Visit their website</Link>
+                  <Link target="_blank" to={winner.website}>
+                    Visit their website
+                  </Link>
                 </Typography>
               )}
               {winner.openHours && (
