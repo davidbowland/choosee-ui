@@ -20,7 +20,7 @@ describe('Sessions service', () => {
     beforeAll(() => {
       server.use(
         rest.post(`${baseUrl}/sessions`, async (req, res, ctx) => {
-          const body = postEndpoint(req.body)
+          const body = postEndpoint(await req.json())
           return res(body ? ctx.json(body) : ctx.status(400))
         })
       )
@@ -90,7 +90,7 @@ describe('Sessions service', () => {
           if (id !== sessionId || to !== toPhoneNumber) {
             return res(ctx.status(400))
           }
-          const body = postEndpoint(req.body)
+          const body = postEndpoint(await req.json())
           return res(body ? ctx.json(body) : ctx.status(400))
         })
       )
@@ -112,7 +112,7 @@ describe('Sessions service', () => {
           if (id !== sessionId || decodeURIComponent(user) !== userId) {
             return res(ctx.status(400))
           }
-          const body = patchEndpoint(req.body)
+          const body = patchEndpoint(await req.json())
           return res(body ? ctx.json(body) : ctx.status(400))
         })
       )
@@ -134,7 +134,7 @@ describe('Sessions service', () => {
           if (id !== sessionId) {
             return res(ctx.status(400))
           }
-          const body = patchEndpoint(req.body)
+          const body = patchEndpoint(await req.json())
           return res(body ? ctx.json(body) : ctx.status(400))
         })
       )
