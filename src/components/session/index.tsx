@@ -136,7 +136,9 @@ const Session = ({
       return (
         <>
           <Logo />
-          <Alert severity="error">{errorMessage}</Alert>
+          <Alert severity="error" variant="filled">
+            {errorMessage}
+          </Alert>
         </>
       )
     } else if (session?.status.current === 'expired') {

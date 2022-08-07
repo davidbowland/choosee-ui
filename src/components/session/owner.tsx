@@ -123,12 +123,12 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
           {isLoading ? 'Loading...' : 'Update vote options'}
         </Button>
         <Snackbar autoHideDuration={15_000} onClose={snackbarErrorClose} open={errorMessage !== undefined}>
-          <Alert onClose={snackbarErrorClose} severity="error">
+          <Alert onClose={snackbarErrorClose} severity="error" variant="filled">
             {errorMessage}
           </Alert>
         </Snackbar>
         <Snackbar autoHideDuration={5_000} onClose={snackbarSuccessClose} open={successMessage !== undefined}>
-          <Alert onClose={snackbarSuccessClose} severity="success">
+          <Alert onClose={snackbarSuccessClose} severity="success" variant="filled">
             {successMessage}
           </Alert>
         </Snackbar>

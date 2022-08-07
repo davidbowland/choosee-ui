@@ -111,7 +111,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
         </Box>
       </SwipeableDrawer>
       <Snackbar autoHideDuration={6000} onClose={snackbarClose} open={showDeleteErrorSnackbar}>
-        <Alert onClose={snackbarClose} severity="error" sx={{ width: '100%' }}>
+        <Alert onClose={snackbarClose} severity="error" sx={{ width: '100%' }} variant="filled">
           There was a problem deleting your account. Please try again later.
         </Alert>
       </Snackbar>

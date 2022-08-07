@@ -12,7 +12,9 @@ const Finished = (): JSX.Element => {
     <>
       <Logo />
       <Stack margin="auto" maxWidth="400px" spacing={2}>
-        <Alert severity="error">Choices exhausted</Alert>
+        <Alert severity="error" variant="filled">
+          Choices exhausted
+        </Alert>
         <Typography sx={{ textAlign: 'center' }} variant="h6">
           All choices have been exhausted. You might be just a little too Choosee!
         </Typography>

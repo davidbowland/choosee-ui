@@ -12,7 +12,9 @@ const Expired = (): JSX.Element => {
     <>
       <Logo />
       <Stack margin="auto" maxWidth="400px" spacing={2}>
-        <Alert severity="error">Voting session expired</Alert>
+        <Alert severity="error" variant="filled">
+          Voting session expired
+        </Alert>
         <Typography sx={{ textAlign: 'center' }} variant="h6">
           The Choosee vote you are trying to access is missing or has expired.
         </Typography>

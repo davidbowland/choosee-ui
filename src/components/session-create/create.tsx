@@ -285,7 +285,7 @@ const Create = (): JSX.Element => {
           />
         </label>
         {voterCount > 1 && (
-          <Alert severity="info">
+          <Alert severity="info" variant="filled">
             You must distribute the session link to voters. Enter the phone number of other voters to text them the
             link!
           </Alert>
@@ -323,12 +323,12 @@ const Create = (): JSX.Element => {
         <Typography style={{ textAlign: 'center' }}>Voting sessions automatically expire after 24 hours</Typography>
       </Stack>
       <Snackbar autoHideDuration={15_000} onClose={snackbarErrorClose} open={errorMessage !== undefined}>
-        <Alert onClose={snackbarErrorClose} severity="error">
+        <Alert onClose={snackbarErrorClose} severity="error" variant="filled">
           {errorMessage}
         </Alert>
       </Snackbar>
       <Snackbar autoHideDuration={5_000} onClose={snackbarSuccessClose} open={successMessage !== undefined}>
-        <Alert onClose={snackbarSuccessClose} severity="success">
+        <Alert onClose={snackbarSuccessClose} severity="success" variant="filled">
           {successMessage}
         </Alert>
       </Snackbar>
