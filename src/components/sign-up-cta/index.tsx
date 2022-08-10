@@ -9,12 +9,12 @@ import Typography from '@mui/material/Typography'
 import { AuthState } from '@types'
 import Logo from '@components/logo'
 
-export interface SessionCreateProps {
+export interface SignUpCtaProps {
   setAuthState: (state: AuthState) => void
   setShowLogin: (state: boolean) => void
 }
 
-const SignUpCta = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Element => {
+const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element => {
   const signInClick = (): void => {
     setAuthState('signIn')
     setShowLogin(true)
