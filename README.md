@@ -6,7 +6,7 @@ Gatsby and Amplify implementation of choosee-session-api and choosee-infrastruct
 
 ### Prerequisites
 
-1. [Node 16](https://nodejs.org/en/)
+1. [Node 18s](https://nodejs.org/en/)
 1. [NPM 8+](https://www.npmjs.com/)
 
 ### Local Development
