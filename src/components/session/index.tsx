@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import Alert from '@mui/material/Alert'
 import { Auth } from 'aws-amplify'
 import Backdrop from '@mui/material/Backdrop'
-import CircularProgress from '@mui/material/CircularProgress'
+import Box from '@mui/material/Box'
+import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import jsonpatch from 'fast-json-patch'
@@ -223,7 +224,7 @@ const Session = ({
         open={isLoading}
         sx={{ color: '#fff', textAlign: 'center', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
       >
-        <Stack margin="auto" maxWidth="400px" spacing={2}>
+        <Stack margin="50px" maxWidth="100%" spacing={2} width="400px">
           {isWaiting ? (
             <>
               <Typography color="#fff" variant="h5">
@@ -238,9 +239,9 @@ const Session = ({
               Loading
             </Typography>
           )}
-          <div style={{ textAlign: 'center' }}>
-            <CircularProgress color="inherit" />
-          </div>
+          <Box sx={{ width: '100%' }}>
+            <LinearProgress />
+          </Box>
           {isWaiting && (
             <div>
               <Typography color="#fff" variant="h6">
