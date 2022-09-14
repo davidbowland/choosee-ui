@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
+import Card from '@mui/material/Card'
+import CardActions from '@mui/material/CardActions'
+import CardContent from '@mui/material/CardContent'
+import CardHeader from '@mui/material/CardHeader'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import Slider from '@mui/material/Slider'
@@ -66,62 +70,75 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
     <div>
       <Stack margin="auto" maxWidth="400px" spacing={2}>
         <Divider />
-        <label>
-          <TextField
-            aria-readonly="true"
-            fullWidth
-            label="Session URL"
-            name="session-url"
-            type="text"
-            value={sessionUrl}
-            variant="filled"
-          />
-        </label>
-        <Button fullWidth onClick={copySessionUrl} variant="contained">
-          Copy session URL
-        </Button>
+        <Card sx={{ p: '15px' }} variant="outlined">
+          <CardContent>
+            <label>
+              <TextField
+                aria-readonly="true"
+                fullWidth
+                label="Session URL"
+                name="session-url"
+                type="text"
+                value={sessionUrl}
+                variant="filled"
+              />
+            </label>
+          </CardContent>
+          <CardActions>
+            <Button fullWidth onClick={copySessionUrl} variant="outlined">
+              Copy session URL
+            </Button>
+          </CardActions>
+        </Card>
         <Divider />
-        <label>
-          Max votes per round: {workingSession.pagesPerRound * 20}
-          <Slider
-            aria-label="Max votes per round"
-            defaultValue={workingSession.pagesPerRound * 20}
-            disabled={isLoading}
-            marks={true}
-            max={40}
-            min={20}
-            onChange={(_: any, value: any) => setWorkingSession({ ...workingSession, pagesPerRound: value / 20 })}
-            step={20}
-            sx={{ paddingTop: '35px' }}
-            valueLabelDisplay="auto"
-          />
-        </label>
-        <label>
-          Number of voters: {workingSession.voterCount}
-          <Slider
-            aria-label="Number of voters"
-            defaultValue={workingSession.voterCount}
-            disabled={isLoading}
-            marks={true}
-            max={10}
-            min={1}
-            onChange={(_: any, value: any) => setWorkingSession({ ...workingSession, voterCount: value })}
-            step={1}
-            sx={{ paddingTop: '35px' }}
-            valueLabelDisplay="auto"
-          />
-        </label>
-        <Button
-          data-amplify-analytics-name="update-session-click"
-          data-amplify-analytics-on="click"
-          disabled={isLoading}
-          fullWidth
-          onClick={patchSession}
-          startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
-          variant="contained"
-        >
-          {isLoading ? 'Loading...' : 'Update vote options'}
-        </Button>
+        <Card sx={{ p: '15px' }} variant="outlined">
+          <CardHeader sx={{ textAlign: 'center' }} title="Vote Options" />
+          <CardContent>
+            <label>
+              Max votes per round: {workingSession.pagesPerRound * 20}
+              <Slider
+                aria-label="Max votes per round"
+                defaultValue={workingSession.pagesPerRound * 20}
+                disabled={isLoading}
+                marks={true}
+                max={40}
+                min={20}
+                onChange={(_: any, value: any) => setWorkingSession({ ...workingSession, pagesPerRound: value / 20 })}
+                step={20}
+                sx={{ paddingTop: '35px' }}
+                valueLabelDisplay="auto"
+              />
+            </label>
+            <label>
+              Number of voters: {workingSession.voterCount}
+              <Slider
+                aria-label="Number of voters"
+                defaultValue={workingSession.voterCount}
+                disabled={isLoading}
+                marks={true}
+                max={10}
+                min={1}
+                onChange={(_: any, value: any) => setWorkingSession({ ...workingSession, voterCount: value })}
+                step={1}
+                sx={{ paddingTop: '35px' }}
+                valueLabelDisplay="auto"
+              />
+            </label>
+          </CardContent>
+          <CardActions>
+            <Button
+              data-amplify-analytics-name="update-session-click"
+              data-amplify-analytics-on="click"
+              disabled={isLoading}
+              fullWidth
+              onClick={patchSession}
+              startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
+              variant="outlined"
+            >
+              {isLoading ? 'Loading...' : 'Update vote options'}
+            </Button>
+          </CardActions>
+        </Card>
         <Snackbar autoHideDuration={15_000} onClose={snackbarErrorClose} open={errorMessage !== undefined}>
           <Alert onClose={snackbarErrorClose} severity="error" variant="filled">
             {errorMessage}

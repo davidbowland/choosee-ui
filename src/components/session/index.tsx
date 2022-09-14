@@ -192,6 +192,13 @@ const Session = ({
   }
 
   useEffect(() => {
+    Auth.currentAuthenticatedUser()
+      .then(setLoggedInUser)
+      .catch(() => null)
+    refreshStatus()
+  }, [])
+
+  useEffect(() => {
     if (
       (place === undefined && choices.length > 0 && loggedInUser) ||
       decision.decisions[place?.name ?? ''] !== undefined
@@ -210,13 +217,6 @@ const Session = ({
     }
   }, [place])
 
-  useEffect(() => {
-    Auth.currentAuthenticatedUser()
-      .then(setLoggedInUser)
-      .catch(() => null)
-    refreshStatus()
-  }, [])
-
   return (
     <>
       {renderSession()}
@@ -224,7 +224,7 @@ const Session = ({
         open={isLoading}
         sx={{ color: '#fff', textAlign: 'center', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
       >
-        <Stack margin="50px" maxWidth="100%" spacing={2} width="400px">
+        <Stack spacing={2} sx={{ m: { sm: '50px', xs: '25px' }, maxWidth: '100%', width: '400px' }}>
           {isWaiting ? (
             <>
               <Typography color="#fff" variant="h5">

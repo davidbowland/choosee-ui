@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Grid from '@mui/material/Grid'
 import { Helmet } from 'react-helmet'
 
 import { AuthState } from '@types'
@@ -29,14 +30,16 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
         setInitialAuthState={setAuthState}
         setInitialShowLogin={setShowLogin}
       >
-        <section style={{ padding: '50px' }}>
-          <VoteSession
-            initialUserId={userId}
-            sessionId={params.sessionId}
-            setAuthState={setAuthState}
-            setShowLogin={setShowLogin}
-          />
-        </section>
+        <Grid container sx={{ padding: { sm: '50px', xs: '25px 10px' } }}>
+          <Grid item sx={{ m: 'auto', maxWidth: 600, width: '100%' }}>
+            <VoteSession
+              initialUserId={userId}
+              sessionId={params.sessionId}
+              setAuthState={setAuthState}
+              setShowLogin={setShowLogin}
+            />
+          </Grid>
+        </Grid>
       </Authenticated>
     </main>
   )

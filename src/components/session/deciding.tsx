@@ -12,12 +12,11 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import { Link } from 'gatsby'
-import MenuItem from '@mui/material/MenuItem'
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
+import NativeSelect from '@mui/material/NativeSelect'
 import Rating from '@mui/material/Rating'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
-import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
@@ -38,12 +37,9 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
   }
 
   return (
-    <Stack margin="auto" maxWidth="400px" spacing={2}>
-      <Typography sx={{ textAlign: 'center' }} variant="h6">
-        {address}
-      </Typography>
+    <Stack spacing={2} sx={{ m: 'auto', maxWidth: 400 }}>
       {place && (
-        <Card ref={cardRef} sx={{ margin: 'auto', maxWidth: 400 }}>
+        <Card ref={cardRef} variant="outlined">
           {place.photos.length > 0 ? (
             <Carousel>
               {place.photos.map((photo, index) => (
@@ -114,20 +110,20 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
               )}
               {place.openHours && (
                 <Typography color="text.secondary" variant="body2">
-                  <FormControl sx={{ m: 1, minWidth: 120 }} variant="standard">
+                  <FormControl sx={{ m: 1, maxWidth: '95%' }} variant="standard">
                     <InputLabel id="choice-hours-label">Hours</InputLabel>
-                    <Select
+                    <NativeSelect
+                      aria-labelledby="choice-hours-label"
                       id="choice-hours-select"
-                      label="Hours"
-                      labelId="choice-hours-label"
+                      sx={{ maxWidth: '95%' }}
                       value={place.openHours[(new Date().getDay() + 6) % 7]}
                     >
                       {place.openHours.map((hours, index) => (
-                        <MenuItem key={index} value={hours}>
+                        <option key={index} value={hours}>
                           {hours}
-                        </MenuItem>
+                        </option>
                       ))}
-                    </Select>
+                    </NativeSelect>
                   </FormControl>
                 </Typography>
               )}
@@ -139,6 +135,9 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
           </BottomNavigation>
         </Card>
       )}
+      <Typography sx={{ textAlign: 'center' }} variant="caption">
+        Showing choices near {address}
+      </Typography>
     </Stack>
   )
 }

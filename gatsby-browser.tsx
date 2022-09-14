@@ -8,9 +8,7 @@ import Themed from '@components/themed'
 export const wrapPageElement: GatsbyBrowser['wrapPageElement'] = ({ element }): JSX.Element => {
   return (
     <Themed>
-      <Paper elevation={3} sx={{ margin: 'auto', maxWidth: '900px' }}>
-        {element}
-      </Paper>
+      <Paper elevation={3}>{element}</Paper>
     </Themed>
   )
 }

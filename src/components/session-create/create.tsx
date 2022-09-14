@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
+import Card from '@mui/material/Card'
+import CardActions from '@mui/material/CardActions'
+import CardContent from '@mui/material/CardContent'
+import CardHeader from '@mui/material/CardHeader'
 import Checkbox from '@mui/material/Checkbox'
 import CircularProgress from '@mui/material/CircularProgress'
 import FormControl from '@mui/material/FormControl'
@@ -137,191 +141,202 @@ const Create = (): JSX.Element => {
   return (
     <>
       <Logo />
-      <Stack margin="auto" maxWidth="400px" spacing={2}>
-        <label>
-          <TextField
-            aria-readonly="true"
-            autoComplete="postal-code"
+      <Card sx={{ m: 'auto', maxWidth: 400, p: '25px' }} variant="outlined">
+        <CardHeader sx={{ textAlign: 'center' }} title="Restaurant Search" />
+        <CardContent>
+          <Stack spacing={2}>
+            <label>
+              <TextField
+                aria-readonly="true"
+                autoComplete="postal-code"
+                disabled={isLoading}
+                error={addressError !== undefined}
+                fullWidth
+                helperText={addressError}
+                label="Your address"
+                name="address"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
+                type="text"
+                value={address}
+                variant="filled"
+              />
+            </label>
+            <FormControl>
+              <FormLabel id="restaurant-type-group-label">Restaurant type</FormLabel>
+              <RadioGroup
+                name="restaurant-type-radio-buttons-group"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setChoiceType(event.target.value as PlaceType)
+                }
+                value={choiceType}
+              >
+                <FormControlLabel
+                  control={<Radio />}
+                  disabled={isLoading}
+                  id="dine-in"
+                  label="Dine-in"
+                  value="restaurant"
+                />
+                <FormControlLabel
+                  control={<Radio />}
+                  disabled={isLoading}
+                  id="delivery"
+                  label="Delivery"
+                  value="meal_delivery"
+                />
+                <FormControlLabel
+                  control={<Radio />}
+                  disabled={isLoading}
+                  id="takeout"
+                  label="Takeout"
+                  value="meal_takeaway"
+                />
+                <FormControlLabel control={<Radio />} disabled={isLoading} id="bar" label="Bar" value="bar" />
+                <FormControlLabel control={<Radio />} disabled={isLoading} id="cafe" label="Café" value="cafe" />
+                <FormControlLabel
+                  control={<Radio />}
+                  disabled={isLoading}
+                  id="night-club"
+                  label="Night club"
+                  value="night_club"
+                />
+              </RadioGroup>
+            </FormControl>
+            <FormControlLabel
+              control={<Checkbox checked={openNow} onClick={(event: any) => setOpenNow(event.target.checked)} />}
+              disabled={isLoading}
+              label="Only show choices currently open"
+            />
+            <FormControl>
+              <FormLabel id="sort-by-group-label">Sort by</FormLabel>
+              <RadioGroup
+                name="sort-by-radio-buttons-group"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setRankBy(event.target.value as RankByType)}
+                value={rankBy}
+              >
+                <FormControlLabel
+                  control={<Radio />}
+                  disabled={isLoading}
+                  id="sort-prominence"
+                  label="Most prominent first"
+                  value="prominence"
+                />
+                <FormControlLabel
+                  control={<Radio />}
+                  disabled={isLoading}
+                  id="sort-distance"
+                  label="Closest first"
+                  value="distance"
+                />
+              </RadioGroup>
+            </FormControl>
+            {rankBy === 'prominence' && (
+              <label>
+                Maximum distance: {radius} {radius === 1 ? 'mile' : 'miles'}
+                <Slider
+                  aria-label="Max distance to restaurant"
+                  defaultValue={radius}
+                  disabled={isLoading}
+                  marks={true}
+                  max={30}
+                  min={1}
+                  onChange={(_: any, value: any) => setRadius(value)}
+                  step={1}
+                  sx={{ paddingTop: '35px' }}
+                  valueLabelDisplay="auto"
+                />
+              </label>
+            )}
+            <label>
+              Price range
+              <Slider
+                aria-label="Price range"
+                defaultValue={priceRange}
+                disabled={isLoading}
+                marks={[
+                  { label: 'Cheapest', value: 1 },
+                  { label: 'Priciest', value: 4 },
+                ]}
+                max={4}
+                min={1}
+                onChange={(_: any, value: any) => setPriceRange(value)}
+                step={1}
+              />
+            </label>
+            <label>
+              Max votes per round: {votesPerRound}
+              <Slider
+                aria-label="Max votes per round"
+                defaultValue={votesPerRound}
+                disabled={isLoading}
+                marks={true}
+                max={40}
+                min={20}
+                onChange={(_: any, value: any) => setVotesPerRound(value)}
+                step={20}
+                sx={{ paddingTop: '35px' }}
+                valueLabelDisplay="auto"
+              />
+            </label>
+            <label>
+              Number of voters: {voterCount}
+              <Slider
+                aria-label="Number of voters"
+                defaultValue={voterCount}
+                disabled={isLoading}
+                marks={true}
+                max={10}
+                min={1}
+                onChange={(_: any, value: any) => setVoterCount(value)}
+                step={1}
+                sx={{ paddingTop: '35px' }}
+                valueLabelDisplay="auto"
+              />
+            </label>
+            {voterCount > 1 && (
+              <Alert severity="info" variant="filled">
+                You must distribute the session link to voters. Enter the phone number of other voters to text them the
+                link!
+              </Alert>
+            )}
+            {Array.from({ length: voterCount - 1 }).map((_, index) => (
+              <label key={index}>
+                <TextField
+                  aria-readonly="true"
+                  disabled={isLoading}
+                  error={voterIdErrors[index] !== undefined}
+                  fullWidth
+                  helperText={voterIdErrors[index]}
+                  key={index}
+                  label={`Voter #${index + 2} phone number (optional)`}
+                  name="phone_number"
+                  onChange={(event) => onVoterIdChange(index, event.target.value)}
+                  placeholder="+10000000000"
+                  type="tel"
+                  value={voterIds[index]}
+                  variant="filled"
+                />
+              </label>
+            ))}
+            <Typography style={{ textAlign: 'center' }} variant="caption">
+              Voting sessions automatically expire after 24 hours
+            </Typography>
+          </Stack>
+        </CardContent>
+        <CardActions>
+          <Button
+            data-amplify-analytics-name="generate-session-click"
+            data-amplify-analytics-on="click"
             disabled={isLoading}
-            error={addressError !== undefined}
             fullWidth
-            helperText={addressError}
-            label="Your address"
-            name="address"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
-            type="text"
-            value={address}
-            variant="filled"
-          />
-        </label>
-        <FormControl>
-          <FormLabel id="restaurant-type-group-label">Restaurant type</FormLabel>
-          <RadioGroup
-            name="restaurant-type-radio-buttons-group"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setChoiceType(event.target.value as PlaceType)}
-            value={choiceType}
+            onClick={generateSession}
+            startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
+            variant="outlined"
           >
-            <FormControlLabel
-              control={<Radio />}
-              disabled={isLoading}
-              id="dine-in"
-              label="Dine-in"
-              value="restaurant"
-            />
-            <FormControlLabel
-              control={<Radio />}
-              disabled={isLoading}
-              id="delivery"
-              label="Delivery"
-              value="meal_delivery"
-            />
-            <FormControlLabel
-              control={<Radio />}
-              disabled={isLoading}
-              id="takeout"
-              label="Takeout"
-              value="meal_takeaway"
-            />
-            <FormControlLabel control={<Radio />} disabled={isLoading} id="bar" label="Bar" value="bar" />
-            <FormControlLabel control={<Radio />} disabled={isLoading} id="cafe" label="Café" value="cafe" />
-            <FormControlLabel
-              control={<Radio />}
-              disabled={isLoading}
-              id="night-club"
-              label="Night club"
-              value="night_club"
-            />
-          </RadioGroup>
-        </FormControl>
-        <FormControlLabel
-          control={<Checkbox checked={openNow} onClick={(event: any) => setOpenNow(event.target.checked)} />}
-          disabled={isLoading}
-          label="Only show choices currently open"
-        />
-        <FormControl>
-          <FormLabel id="sort-by-group-label">Sort by</FormLabel>
-          <RadioGroup
-            name="sort-by-radio-buttons-group"
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setRankBy(event.target.value as RankByType)}
-            value={rankBy}
-          >
-            <FormControlLabel
-              control={<Radio />}
-              disabled={isLoading}
-              id="sort-prominence"
-              label="Most prominent first"
-              value="prominence"
-            />
-            <FormControlLabel
-              control={<Radio />}
-              disabled={isLoading}
-              id="sort-distance"
-              label="Closest first"
-              value="distance"
-            />
-          </RadioGroup>
-        </FormControl>
-        {rankBy === 'prominence' && (
-          <label>
-            Maximum distance: {radius} {radius === 1 ? 'mile' : 'miles'}
-            <Slider
-              aria-label="Max distance to restaurant"
-              defaultValue={radius}
-              disabled={isLoading}
-              marks={true}
-              max={30}
-              min={1}
-              onChange={(_: any, value: any) => setRadius(value)}
-              step={1}
-              sx={{ paddingTop: '35px' }}
-              valueLabelDisplay="auto"
-            />
-          </label>
-        )}
-        <label>
-          Price range
-          <Slider
-            aria-label="Price range"
-            defaultValue={priceRange}
-            disabled={isLoading}
-            marks={[
-              { label: 'Cheapest', value: 1 },
-              { label: 'Priciest', value: 4 },
-            ]}
-            max={4}
-            min={1}
-            onChange={(_: any, value: any) => setPriceRange(value)}
-            step={1}
-          />
-        </label>
-        <label>
-          Max votes per round: {votesPerRound}
-          <Slider
-            aria-label="Max votes per round"
-            defaultValue={votesPerRound}
-            disabled={isLoading}
-            marks={true}
-            max={40}
-            min={20}
-            onChange={(_: any, value: any) => setVotesPerRound(value)}
-            step={20}
-            sx={{ paddingTop: '35px' }}
-            valueLabelDisplay="auto"
-          />
-        </label>
-        <label>
-          Number of voters: {voterCount}
-          <Slider
-            aria-label="Number of voters"
-            defaultValue={voterCount}
-            disabled={isLoading}
-            marks={true}
-            max={10}
-            min={1}
-            onChange={(_: any, value: any) => setVoterCount(value)}
-            step={1}
-            sx={{ paddingTop: '35px' }}
-            valueLabelDisplay="auto"
-          />
-        </label>
-        {voterCount > 1 && (
-          <Alert severity="info" variant="filled">
-            You must distribute the session link to voters. Enter the phone number of other voters to text them the
-            link!
-          </Alert>
-        )}
-        {Array.from({ length: voterCount - 1 }).map((_, index) => (
-          <label key={index}>
-            <TextField
-              aria-readonly="true"
-              disabled={isLoading}
-              error={voterIdErrors[index] !== undefined}
-              fullWidth
-              helperText={voterIdErrors[index]}
-              key={index}
-              label={`Voter #${index + 2} phone number (optional)`}
-              name="phone_number"
-              onChange={(event) => onVoterIdChange(index, event.target.value)}
-              placeholder="+10000000000"
-              type="tel"
-              value={voterIds[index]}
-              variant="filled"
-            />
-          </label>
-        ))}
-        <Button
-          data-amplify-analytics-name="generate-session-click"
-          data-amplify-analytics-on="click"
-          disabled={isLoading}
-          fullWidth
-          onClick={generateSession}
-          startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
-          variant="contained"
-        >
-          {isLoading ? 'Loading...' : 'Choose restaurants'}
-        </Button>
-        <Typography style={{ textAlign: 'center' }}>Voting sessions automatically expire after 24 hours</Typography>
-      </Stack>
+            {isLoading ? 'Loading...' : 'Choose restaurants'}
+          </Button>
+        </CardActions>
+      </Card>
       <Snackbar autoHideDuration={15_000} onClose={snackbarErrorClose} open={errorMessage !== undefined}>
         <Alert onClose={snackbarErrorClose} severity="error" variant="filled">
           {errorMessage}

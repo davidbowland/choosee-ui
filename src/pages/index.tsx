@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Grid from '@mui/material/Grid'
 import { Helmet } from 'react-helmet'
 
 import { AuthState } from '@types'
@@ -20,9 +21,11 @@ const Index = (): JSX.Element => {
         setInitialAuthState={setAuthState}
         setInitialShowLogin={setShowLogin}
       >
-        <section style={{ padding: '50px' }}>
-          <SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />
-        </section>
+        <Grid container sx={{ padding: { sm: '50px', xs: '25px 10px' } }}>
+          <Grid item sx={{ m: 'auto', maxWidth: 600, width: '100%' }}>
+            <SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />
+          </Grid>
+        </Grid>
       </Authenticated>
     </main>
   )

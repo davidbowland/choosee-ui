@@ -32,7 +32,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
         <Typography sx={{ textAlign: 'center' }} variant="h5">
           The winning decision is:
         </Typography>
-        <Card sx={{ margin: 'auto', maxWidth: 400 }}>
+        <Card sx={{ margin: 'auto', maxWidth: 400 }} variant="outlined">
           {winner.photos[0] ? (
             <CardMedia alt={`Photo of ${winner.name}`} component="img" height="300" image={winner.photos[0]} />
           ) : (
