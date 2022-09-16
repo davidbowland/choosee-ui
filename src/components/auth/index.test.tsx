@@ -256,88 +256,135 @@ describe('Authenticated component', () => {
       await waitFor(() => expect(mockLocationReload).toHaveBeenCalled())
     })
 
-    test('expect selecting delete account invokes delete function', async () => {
-      render(
-        <Authenticated
-          initialAuthState={authState}
-          initialShowLogin={showLogin}
-          setInitialAuthState={setInitialAuthState}
-          setInitialShowLogin={setInitialShowLogin}
-        >
-          <p>Testing children</p>
-        </Authenticated>
-      )
-      const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
-      const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-      await act(async () => {
-        deleteAccountMenuOption.click()
-      })
+    describe('delete account', () => {
+      test('expect selecting delete account and then back does not delete account', async () => {
+        render(
+          <Authenticated
+            initialAuthState={authState}
+            initialShowLogin={showLogin}
+            setInitialAuthState={setInitialAuthState}
+            setInitialShowLogin={setInitialShowLogin}
+          >
+            <p>Testing children</p>
+          </Authenticated>
+        )
+        const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
+        await act(async () => {
+          menuButton.click()
+        })
+        const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
+        await act(async () => {
+          deleteAccountMenuOption.click()
+        })
+        const goBackButton = (await screen.findByText(/Go back/i)) as HTMLButtonElement
+        act(() => {
+          goBackButton.click()
+        })
 
-      expect(user.deleteUser).toHaveBeenCalled()
-      expect(mocked(Auth).signOut).toHaveBeenCalled()
-      expect(await screen.findByText(/Sign in/i)).toBeInTheDocument()
-      expect(screen.queryByText(/Dave/i)).not.toBeInTheDocument()
-      await waitFor(() => expect(mockLocationReload).toHaveBeenCalled())
-    })
-
-    test('expect delete account error shows snackbar', async () => {
-      ;(user.deleteUser as jest.Mock).mockImplementationOnce((callback) => callback('Thar be errors here'))
-
-      render(
-        <Authenticated
-          initialAuthState={authState}
-          initialShowLogin={showLogin}
-          setInitialAuthState={setInitialAuthState}
-          setInitialShowLogin={setInitialShowLogin}
-        >
-          <p>Testing children</p>
-        </Authenticated>
-      )
-      const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
-      const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-      await act(async () => {
-        deleteAccountMenuOption.click()
+        expect(user.deleteUser).not.toHaveBeenCalled()
+        expect(mocked(Auth).signOut).not.toHaveBeenCalled()
+        expect(screen.queryByText(/Sign in/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/Dave/i)).toBeInTheDocument()
+        expect(mockLocationReload).not.toHaveBeenCalled()
       })
 
-      expect(user.deleteUser).toHaveBeenCalled()
-      expect(mocked(Auth).signOut).not.toHaveBeenCalled()
-      expect(console.error).toHaveBeenCalled()
-      expect(await screen.findByText(/There was a problem deleting your account/i)).toBeVisible()
-    })
+      test('expect selecting delete account invokes delete function', async () => {
+        render(
+          <Authenticated
+            initialAuthState={authState}
+            initialShowLogin={showLogin}
+            setInitialAuthState={setInitialAuthState}
+            setInitialShowLogin={setInitialShowLogin}
+          >
+            <p>Testing children</p>
+          </Authenticated>
+        )
+        const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
+        act(() => {
+          menuButton.click()
+        })
+        const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
+        act(() => {
+          deleteAccountMenuOption.click()
+        })
+        const continueButton = (await screen.findByText(/Continue/i)) as HTMLButtonElement
+        act(() => {
+          continueButton.click()
+        })
 
-    test('expect closing delete error snackbar removes the text', async () => {
-      ;(user.deleteUser as jest.Mock).mockImplementationOnce((callback) => callback('Thar be errors here'))
-
-      render(
-        <Authenticated
-          initialAuthState={authState}
-          initialShowLogin={showLogin}
-          setInitialAuthState={setInitialAuthState}
-          setInitialShowLogin={setInitialShowLogin}
-        >
-          <p>Testing children</p>
-        </Authenticated>
-      )
-      const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
-      const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-      await act(async () => {
-        deleteAccountMenuOption.click()
-      })
-      const closeSnackbarButton = (await screen.findByLabelText(/Close/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        closeSnackbarButton.click()
+        expect(user.deleteUser).toHaveBeenCalled()
+        expect(mocked(Auth).signOut).toHaveBeenCalled()
+        expect(await screen.findByText(/Sign in/i)).toBeInTheDocument()
+        expect(screen.queryByText(/Dave/i)).not.toBeInTheDocument()
+        await waitFor(() => expect(mockLocationReload).toHaveBeenCalled())
       })
 
-      expect(await screen.findByText(/There was a problem deleting your account/i)).not.toBeVisible()
+      test('expect delete account error shows snackbar', async () => {
+        ;(user.deleteUser as jest.Mock).mockImplementationOnce((callback) => callback('Thar be errors here'))
+
+        render(
+          <Authenticated
+            initialAuthState={authState}
+            initialShowLogin={showLogin}
+            setInitialAuthState={setInitialAuthState}
+            setInitialShowLogin={setInitialShowLogin}
+          >
+            <p>Testing children</p>
+          </Authenticated>
+        )
+        const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
+        act(() => {
+          menuButton.click()
+        })
+        const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
+        act(() => {
+          deleteAccountMenuOption.click()
+        })
+        const continueButton = (await screen.findByText(/Continue/i)) as HTMLButtonElement
+        act(() => {
+          continueButton.click()
+        })
+
+        expect(user.deleteUser).toHaveBeenCalled()
+        expect(mocked(Auth).signOut).not.toHaveBeenCalled()
+        expect(console.error).toHaveBeenCalled()
+        expect(await screen.findByText(/There was a problem deleting your account/i)).toBeVisible()
+      })
+
+      test('expect closing delete error snackbar removes the text', async () => {
+        ;(user.deleteUser as jest.Mock).mockImplementationOnce((callback) => callback('Thar be errors here'))
+
+        render(
+          <Authenticated
+            initialAuthState={authState}
+            initialShowLogin={showLogin}
+            setInitialAuthState={setInitialAuthState}
+            setInitialShowLogin={setInitialShowLogin}
+          >
+            <p>Testing children</p>
+          </Authenticated>
+        )
+        const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
+        act(() => {
+          menuButton.click()
+        })
+        const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
+        act(() => {
+          deleteAccountMenuOption.click()
+        })
+        const continueButton = (await screen.findByText(/Continue/i)) as HTMLButtonElement
+        act(() => {
+          continueButton.click()
+        })
+        const closeSnackbarButton = (await screen.findByLabelText(/Close/i, {
+          selector: 'button',
+        })) as HTMLButtonElement
+        act(() => {
+          closeSnackbarButton.click()
+        })
+
+        expect(await screen.findByText(/There was a problem deleting your account/i)).not.toBeVisible()
+      })
     })
   })
 })

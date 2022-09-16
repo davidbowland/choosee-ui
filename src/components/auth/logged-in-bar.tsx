@@ -3,8 +3,14 @@ import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded'
 import Alert from '@mui/material/Alert'
 import { Auth } from 'aws-amplify'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import DeleteIcon from '@mui/icons-material/Delete'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogContentText from '@mui/material/DialogContentText'
+import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import { Link } from 'gatsby'
@@ -20,16 +26,35 @@ import Typography from '@mui/material/Typography'
 import { CognitoUserAmplify } from '@types'
 
 export interface LoggedInBarProps {
-  loggedInUser?: CognitoUserAmplify
+  loggedInUser: CognitoUserAmplify
   setLoggedInUser: (user: CognitoUserAmplify | undefined) => void
 }
 
 const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.Element => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showDeleteErrorSnackbar, setShowDeleteErrorSnackbar] = useState(false)
 
   const closeMenu = (): void => {
     setIsDrawerOpen(false)
+  }
+
+  const deleteAccountClick = async (): Promise<void> => {
+    setShowDeleteDialog(false)
+    loggedInUser.deleteUser((err) => {
+      if (err) {
+        console.error('deleteAccountClick', err)
+        setShowDeleteErrorSnackbar(true)
+      } else {
+        closeMenu()
+        setLoggedInUser(undefined)
+        Auth.signOut({ global: true }).then(() => window.location.reload())
+      }
+    })
+  }
+
+  const deleteDialogClose = (): void => {
+    setShowDeleteDialog(false)
   }
 
   const openMenu = (): void => {
@@ -47,7 +72,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
           Choosee
         </Link>
       </Typography>
-      <Typography component="div">{loggedInUser?.attributes?.name}</Typography>
+      <Typography component="div">{loggedInUser.attributes?.name}</Typography>
       <IconButton
         aria-controls="menu-appbar"
         aria-haspopup="true"
@@ -87,21 +112,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
           </List>
           <Divider />
           <List>
-            <ListItem
-              button
-              onClick={() => {
-                loggedInUser?.deleteUser((err) => {
-                  if (err) {
-                    setShowDeleteErrorSnackbar(true)
-                    console.error(err)
-                  } else {
-                    closeMenu()
-                    setLoggedInUser(undefined)
-                    Auth.signOut({ global: true }).then(() => window.location.reload())
-                  }
-                })
-              }}
-            >
+            <ListItem button onClick={() => setShowDeleteDialog(true)}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
@@ -110,6 +121,25 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
           </List>
         </Box>
       </SwipeableDrawer>
+      <Dialog
+        aria-describedby="Are you sure you want to delete the account?"
+        aria-labelledby="Delete account dialog"
+        onClose={deleteDialogClose}
+        open={showDeleteDialog}
+      >
+        <DialogTitle id="alert-dialog-title">Delete account?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete your account? Some information may remain in log files for up to 30 days.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus onClick={deleteDialogClose}>
+            Go back
+          </Button>
+          <Button onClick={deleteAccountClick}>Continue</Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar autoHideDuration={6000} onClose={snackbarClose} open={showDeleteErrorSnackbar}>
         <Alert onClose={snackbarClose} severity="error" sx={{ width: '100%' }} variant="filled">
           There was a problem deleting your account. Please try again later.
