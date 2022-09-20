@@ -3,6 +3,7 @@ import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import React from 'react'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
@@ -31,6 +32,7 @@ const Finished = (): JSX.Element => {
             data-amplify-analytics-on="click"
             fullWidth
             onClick={() => navigate('/')}
+            startIcon={<CheckBoxIcon />}
             variant="outlined"
           >
             Make new choices

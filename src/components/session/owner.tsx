@@ -5,7 +5,9 @@ import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CircularProgress from '@mui/material/CircularProgress'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import Divider from '@mui/material/Divider'
 import Slider from '@mui/material/Slider'
 import Snackbar from '@mui/material/Snackbar'
@@ -68,7 +70,7 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
 
   return (
     <div>
-      <Stack margin="auto" maxWidth="400px" spacing={2}>
+      <Stack margin="auto" maxWidth="600px" spacing={2}>
         <Divider />
         <Card sx={{ p: '15px' }} variant="outlined">
           <CardContent>
@@ -85,7 +87,7 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
             </label>
           </CardContent>
           <CardActions>
-            <Button fullWidth onClick={copySessionUrl} variant="outlined">
+            <Button fullWidth onClick={copySessionUrl} startIcon={<ContentCopyIcon />} variant="outlined">
               Copy session URL
             </Button>
           </CardActions>
@@ -132,7 +134,7 @@ const Owner = ({ session, sessionId, setSession }: OwnerProps): JSX.Element => {
               disabled={isLoading}
               fullWidth
               onClick={patchSession}
-              startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
+              startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : <CheckBoxIcon />}
               variant="outlined"
             >
               {isLoading ? 'Loading...' : 'Update vote options'}

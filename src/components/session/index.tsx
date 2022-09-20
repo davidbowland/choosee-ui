@@ -224,7 +224,7 @@ const Session = ({
         open={isLoading}
         sx={{ color: '#fff', textAlign: 'center', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
       >
-        <Stack spacing={2} sx={{ m: { sm: '50px', xs: '25px' }, maxWidth: '100%', width: '400px' }}>
+        <Stack spacing={2} sx={{ m: { sm: '50px', xs: '25px' }, maxWidth: '100%', width: '600px' }}>
           {isWaiting ? (
             <>
               <Typography color="#fff" variant="h5">

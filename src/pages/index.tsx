@@ -22,7 +22,7 @@ const Index = (): JSX.Element => {
         setInitialShowLogin={setShowLogin}
       >
         <Grid container sx={{ padding: { sm: '50px', xs: '25px 10px' } }}>
-          <Grid item sx={{ m: 'auto', maxWidth: 600, width: '100%' }}>
+          <Grid item sx={{ m: 'auto', maxWidth: 1200, width: '100%' }}>
             <SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />
           </Grid>
         </Grid>

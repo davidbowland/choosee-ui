@@ -141,7 +141,7 @@ const Create = (): JSX.Element => {
   return (
     <>
       <Logo />
-      <Card sx={{ m: 'auto', maxWidth: 400, p: '25px' }} variant="outlined">
+      <Card sx={{ m: 'auto', maxWidth: 600, p: '25px' }} variant="outlined">
         <CardHeader sx={{ textAlign: 'center' }} title="Restaurant Search" />
         <CardContent>
           <Stack spacing={2}>
@@ -331,7 +331,7 @@ const Create = (): JSX.Element => {
             fullWidth
             onClick={generateSession}
             startIcon={isLoading ? <CircularProgress color="inherit" size={14} /> : null}
-            variant="outlined"
+            variant="contained"
           >
             {isLoading ? 'Loading...' : 'Choose restaurants'}
           </Button>

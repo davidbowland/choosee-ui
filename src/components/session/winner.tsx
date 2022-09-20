@@ -3,6 +3,7 @@ import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import FormControl from '@mui/material/FormControl'
@@ -28,11 +29,11 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
   return (
     <>
       <Logo />
-      <Stack margin="auto" maxWidth="400px" spacing={2}>
+      <Stack margin="auto" maxWidth="600px" spacing={2}>
         <Typography sx={{ textAlign: 'center' }} variant="h5">
           The winning decision is:
         </Typography>
-        <Card sx={{ margin: 'auto', maxWidth: 400 }} variant="outlined">
+        <Card sx={{ margin: 'auto', maxWidth: 600 }} variant="outlined">
           {winner.photos[0] ? (
             <CardMedia alt={`Photo of ${winner.name}`} component="img" height="300" image={winner.photos[0]} />
           ) : (
@@ -112,6 +113,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
           data-amplify-analytics-name="new-choices-click"
           data-amplify-analytics-on="click"
           onClick={() => navigate('/')}
+          startIcon={<CheckBoxIcon />}
           variant="contained"
         >
           Make new choices
