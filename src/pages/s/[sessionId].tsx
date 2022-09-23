@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet'
 
 import { AuthState } from '@types'
 import Authenticated from '@components/auth'
+import PrivacyLink from '@components/privacy-link'
 import VoteSession from '@components/session'
 
 export interface SessionPageProps {
@@ -38,6 +39,7 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
               setAuthState={setAuthState}
               setShowLogin={setShowLogin}
             />
+            <PrivacyLink />
           </Grid>
         </Grid>
       </Authenticated>

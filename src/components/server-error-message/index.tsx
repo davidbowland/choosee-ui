@@ -4,6 +4,7 @@ import { Link } from 'gatsby'
 import React from 'react'
 import Typography from '@mui/material/Typography'
 
+import PrivacyLink from '@components/privacy-link'
 export interface ServerErrorProps {
   children: React.ReactNode
   title: string
@@ -25,6 +26,7 @@ const ServerErrorMessage = ({ children, title }: ServerErrorProps): JSX.Element 
           </Grid>
           <Grid item xs>
             <Link to="/">Go home</Link>
+            <PrivacyLink />
           </Grid>
         </Grid>
       </Grid>

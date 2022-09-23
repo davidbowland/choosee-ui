@@ -4,6 +4,7 @@ import CssBaseline from '@mui/material/CssBaseline'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 import '@config/amplify'
+import Disclaimer from '@components/disclaimer'
 
 import '@assets/css/index.css'
 import '@fontsource/roboto'
@@ -28,6 +29,7 @@ const Themed = ({ children }: ThemedProps): JSX.Element => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {children}
+      <Disclaimer />
     </ThemeProvider>
   )
 }

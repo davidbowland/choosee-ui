@@ -6,6 +6,7 @@ import React from 'react'
 import { mocked } from 'jest-mock'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
+import Disclaimer from '@components/disclaimer'
 import Themed from './index'
 import { theme } from '@test/__mocks__'
 
@@ -16,12 +17,14 @@ jest.mock('@mui/material/styles', () => ({
   createTheme: jest.fn(),
 }))
 jest.mock('@mui/material/useMediaQuery')
+jest.mock('@components/disclaimer')
 
 describe('Themed component', () => {
   const children = <>fnord</>
 
   beforeAll(() => {
     mocked(CssBaseline).mockReturnValue(<></>)
+    mocked(Disclaimer).mockReturnValue(<></>)
     mocked(ThemeProvider).mockImplementation(({ children }) => <>{children}</>)
     mocked(createTheme).mockReturnValue(theme)
     mocked(useMediaQuery).mockReturnValue(false)
@@ -37,6 +40,12 @@ describe('Themed component', () => {
     render(<Themed>{children}</Themed>)
 
     expect(mocked(CssBaseline)).toHaveBeenCalledTimes(1)
+  })
+
+  test('expect rendering Themed renders Disclaimer', async () => {
+    render(<Themed>{children}</Themed>)
+
+    expect(mocked(Disclaimer)).toHaveBeenCalledTimes(1)
   })
 
   test('expect rendering Themed uses light theme when reqeusted', () => {

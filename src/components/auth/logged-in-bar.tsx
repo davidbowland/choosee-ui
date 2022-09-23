@@ -19,6 +19,7 @@ import ListItem from '@mui/material/ListItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import LogoutIcon from '@mui/icons-material/Logout'
+import PrivacyTipIcon from '@mui/icons-material/PrivacyTip'
 import Snackbar from '@mui/material/Snackbar'
 import SwipeableDrawer from '@mui/material/SwipeableDrawer'
 import Typography from '@mui/material/Typography'
@@ -88,6 +89,12 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
       <SwipeableDrawer anchor="right" onClose={closeMenu} onOpen={openMenu} open={isDrawerOpen}>
         <Box onClick={closeMenu} role="presentation" sx={{ width: 250 }}>
           <List>
+            <ListItem button component="a" href="/privacy-policy">
+              <ListItemIcon>
+                <PrivacyTipIcon />
+              </ListItemIcon>
+              <ListItemText primary="Privacy policy" />
+            </ListItem>
             <ListItem
               button
               onClick={() => {
@@ -102,6 +109,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
               <ListItemText primary="Sign out" />
             </ListItem>
           </List>
+          <Divider />
           <List>
             <ListItem button>
               <ListItemIcon>
@@ -130,7 +138,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
         <DialogTitle id="alert-dialog-title">Delete account?</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete your account? Some information may remain in log files for up to 30 days.
+            Are you sure you want to delete your account? Some information may remain in log files for up to 90 days.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

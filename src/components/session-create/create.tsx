@@ -141,7 +141,7 @@ const Create = (): JSX.Element => {
   return (
     <>
       <Logo />
-      <Card sx={{ m: 'auto', maxWidth: 600, p: '25px' }} variant="outlined">
+      <Card sx={{ m: 'auto', maxWidth: 600, p: { sm: 2, xs: 1 } }} variant="outlined">
         <CardHeader sx={{ textAlign: 'center' }} title="Restaurant Search" />
         <CardContent>
           <Stack spacing={2}>

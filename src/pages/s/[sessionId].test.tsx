@@ -4,6 +4,7 @@ import { mocked } from 'jest-mock'
 import { render } from '@testing-library/react'
 
 import Authenticated from '@components/auth'
+import PrivacyLink from '@components/privacy-link'
 import SessionPage from './[sessionId]'
 import Themed from '@components/themed'
 import VoteSession from '@components/session'
@@ -11,18 +12,20 @@ import { sessionId } from '@test/__mocks__'
 
 jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
+jest.mock('@components/privacy-link')
 jest.mock('@components/session')
 jest.mock('@components/themed')
 
 describe('Session page', () => {
   beforeAll(() => {
     mocked(Authenticated).mockImplementation(({ children }): any => children)
-    mocked(VoteSession).mockReturnValue(<></>)
+    mocked(PrivacyLink).mockReturnValue(<></>)
     mocked(Themed).mockImplementation(({ children }) => <>{children}</>)
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { search: '' },
     })
+    mocked(VoteSession).mockReturnValue(<></>)
   })
 
   beforeEach(() => {
@@ -32,6 +35,11 @@ describe('Session page', () => {
   test('expect rendering SessionPage renders Authenticated', () => {
     render(<SessionPage params={{ sessionId }} />)
     expect(mocked(Authenticated)).toHaveBeenCalledTimes(1)
+  })
+
+  test('expect rendering SessionPage renders PrivacyLink', () => {
+    render(<SessionPage params={{ sessionId }} />)
+    expect(mocked(PrivacyLink)).toHaveBeenCalledTimes(1)
   })
 
   test('expect rendering SessionPage renders Session', () => {
