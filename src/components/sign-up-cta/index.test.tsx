@@ -29,13 +29,13 @@ describe('SignUpCta component', () => {
 
   test('expect sign up button to be rendered', async () => {
     render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
-    expect(await screen.findByText(/Sign up/i, { selector: 'button' })).toBeInTheDocument()
+    expect((await screen.findAllByText(/Sign up/i, { selector: 'button' }))[0]).toBeInTheDocument()
   })
 
   test('expect sign up button invokes setAuthState and setShowLogin', async () => {
     render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
-    const signUpButton = (await screen.findByText(/Sign up/i, { selector: 'button' })) as HTMLButtonElement
+    const signUpButton = (await screen.findAllByText(/Sign up/i, { selector: 'button' }))[0] as HTMLButtonElement
     await act(async () => {
       signUpButton.click()
     })
