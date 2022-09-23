@@ -132,7 +132,7 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
           title="Contact info at your fingertips"
         >
           Restaurant contact info, including phone number and website, are prominently displayed on each choice and the
-          winning decision. Other information displayed includes ratings, price estimate, and hours of operation.
+          winning decision. Other information displayed includes rating, price estimate, and hours of operation.
         </CtaCard>
         <CtaCard
           cta="I'm in"
