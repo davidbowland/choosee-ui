@@ -42,7 +42,7 @@ describe('Disclaimer component', () => {
       sameSite: 'strict',
       secure: true,
     })
-    expect(screen.queryByText(/Cookie and Privacy Disclosure/i)).not.toBeVisible()
+    expect(screen.queryByText(/Cookie and Privacy Disclosure/i)).not.toBeInTheDocument()
   })
 
   test('expect disclaimer loads closed when cookie set', async () => {
@@ -50,6 +50,6 @@ describe('Disclaimer component', () => {
     render(<Disclaimer />)
 
     expect(mockCookieGet).toHaveBeenCalledWith('disclaimer_accept')
-    expect(screen.queryByText(/Cookie and Privacy Disclosure/i)).not.toBeVisible()
+    expect(screen.queryByText(/Cookie and Privacy Disclosure/i)).not.toBeInTheDocument()
   })
 })
