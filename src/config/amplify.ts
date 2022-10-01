@@ -80,3 +80,5 @@ Analytics.autoTrack('event', {
   // REQUIRED, turn on/off the auto tracking
   enable: true,
 })
+
+Auth.configure(analyticsConfig)
