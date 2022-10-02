@@ -19,6 +19,10 @@ const Themed = ({ children }: ThemedProps): JSX.Element => {
     () =>
       createTheme({
         palette: {
+          background: {
+            default: prefersDarkMode ? '#121212' : '#ededed',
+            paper: prefersDarkMode ? '#121212' : '#fff',
+          },
           mode: prefersDarkMode ? 'dark' : 'light',
         },
       }),

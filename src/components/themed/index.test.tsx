@@ -51,7 +51,15 @@ describe('Themed component', () => {
   test('expect rendering Themed uses light theme when reqeusted', () => {
     render(<Themed>{children}</Themed>)
 
-    expect(mocked(createTheme)).toHaveBeenCalledWith({ palette: { mode: 'light' } })
+    expect(mocked(createTheme)).toHaveBeenCalledWith({
+      palette: {
+        background: {
+          default: '#ededed',
+          paper: '#fff',
+        },
+        mode: 'light',
+      },
+    })
     expect(mocked(ThemeProvider)).toHaveBeenCalledWith(expect.objectContaining({ theme }), {})
   })
 
@@ -59,7 +67,15 @@ describe('Themed component', () => {
     mocked(useMediaQuery).mockReturnValueOnce(true)
     render(<Themed>{children}</Themed>)
 
-    expect(mocked(createTheme)).toHaveBeenCalledWith({ palette: { mode: 'dark' } })
+    expect(mocked(createTheme)).toHaveBeenCalledWith({
+      palette: {
+        background: {
+          default: '#121212',
+          paper: '#121212',
+        },
+        mode: 'dark',
+      },
+    })
     expect(mocked(ThemeProvider)).toHaveBeenCalledWith(expect.objectContaining({ theme }), {})
   })
 })

@@ -12,7 +12,7 @@ const PrivacyPage = (): JSX.Element => {
   const [showLogin, setShowLogin] = useState(false)
 
   return (
-    <Paper elevation={1}>
+    <>
       <Helmet>
         <title>Privacy Policy -- choosee.dbowland.com</title>
       </Helmet>
@@ -28,7 +28,7 @@ const PrivacyPage = (): JSX.Element => {
           </Paper>
         </Authenticated>
       </main>
-    </Paper>
+    </>
   )
 }
 
