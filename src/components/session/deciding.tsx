@@ -39,7 +39,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
   return (
     <Stack spacing={2} sx={{ m: 'auto', maxWidth: 600, width: '100%' }}>
       {place && (
-        <Card ref={cardRef} variant="outlined">
+        <Card ref={cardRef}>
           {place.photos.length > 0 ? (
             <Carousel>
               {place.photos.map((photo, index) => (

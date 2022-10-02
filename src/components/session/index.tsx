@@ -8,7 +8,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import jsonpatch from 'fast-json-patch'
 
-import { AuthState, CognitoUserAmplify, Decision, PlaceDetails, SessionData } from '@types'
+import { AmplifyUser, AuthState, Decision, PlaceDetails, SessionData } from '@types'
 import { fetchDecision, fetchSession, updateDecisions } from '@services/sessions'
 import Deciding from './deciding'
 import Expired from './expired'
@@ -43,7 +43,7 @@ const Session = ({
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
-  const [loggedInUser, setLoggedInUser] = useState<CognitoUserAmplify | undefined>(undefined)
+  const [loggedInUser, setLoggedInUser] = useState<AmplifyUser | undefined>(undefined)
   const [pageId, setPageId] = useState(-2)
   const [place, setPlace] = useState<PlaceDetails | undefined>(undefined)
   const [session, setSession] = useState<SessionData>({ status: { current: 'deciding', pageId: -1 } } as any)

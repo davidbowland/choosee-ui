@@ -7,13 +7,11 @@ import { mocked } from 'jest-mock'
 import * as mapsService from '@services/maps'
 import * as sessionService from '@services/sessions'
 import { sessionId, user } from '@test/__mocks__'
-import Logo from '@components/logo'
 import SessionCreate from './index'
 import SignUpCta from '@components/sign-up-cta'
 
 jest.mock('aws-amplify')
 jest.mock('@aws-amplify/analytics')
-jest.mock('@components/logo')
 jest.mock('@components/sign-up-cta')
 jest.mock('gatsby')
 jest.mock('@services/maps')
@@ -40,7 +38,6 @@ describe('SessionCreate component', () => {
         },
       },
     })
-    mocked(Logo).mockReturnValue(<></>)
     mocked(SignUpCta).mockReturnValue(<></>)
   })
 

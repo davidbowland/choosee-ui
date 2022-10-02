@@ -7,13 +7,12 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import { AuthState, CognitoUserAmplify } from '@types'
-import Logo from '@components/logo'
+import { AmplifyUser, AuthState } from '@types'
 
 export interface LoginPromptProps {
   initialUserId?: string
   setAuthState: (state: AuthState) => void
-  setLoggedInUser: (user: CognitoUserAmplify) => void
+  setLoggedInUser: (user: AmplifyUser) => void
   setShowLogin: (state: boolean) => void
 }
 
@@ -28,7 +27,7 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
     }
     setUserIdError(undefined)
 
-    setLoggedInUser({ attributes: { phone_number: userId } } as unknown as CognitoUserAmplify)
+    setLoggedInUser({ attributes: { phone_number: userId } } as unknown as AmplifyUser)
   }
 
   const onUserIdChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -49,57 +48,54 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
   }
 
   return (
-    <>
-      <Logo />
-      <Stack margin="auto" maxWidth="400px" spacing={2}>
-        <Typography variant="h6">Enter your phone number to vote</Typography>
-        <label>
-          <TextField
-            aria-readonly="true"
-            autoComplete="tel"
-            error={userIdError !== undefined}
-            fullWidth
-            helperText={userIdError}
-            label="Your phone number"
-            name="phone_number"
-            onChange={onUserIdChange}
-            placeholder="+10000000000"
-            type="tel"
-            value={userId}
-            variant="filled"
-          />
-        </label>
-        <Button
-          data-amplify-analytics-name="lets-choose-click"
-          data-amplify-analytics-on="click"
+    <Stack margin="auto" maxWidth="400px" spacing={2}>
+      <Typography variant="h6">Enter your phone number to vote</Typography>
+      <label>
+        <TextField
+          aria-readonly="true"
+          autoComplete="tel"
+          error={userIdError !== undefined}
           fullWidth
-          onClick={chooseClick}
-          startIcon={<DoneAllIcon />}
-          variant="contained"
-        >
-          Let&apos;s choose!
-        </Button>
-        <Typography sx={{ textAlign: 'center' }} variant="h6">
-          -- or --
-        </Typography>
-        <Button
-          data-amplify-analytics-name="sign-up-click"
-          data-amplify-analytics-on="click"
-          fullWidth
-          onClick={signUpClick}
-          startIcon={<FollowTheSignsOutlinedIcon />}
-          variant="contained"
-        >
-          Sign up
-        </Button>
-        <Typography sx={{ textAlign: 'center' }} variant="h6">
-          -- or --
-        </Typography>
-        <Button fullWidth onClick={signInClick} startIcon={<LoginIcon />} variant="contained">
-          Sign in
-        </Button>
-      </Stack>
-    </>
+          helperText={userIdError}
+          label="Your phone number"
+          name="phone_number"
+          onChange={onUserIdChange}
+          placeholder="+10000000000"
+          type="tel"
+          value={userId}
+          variant="filled"
+        />
+      </label>
+      <Button
+        data-amplify-analytics-name="lets-choose-click"
+        data-amplify-analytics-on="click"
+        fullWidth
+        onClick={chooseClick}
+        startIcon={<DoneAllIcon />}
+        variant="contained"
+      >
+        Let&apos;s choose!
+      </Button>
+      <Typography sx={{ textAlign: 'center' }} variant="h6">
+        -- or --
+      </Typography>
+      <Button
+        data-amplify-analytics-name="sign-up-click"
+        data-amplify-analytics-on="click"
+        fullWidth
+        onClick={signUpClick}
+        startIcon={<FollowTheSignsOutlinedIcon />}
+        variant="contained"
+      >
+        Sign up
+      </Button>
+      <Typography sx={{ textAlign: 'center' }} variant="h6">
+        -- or --
+      </Typography>
+      <Button fullWidth onClick={signInClick} startIcon={<LoginIcon />} variant="contained">
+        Sign in
+      </Button>
+    </Stack>
   )
 }
 

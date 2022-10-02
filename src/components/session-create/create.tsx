@@ -21,7 +21,6 @@ import { navigate } from 'gatsby'
 
 import { NewSession, PlaceType, RankByType } from '@types'
 import { createSession, textSession } from '@services/sessions'
-import Logo from '@components/logo'
 import { fetchAddress } from '@services/maps'
 
 const METERS_PER_MILE = 1609.34
@@ -140,8 +139,7 @@ const Create = (): JSX.Element => {
 
   return (
     <>
-      <Logo />
-      <Card sx={{ m: 'auto', maxWidth: 600, p: { sm: 2, xs: 1 } }} variant="outlined">
+      <Card sx={{ m: 'auto', maxWidth: 600, p: 2 }} variant="outlined">
         <CardHeader sx={{ textAlign: 'center' }} title="Restaurant Search" />
         <CardContent>
           <Stack spacing={2}>

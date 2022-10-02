@@ -24,11 +24,11 @@ import Snackbar from '@mui/material/Snackbar'
 import SwipeableDrawer from '@mui/material/SwipeableDrawer'
 import Typography from '@mui/material/Typography'
 
-import { CognitoUserAmplify } from '@types'
+import { AmplifyUser } from '@types'
 
 export interface LoggedInBarProps {
-  loggedInUser: CognitoUserAmplify
-  setLoggedInUser: (user: CognitoUserAmplify | undefined) => void
+  loggedInUser: AmplifyUser
+  setLoggedInUser: (user: AmplifyUser | undefined) => void
 }
 
 const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.Element => {

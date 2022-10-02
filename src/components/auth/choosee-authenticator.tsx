@@ -4,12 +4,11 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import React from 'react'
 import Stack from '@mui/material/Stack'
 
-import { AuthState, CognitoUserAmplify } from '@types'
-import Logo from '@components/logo'
+import { AmplifyUser, AuthState } from '@types'
 
 export interface ChooseeAuthenticatorProps {
   authState: AuthState
-  setLoggedInUser: (user: CognitoUserAmplify | undefined) => void
+  setLoggedInUser: (user: AmplifyUser | undefined) => void
   setShowLogin: (state: boolean) => void
 }
 
@@ -22,7 +21,6 @@ const ChooseeAuthenticator = ({ authState, setLoggedInUser, setShowLogin }: Choo
   return (
     <section style={{ padding: '50px' }}>
       <ThemeProvider colorMode="system" theme={theme}>
-        <Logo />
         <Stack margin="auto" spacing={2}>
           <Authenticator initialState={authState} loginMechanisms={['phone_number']} signUpAttributes={['name']}>
             {({ user }) => {

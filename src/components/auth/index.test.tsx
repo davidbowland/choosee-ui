@@ -6,13 +6,11 @@ import React from 'react'
 import { mocked } from 'jest-mock'
 
 import Authenticated from './index'
-import Logo from '@components/logo'
 import { user } from '@test/__mocks__'
 
 jest.mock('aws-amplify')
 jest.mock('@aws-amplify/analytics')
 jest.mock('@aws-amplify/ui-react')
-jest.mock('@components/logo')
 
 describe('Authenticated component', () => {
   const authState = 'signIn'
@@ -27,7 +25,6 @@ describe('Authenticated component', () => {
     mocked(Auth).signOut.mockResolvedValue({})
     mocked(Authenticator).mockReturnValue(<></>)
     mocked(ThemeProvider).mockImplementation(({ children }) => children as unknown as JSX.Element)
-    mocked(Logo).mockReturnValue(<></>)
 
     console.error = jest.fn()
     Object.defineProperty(window, 'location', {
@@ -94,20 +91,6 @@ describe('Authenticated component', () => {
       expect(await screen.findByText(/Choosee/i)).toBeInTheDocument()
       expect(await screen.findByText(/Sign In/i)).toBeInTheDocument()
       expect(screen.queryByText(/Cancel/i)).not.toBeInTheDocument()
-    })
-
-    test('expect clicking sign in shows Logo', async () => {
-      render(
-        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
-          <p>Testing children</p>
-        </Authenticated>
-      )
-      const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        signInButton.click()
-      })
-
-      expect(mocked(Logo)).toHaveBeenCalledTimes(1)
     })
 
     test('expect clicking sign in shows authenticator', async () => {

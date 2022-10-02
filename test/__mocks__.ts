@@ -1,6 +1,6 @@
 /* eslint-disable sort-keys */
 import {
-  CognitoUserAmplify,
+  AmplifyUser,
   Decision,
   NewSession,
   PatchOperation,
@@ -95,7 +95,7 @@ export const statusDeciding: StatusObject = {
   pageId: 0,
 }
 
-export const user: CognitoUserAmplify = {
+export const user: AmplifyUser = {
   username: '178300fb-3ab6-41e2-bab6-231964026e42',
   pool: {
     userPoolId: 'us-east-2_xqxzyIOz4',
