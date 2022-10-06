@@ -170,7 +170,7 @@ const Session = ({
           <Stack spacing={2}>
             <Deciding address={session.address} makeChoice={makeChoice} place={place} />
             {session.owner === loggedInUser?.attributes?.sub && (
-              <Owner session={session} sessionId={sessionId} setSession={setSession} />
+              <Owner loggedIn={!!session.owner} session={session} sessionId={sessionId} setSession={setSession} />
             )}
           </Stack>
         )

@@ -199,6 +199,10 @@ describe('SessionCreate component', () => {
       await act(async () => {
         fireEvent.change(addressInput, { target: { value: address } })
       })
+      const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(sliderInput, { target: { value: 2 } })
+      })
       const voterPhoneInput = (await screen.findByLabelText(/Voter #2 phone number/i)) as HTMLInputElement
       await act(async () => {
         fireEvent.change(voterPhoneInput, { target: { value: '+12345' } })
@@ -217,6 +221,10 @@ describe('SessionCreate component', () => {
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
       await act(async () => {
         fireEvent.change(addressInput, { target: { value: address } })
+      })
+      const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(sliderInput, { target: { value: 2 } })
       })
       const voterPhoneInput = (await screen.findByLabelText(/Voter #2 phone number/i)) as HTMLInputElement
       await act(async () => {

@@ -13,7 +13,6 @@ import { StaticImage } from 'gatsby-plugin-image'
 import Typography from '@mui/material/Typography'
 
 import { AuthState } from '@types'
-import Logo from '@components/logo'
 
 export interface SignUpCtaProps {
   setAuthState: (state: AuthState) => void
@@ -63,11 +62,10 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
     <>
       <Grid container justifyContent="center">
         <Grid item maxWidth="800px">
-          <Logo />
           <Stack margin="auto" spacing={2}>
             <Typography sx={{ textAlign: 'center' }} variant="h6">
-              Vote on where you want to eat. Share a link for others to vote with you. Sign up or sign in to get
-              started.
+              Vote on where you want to eat. Share a link for others to vote with you. Use the form to get started. Sign
+              up for a free account or sign in to unlock special features such as texting and option editing.
             </Typography>
             <Button
               data-amplify-analytics-name="sign-up-click"
@@ -83,27 +81,10 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
               A free account is required to keep our costs low. We don&apos;t sell your information and deleting your
               account is easy.
             </Typography>
-            <div style={{ height: '100px' }}>
-              <Fab
-                aria-label="sign in"
-                color="primary"
-                onClick={signInClick}
-                sx={{
-                  bottom: 20,
-                  left: 'auto',
-                  margin: 0,
-                  position: 'fixed',
-                  right: 20,
-                  top: 'auto',
-                }}
-              >
-                <LoginIcon />
-              </Fab>
-            </div>
           </Stack>
         </Grid>
       </Grid>
-      <Grid container justifyContent="center" spacing={4} sx={{ minHeight: '100vh', paddingLeft: 4, width: '100%' }}>
+      <Grid container justifyContent="center" spacing={4} sx={{ minHeight: '100vh', paddingRight: 4, width: '100%' }}>
         <CtaCard
           cta="Sign up"
           img={<StaticImage alt="Restaurant search" src="../../assets/images/restaurant-search.png" />}
@@ -116,8 +97,8 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
           img={<StaticImage alt="Text others" src="../../assets/images/text-others.png" />}
           title="Invite others to choose with you"
         >
-          Enter the phone number of people you want to text to have a link sent directly to them inviting them to vote
-          with you.
+          Sign in to enter the phone number of people you want to text. A link will be sent directly to them inviting
+          them to vote with you.
         </CtaCard>
         <CtaCard
           cta="Sounds good"
@@ -141,7 +122,29 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
         >
           No matter where you are, you can allow Choosee to find your location, saving you time and trouble.
         </CtaCard>
+        <CtaCard
+          cta="Create account"
+          img={<StaticImage alt="Vote options" src="../../assets/images/vote-options.png" />}
+          title="Adjust vote options on the fly"
+        >
+          Sign in to unlock the ability to modify vote options while the vote is in progress.
+        </CtaCard>
       </Grid>
+      <Fab
+        aria-label="sign in"
+        color="primary"
+        onClick={signInClick}
+        sx={{
+          bottom: 20,
+          left: 'auto',
+          margin: 0,
+          position: 'fixed',
+          right: 20,
+          top: 'auto',
+        }}
+      >
+        <LoginIcon />
+      </Fab>
     </>
   )
 }

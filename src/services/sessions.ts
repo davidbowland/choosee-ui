@@ -4,7 +4,7 @@ import { Decision, NewSession, PatchOperation, SessionData, StringObject } from 
 import { sessionApiName, sessionApiNameUnauthenticated } from '@config/amplify'
 
 export const createSession = (session: NewSession): Promise<StringObject> =>
-  API.post(sessionApiName, '/sessions', { body: session })
+  API.post(sessionApiNameUnauthenticated, '/sessions', { body: session })
 
 export const fetchDecision = (sessionId: string, userId: string): Promise<Decision> =>
   API.get(

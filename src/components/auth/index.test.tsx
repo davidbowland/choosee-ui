@@ -77,12 +77,7 @@ describe('Authenticated component', () => {
 
     test('expect title, sign in, and children', async () => {
       render(
-        <Authenticated
-          initialAuthState={authState}
-          initialShowLogin={showLogin}
-          setInitialAuthState={setInitialAuthState}
-          setInitialShowLogin={setInitialShowLogin}
-        >
+        <Authenticated initialAuthState={authState} initialShowLogin={showLogin}>
           <p>Testing children</p>
         </Authenticated>
       )

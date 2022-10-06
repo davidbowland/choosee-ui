@@ -1,9 +1,7 @@
 import '@testing-library/jest-dom'
 import { act, render, screen } from '@testing-library/react'
 import React from 'react'
-import { mocked } from 'jest-mock'
 
-import Logo from '@components/logo'
 import SignUpCta from './index'
 
 jest.mock('@components/logo')
@@ -15,16 +13,10 @@ describe('SignUpCta component', () => {
 
   beforeAll(() => {
     console.error = jest.fn()
-    mocked(Logo).mockReturnValue(<></>)
   })
 
   afterAll(() => {
     console.error = consoleError
-  })
-
-  test('expect Logo rendered', () => {
-    render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
-    expect(mocked(Logo)).toHaveBeenCalledTimes(1)
   })
 
   test('expect sign up button to be rendered', async () => {

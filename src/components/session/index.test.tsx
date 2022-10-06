@@ -426,7 +426,7 @@ describe('Session component', () => {
       test('expect correct URL shown when logged in', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const urlInput: HTMLInputElement = (await screen.findByLabelText(/Session URL/i)) as HTMLInputElement
+        const urlInput: HTMLInputElement = (await screen.findByLabelText(/Invite URL/i)) as HTMLInputElement
         await waitFor(() => {
           expect(urlInput.value).toEqual('https://dbowland.com/s/aeio')
         })
@@ -442,7 +442,7 @@ describe('Session component', () => {
       test('expect copy invokes writeText and displays message', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+        const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
         act(() => {
@@ -456,7 +456,7 @@ describe('Session component', () => {
       test('expect closing copy success message removes it', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+        const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
         act(() => {
@@ -478,7 +478,7 @@ describe('Session component', () => {
         })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+        const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
         act(() => {
@@ -495,7 +495,7 @@ describe('Session component', () => {
         })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const copyLinkButton = (await screen.findByText(/Copy session URL/i, {
+        const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
         act(() => {

@@ -30,7 +30,11 @@ interface VoterIds {
   [key: number]: string | undefined
 }
 
-const Create = (): JSX.Element => {
+export interface CreateProps {
+  loggedIn: boolean
+}
+
+const Create = ({ loggedIn }: CreateProps): JSX.Element => {
   const [address, setAddress] = useState('')
   const [addressError, setAddressError] = useState<string | undefined>(undefined)
   const [choiceType, setChoiceType] = useState<PlaceType>('restaurant')
@@ -41,7 +45,7 @@ const Create = (): JSX.Element => {
   const [radius, setRadius] = useState(30)
   const [rankBy, setRankBy] = useState<RankByType>('prominence')
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
-  const [voterCount, setVoterCount] = useState(2)
+  const [voterCount, setVoterCount] = useState(loggedIn ? 2 : 1)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
   const [voterIdErrors, setVoterIdErrors] = useState<VoterIds>({})
   const [votesPerRound, setVotesPerRound] = useState(20)
@@ -139,7 +143,7 @@ const Create = (): JSX.Element => {
 
   return (
     <>
-      <Card sx={{ m: 'auto', maxWidth: 600, p: 2 }} variant="outlined">
+      <Card sx={{ m: 'auto', maxWidth: 600, p: 2, width: '100%' }} variant="outlined">
         <CardHeader sx={{ textAlign: 'center' }} title="Restaurant Search" />
         <CardContent>
           <Stack spacing={2}>
@@ -291,31 +295,37 @@ const Create = (): JSX.Element => {
                 valueLabelDisplay="auto"
               />
             </label>
-            {voterCount > 1 && (
+            {!loggedIn && (
+              <Typography style={{ textAlign: 'center' }} variant="body1">
+                Sign up to text invite links!
+              </Typography>
+            )}
+            {loggedIn && voterCount > 1 && (
               <Alert severity="info" variant="filled">
-                You must distribute the session link to voters. Enter the phone number of other voters to text them the
+                You must distribute the invite link to voters. Enter the phone number of other voters to text them the
                 link!
               </Alert>
             )}
-            {Array.from({ length: voterCount - 1 }).map((_, index) => (
-              <label key={index}>
-                <TextField
-                  aria-readonly="true"
-                  disabled={isLoading}
-                  error={voterIdErrors[index] !== undefined}
-                  fullWidth
-                  helperText={voterIdErrors[index]}
-                  key={index}
-                  label={`Voter #${index + 2} phone number (optional)`}
-                  name="phone_number"
-                  onChange={(event) => onVoterIdChange(index, event.target.value)}
-                  placeholder="+10000000000"
-                  type="tel"
-                  value={voterIds[index]}
-                  variant="filled"
-                />
-              </label>
-            ))}
+            {loggedIn &&
+              Array.from({ length: voterCount - 1 }).map((_, index) => (
+                <label key={index}>
+                  <TextField
+                    aria-readonly="true"
+                    disabled={isLoading}
+                    error={voterIdErrors[index] !== undefined}
+                    fullWidth
+                    helperText={voterIdErrors[index]}
+                    key={index}
+                    label={`Voter #${index + 2} phone number (optional)`}
+                    name="phone_number"
+                    onChange={(event) => onVoterIdChange(index, event.target.value)}
+                    placeholder="+10000000000"
+                    type="tel"
+                    value={voterIds[index]}
+                    variant="filled"
+                  />
+                </label>
+              ))}
             <Typography style={{ textAlign: 'center' }} variant="caption">
               Voting sessions automatically expire after 24 hours
             </Typography>
