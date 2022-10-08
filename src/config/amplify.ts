@@ -9,6 +9,7 @@ const sessionBaseUrl = process.env.GATSBY_SESSION_API_BASE_URL
 
 // Authorization
 
+export const mapsApiName = 'MapsAPIGateway'
 export const mapsApiNameUnauthenticated = 'MapsAPIGatewayUnauthenticated'
 export const sessionApiName = 'SessionAPIGateway'
 export const sessionApiNameUnauthenticated = 'SessionAPIGatewayUnauthenticated'
@@ -16,6 +17,13 @@ export const sessionApiNameUnauthenticated = 'SessionAPIGatewayUnauthenticated'
 Amplify.configure({
   API: {
     endpoints: [
+      {
+        custom_header: async () => ({
+          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        }),
+        endpoint: mapsBaseUrl,
+        name: mapsApiName,
+      },
       {
         endpoint: mapsBaseUrl,
         name: mapsApiNameUnauthenticated,

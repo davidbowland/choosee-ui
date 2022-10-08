@@ -18,6 +18,9 @@ jest.mock('@services/maps')
 jest.mock('@services/sessions')
 
 describe('SessionCreate component', () => {
+  const address = '90210'
+  const coords = { latitude: 38.897957, longitude: -77.03656 }
+
   const consoleError = console.error
   const navigatorGeolocation = navigator.geolocation
 
@@ -58,21 +61,6 @@ describe('SessionCreate component', () => {
   describe('signed out', () => {
     beforeAll(() => {
       mocked(Auth).currentAuthenticatedUser.mockRejectedValue(undefined)
-    })
-
-    test('expect SignUpCta rendered', () => {
-      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
-      expect(mocked(SignUpCta)).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe('signed in', () => {
-    const address = '90210'
-    const coords = { latitude: 38.897957, longitude: -77.03656 }
-    const otherVoterPhone = '+18005551111'
-
-    beforeAll(() => {
-      mocked(Auth).currentAuthenticatedUser.mockResolvedValue(user)
       mocked(mapsService).fetchAddress.mockResolvedValue({ address })
       mocked(sessionService).createSession.mockResolvedValue({ sessionId })
     })
@@ -106,15 +94,12 @@ describe('SessionCreate component', () => {
       expect(addressInput.value).toEqual('')
     })
 
-    test('expect error message when no address', async () => {
+    test('expect error message on FORBIDDEN response from fetchAddress', async () => {
+      getCurrentPosition.mockReturnValueOnce({ coords })
+      mocked(mapsService).fetchAddress.mockRejectedValueOnce({ response: { status: 403 } })
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
-      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
-
-      expect(await screen.findByText(/Please enter your address to begin/i)).toBeInTheDocument()
+      expect(await screen.findByText(/Unusual traffic detected, please log in to continue/i)).toBeInTheDocument()
     })
 
     test('expect createSession called with new Session', async () => {
@@ -171,6 +156,114 @@ describe('SessionCreate component', () => {
         },
         'qwertyuiokjhgffgh'
       )
+    })
+
+    test('expect error message on FORBIDDEN response from createSession', async () => {
+      mocked(sessionService).createSession.mockRejectedValueOnce({ response: { status: 403 } })
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(addressInput, { target: { value: address } })
+      })
+      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
+      await act(async () => {
+        chooseButton.click()
+      })
+
+      expect(await screen.findByText(/Unusual traffic detected, please log in to continue/i)).toBeInTheDocument()
+    })
+
+    test('expect SignUpCta rendered', () => {
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+      expect(mocked(SignUpCta)).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('signed in', () => {
+    const otherVoterPhone = '+18005551111'
+
+    beforeAll(() => {
+      mocked(Auth).currentAuthenticatedUser.mockResolvedValue(user)
+      mocked(mapsService).fetchAddressAuthenticated.mockResolvedValue({ address })
+      mocked(sessionService).createSessionAuthenticated.mockResolvedValue({ sessionId })
+    })
+
+    test('expect address populated when returned', async () => {
+      getCurrentPosition.mockReturnValueOnce({ coords })
+      getCurrentPosition.mockReturnValueOnce({ coords })
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+
+      await waitFor(() => expect(addressInput.value).toEqual(address))
+      expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(
+        coords.latitude,
+        coords.longitude,
+        'qwertyuiokjhgffgh'
+      )
+    })
+
+    test('expect error message when no address', async () => {
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+
+      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
+      await act(async () => {
+        chooseButton.click()
+      })
+
+      expect(await screen.findByText(/Please enter your address to begin/i)).toBeInTheDocument()
+    })
+
+    test('expect createSession called with new Session', async () => {
+      render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
+
+      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(addressInput, { target: { value: address } })
+      })
+      const radioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
+      await act(async () => {
+        radioButton.click()
+      })
+      const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
+      await act(async () => {
+        checkboxInput.click()
+      })
+      const milesSliderInput = (await screen.findByLabelText(/Max distance to restaurant/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(milesSliderInput, { target: { value: 1 } })
+      })
+      const maxPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[1] as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(maxPriceSliderInput, { target: { value: 3 } })
+      })
+      const minPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[0] as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
+      })
+      const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(pagesSliderInput, { target: { value: 40 } })
+      })
+      const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
+      await act(async () => {
+        fireEvent.change(voterSliderInput, { target: { value: 4 } })
+      })
+      const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
+      await act(async () => {
+        chooseButton.click()
+      })
+
+      expect(mocked(sessionService).createSessionAuthenticated).toHaveBeenCalledWith({
+        address: '90210',
+        maxPrice: 3,
+        minPrice: 2,
+        openNow: false,
+        pagesPerRound: 2,
+        radius: 1_609.34,
+        rankBy: 'prominence',
+        type: 'meal_takeaway',
+        voterCount: 4,
+      })
     })
 
     test('expect success message removed when closed', async () => {
@@ -256,7 +349,7 @@ describe('SessionCreate component', () => {
     })
 
     test('expect error message on createSession error', async () => {
-      mocked(sessionService).createSession.mockRejectedValueOnce(undefined)
+      mocked(sessionService).createSessionAuthenticated.mockRejectedValueOnce(undefined)
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
@@ -272,7 +365,7 @@ describe('SessionCreate component', () => {
     })
 
     test('expect closing error message removes it', async () => {
-      mocked(sessionService).createSession.mockRejectedValueOnce(undefined)
+      mocked(sessionService).createSessionAuthenticated.mockRejectedValueOnce(undefined)
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
@@ -292,7 +385,7 @@ describe('SessionCreate component', () => {
     })
 
     test('expect createSession invalid address message displayed when present', async () => {
-      mocked(sessionService).createSession.mockRejectedValueOnce({ message: 'Invalid address' })
+      mocked(sessionService).createSessionAuthenticated.mockRejectedValueOnce({ message: 'Invalid address' })
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement

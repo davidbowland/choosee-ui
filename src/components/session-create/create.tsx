@@ -19,9 +19,9 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { navigate } from 'gatsby'
 
-import { NewSession, PlaceType, RankByType } from '@types'
-import { createSession, textSession } from '@services/sessions'
-import { fetchAddress } from '@services/maps'
+import { AddressResult, NewSession, PlaceType, RankByType, StringObject } from '@types'
+import { createSession, createSessionAuthenticated, textSession } from '@services/sessions'
+import { fetchAddress, fetchAddressAuthenticated } from '@services/maps'
 
 const METERS_PER_MILE = 1609.34
 const VOTES_PER_PAGE = 20
@@ -70,7 +70,6 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
 
     setIsLoading(true)
     try {
-      const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'CREATE_SESSION' })
       const newSession: NewSession = {
         address,
         maxPrice: priceRange[1],
@@ -82,7 +81,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
         type: choiceType,
         voterCount,
       }
-      const session = await createSession(newSession, token)
+      const session = await postSession(newSession)
       setErrorMessage(undefined)
       setSuccessMessage('Choosee voting session starting')
 
@@ -100,11 +99,21 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
       console.error('generateSession', error)
       if (error?.message === 'Invalid address') {
         setAddressError(error?.message)
+      } else if (error?.response?.status === 403) {
+        setErrorMessage('Unusual traffic detected, please log in to continue.')
       } else {
         setErrorMessage('Error generating Choosee voting session. Please try again later.')
       }
       setIsLoading(false)
     }
+  }
+
+  const getAddress = async (lat: number, lng: number): Promise<AddressResult> => {
+    if (loggedIn) {
+      return await fetchAddressAuthenticated(lat, lng)
+    }
+    const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
+    return await fetchAddress(lat, lng, token)
   }
 
   const onVoterIdChange = (index: number, value: string): void => {
@@ -114,12 +123,22 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     setVoterIds({ ...voterIds, [index]: trimmedPhone })
   }
 
+  const postSession = async (newSession: NewSession): Promise<StringObject> => {
+    if (loggedIn) {
+      return await createSessionAuthenticated(newSession)
+    }
+    const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'CREATE_SESSION' })
+    return await createSession(newSession, token)
+  }
+
   const setLatLng = async (lat: number, lng: number): Promise<void> => {
     try {
-      const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
-      const fetchedAddress = await fetchAddress(lat, lng, token)
+      const fetchedAddress = await getAddress(lat, lng)
       setAddress(fetchedAddress.address)
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
+        setErrorMessage('Unusual traffic detected, please log in to continue.')
+      }
       console.error('setLatLng', error)
     }
   }
@@ -141,7 +160,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
         undefined,
         { enableHighAccuracy: true }
       )
-  }, [])
+  }, [loggedIn])
 
   return (
     <>

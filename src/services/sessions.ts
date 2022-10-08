@@ -6,6 +6,9 @@ import { sessionApiName, sessionApiNameUnauthenticated } from '@config/amplify'
 export const createSession = (session: NewSession, token: string): Promise<StringObject> =>
   API.post(sessionApiNameUnauthenticated, '/sessions', { body: session, headers: { 'x-recaptcha-token': token } })
 
+export const createSessionAuthenticated = (session: NewSession): Promise<StringObject> =>
+  API.post(sessionApiName, '/sessions/authed', { body: session })
+
 export const fetchDecision = (sessionId: string, userId: string): Promise<Decision> =>
   API.get(
     sessionApiNameUnauthenticated,

@@ -1,8 +1,16 @@
 import { Auth } from 'aws-amplify'
 import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
-import { createSession, fetchDecision, fetchSession, textSession, updateDecisions, updateSession } from './sessions'
-import { decisions, jsonPatchOperations, newSession, session, sessionId, userId } from '@test/__mocks__'
+import {
+  createSession,
+  createSessionAuthenticated,
+  fetchDecision,
+  fetchSession,
+  textSession,
+  updateDecisions,
+  updateSession,
+} from './sessions'
+import { decisions, jsonPatchOperations, newSession, recaptchaToken, session, sessionId, userId } from '@test/__mocks__'
 import { rest, server } from '@test/setup-server'
 
 const baseUrl = process.env.GATSBY_SESSION_API_BASE_URL
@@ -20,6 +28,10 @@ describe('Sessions service', () => {
     beforeAll(() => {
       server.use(
         rest.post(`${baseUrl}/sessions`, async (req, res, ctx) => {
+          if (req.headers.get('x-recaptcha-token') !== recaptchaToken) {
+            return res(ctx.status(401))
+          }
+
           const body = postEndpoint(await req.json())
           return res(body ? ctx.json(body) : ctx.status(400))
         })
@@ -27,7 +39,7 @@ describe('Sessions service', () => {
     })
 
     test('expect endpoint called with session', async () => {
-      await createSession(newSession)
+      await createSession(newSession, recaptchaToken)
       expect(postEndpoint).toHaveBeenCalledWith(expect.objectContaining(newSession))
     })
 
@@ -35,7 +47,34 @@ describe('Sessions service', () => {
       const expectedResult = { id: 'aeiou' }
       postEndpoint.mockReturnValue(expectedResult)
 
-      const result = await createSession(newSession)
+      const result = await createSession(newSession, recaptchaToken)
+      expect(postEndpoint).toHaveBeenCalledTimes(1)
+      expect(result).toEqual(expectedResult)
+    })
+  })
+
+  describe('createSessionAuthenticated', () => {
+    const postEndpoint = jest.fn().mockReturnValue({ id: sessionId })
+
+    beforeAll(() => {
+      server.use(
+        rest.post(`${baseUrl}/sessions/authed`, async (req, res, ctx) => {
+          const body = postEndpoint(await req.json())
+          return res(body ? ctx.json(body) : ctx.status(400))
+        })
+      )
+    })
+
+    test('expect endpoint called with session', async () => {
+      await createSessionAuthenticated(newSession)
+      expect(postEndpoint).toHaveBeenCalledWith(expect.objectContaining(newSession))
+    })
+
+    test('expect result from call returned', async () => {
+      const expectedResult = { id: 'aeiou' }
+      postEndpoint.mockReturnValue(expectedResult)
+
+      const result = await createSessionAuthenticated(newSession)
       expect(postEndpoint).toHaveBeenCalledTimes(1)
       expect(result).toEqual(expectedResult)
     })
