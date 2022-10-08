@@ -31,7 +31,8 @@ const Disclaimer = (): JSX.Element => {
                     phone number simply to prevent fraud and to keep costs low. Depending on your activity, your IP
                     address may appear in our logs for up to 90 days. We never sell your information, but we do collect
                     device and site usage information using{' '}
-                    <Link to="https://aws.amazon.com/pinpoint/">Amazon Pinpoint</Link>.
+                    <Link to="https://aws.amazon.com/pinpoint/">Amazon Pinpoint</Link> and protect our site with{' '}
+                    <Link to="https://www.google.com/intl/en/policies/privacy/">reCAPTCHA v3</Link>.
                   </Typography>
                   <Typography variant="body2">
                     See our <Link to="/privacy-policy">privacy policy</Link> for more information.

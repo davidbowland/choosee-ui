@@ -35,16 +35,4 @@ describe('SignUpCta component', () => {
     expect(setAuthState).toHaveBeenCalledWith('signUp')
     expect(setShowLogin).toHaveBeenCalledWith(true)
   })
-
-  test('expect sign in button invokes setAuthState and setShowLogin', async () => {
-    render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
-
-    const signInButton = (await screen.findByLabelText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-    await act(async () => {
-      signInButton.click()
-    })
-
-    expect(setAuthState).toHaveBeenCalledWith('signIn')
-    expect(setShowLogin).toHaveBeenCalledWith(true)
-  })
 })

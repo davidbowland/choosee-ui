@@ -6,7 +6,7 @@ import { mocked } from 'jest-mock'
 
 import * as mapsService from '@services/maps'
 import * as sessionService from '@services/sessions'
-import { sessionId, user } from '@test/__mocks__'
+import { recaptchaToken, sessionId, user } from '@test/__mocks__'
 import SessionCreate from './index'
 import SignUpCta from '@components/sign-up-cta'
 
@@ -22,6 +22,7 @@ describe('SessionCreate component', () => {
   const navigatorGeolocation = navigator.geolocation
 
   const getCurrentPosition = jest.fn()
+  const grecaptchaExecute = jest.fn()
   const setAuthState = jest.fn()
   const setShowLogin = jest.fn()
 
@@ -38,7 +39,12 @@ describe('SessionCreate component', () => {
         },
       },
     })
+    Object.defineProperty(window, 'grecaptcha', {
+      configurable: true,
+      value: { execute: grecaptchaExecute },
+    })
     mocked(SignUpCta).mockReturnValue(<></>)
+    grecaptchaExecute.mockResolvedValue(recaptchaToken)
   })
 
   afterAll(() => {
@@ -77,7 +83,11 @@ describe('SessionCreate component', () => {
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
 
       await waitFor(() => expect(addressInput.value).toEqual(address))
-      expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+      expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(
+        coords.latitude,
+        coords.longitude,
+        'qwertyuiokjhgffgh'
+      )
     })
 
     test('expect no address populated when no result', async () => {
@@ -87,7 +97,11 @@ describe('SessionCreate component', () => {
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
 
       await waitFor(() =>
-        expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude)
+        expect(mocked(mapsService).fetchAddress).toHaveBeenCalledWith(
+          coords.latitude,
+          coords.longitude,
+          'qwertyuiokjhgffgh'
+        )
       )
       expect(addressInput.value).toEqual('')
     })
@@ -143,17 +157,20 @@ describe('SessionCreate component', () => {
         chooseButton.click()
       })
 
-      expect(mocked(sessionService).createSession).toHaveBeenCalledWith({
-        address: '90210',
-        maxPrice: 3,
-        minPrice: 2,
-        openNow: false,
-        pagesPerRound: 2,
-        radius: 1_609.34,
-        rankBy: 'prominence',
-        type: 'meal_takeaway',
-        voterCount: 4,
-      })
+      expect(mocked(sessionService).createSession).toHaveBeenCalledWith(
+        {
+          address: '90210',
+          maxPrice: 3,
+          minPrice: 2,
+          openNow: false,
+          pagesPerRound: 2,
+          radius: 1_609.34,
+          rankBy: 'prominence',
+          type: 'meal_takeaway',
+          voterCount: 4,
+        },
+        'qwertyuiokjhgffgh'
+      )
     })
 
     test('expect success message removed when closed', async () => {

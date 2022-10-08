@@ -50,6 +50,9 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
   return (
     <Stack margin="auto" maxWidth="400px" spacing={2}>
       <Typography variant="h6">Enter your phone number to vote</Typography>
+      <Typography variant="caption">
+        Your phone number is only used to track your vote. We won&apos;t use it to contact you or sell your information.
+      </Typography>
       <label>
         <TextField
           aria-readonly="true"

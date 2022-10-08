@@ -3,10 +3,8 @@ import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
-import Fab from '@mui/material/Fab'
 import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
 import Grid from '@mui/material/Grid'
-import LoginIcon from '@mui/icons-material/Login'
 import React from 'react'
 import Stack from '@mui/material/Stack'
 import { StaticImage } from 'gatsby-plugin-image'
@@ -47,11 +45,6 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
       </Card>
     </Grid>
   )
-
-  const signInClick = (): void => {
-    setAuthState('signIn')
-    setShowLogin(true)
-  }
 
   const signUpClick = (): void => {
     setAuthState('signUp')
@@ -130,21 +123,6 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
           Sign in to unlock the ability to modify vote options while the vote is in progress.
         </CtaCard>
       </Grid>
-      <Fab
-        aria-label="sign in"
-        color="primary"
-        onClick={signInClick}
-        sx={{
-          bottom: 20,
-          left: 'auto',
-          margin: 0,
-          position: 'fixed',
-          right: 20,
-          top: 'auto',
-        }}
-      >
-        <LoginIcon />
-      </Fab>
     </>
   )
 }

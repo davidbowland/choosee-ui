@@ -25,7 +25,7 @@
     "serve": "npm run build && gatsby serve",
     "test": "jest --colors",
     "typecheck": "tsc --noEmit",
-    "update": "ncu -u && npm i --legacy-peer-deps && npm audit fix --legacy-peer-deps && npm run test && npm dedupe --legacy-peer-deps"
+    "update": "ncu -u && npm i --legacy-peer-deps && npm audit fix --audit-level=none --legacy-peer-deps && npm run test && npm dedupe --legacy-peer-deps"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
@@ -47,6 +47,7 @@
     "@mui/icons-material": "^5.10.6",
     "@mui/lab": "^5.0.0-alpha.101",
     "@mui/material": "^5.10.7",
+    "@types/grecaptcha": "^3.0.4",
     "aws-amplify": "^4.3.37",
     "axios": "^0.27.2",
     "babel-plugin-styled-components": "^2.0.7",

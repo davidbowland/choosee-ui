@@ -7,6 +7,7 @@ declare global {
       GATSBY_IDENTITY_POOL_ID: string
       GATSBY_MAPS_API_BASE_URL: string
       GATSBY_PINPOINT_ID: string
+      GATSBY_RECAPTCHA_SITE_KEY: string
       GATSBY_SESSION_API_BASE_URL: string
     }
   }

@@ -19,6 +19,11 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
     Auth.currentAuthenticatedUser()
       .then(() => setLoggedIn(true))
       .catch(() => setLoggedIn(false))
+
+    const script = document.createElement('script')
+    script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.GATSBY_RECAPTCHA_SITE_KEY}`
+    script.async = true
+    document.body.appendChild(script)
   }, [])
 
   return (

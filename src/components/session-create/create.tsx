@@ -70,6 +70,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
 
     setIsLoading(true)
     try {
+      const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'CREATE_SESSION' })
       const newSession: NewSession = {
         address,
         maxPrice: priceRange[1],
@@ -81,7 +82,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
         type: choiceType,
         voterCount,
       }
-      const session = await createSession(newSession)
+      const session = await createSession(newSession, token)
       setErrorMessage(undefined)
       setSuccessMessage('Choosee voting session starting')
 
@@ -115,7 +116,8 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
 
   const setLatLng = async (lat: number, lng: number): Promise<void> => {
     try {
-      const fetchedAddress = await fetchAddress(lat, lng)
+      const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
+      const fetchedAddress = await fetchAddress(lat, lng, token)
       setAddress(fetchedAddress.address)
     } catch (error) {
       console.error('setLatLng', error)

@@ -68,6 +68,8 @@ export const placeDetails: PlaceDetails = {
   website: 'https://dbowland.com/',
 }
 
+export const recaptchaToken = 'qwertyuiokjhgffgh'
+
 export const session: SessionData = {
   address: 'Columbia, MO 65203, USA',
   choiceId,
@@ -77,6 +79,8 @@ export const session: SessionData = {
     lat: 38.9538484,
     lng: -92.3714428,
   },
+  maxPrice: 4,
+  minPrice: 1,
   openNow: false,
   owner: '178300fb-3ab6-41e2-bab6-231964026e42',
   pagesPerRound: 1,
