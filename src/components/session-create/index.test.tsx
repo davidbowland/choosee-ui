@@ -129,10 +129,6 @@ describe('SessionCreate component', () => {
       await act(async () => {
         fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
       })
-      const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(pagesSliderInput, { target: { value: 40 } })
-      })
       const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
       await act(async () => {
         fireEvent.change(voterSliderInput, { target: { value: 4 } })
@@ -148,7 +144,7 @@ describe('SessionCreate component', () => {
           maxPrice: 3,
           minPrice: 2,
           openNow: false,
-          pagesPerRound: 2,
+          pagesPerRound: 1,
           radius: 1_609.34,
           rankBy: 'prominence',
           type: 'meal_takeaway',
@@ -240,10 +236,6 @@ describe('SessionCreate component', () => {
       await act(async () => {
         fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
       })
-      const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(pagesSliderInput, { target: { value: 40 } })
-      })
       const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
       await act(async () => {
         fireEvent.change(voterSliderInput, { target: { value: 4 } })
@@ -258,7 +250,7 @@ describe('SessionCreate component', () => {
         maxPrice: 3,
         minPrice: 2,
         openNow: false,
-        pagesPerRound: 2,
+        pagesPerRound: 1,
         radius: 1_609.34,
         rankBy: 'prominence',
         type: 'meal_takeaway',

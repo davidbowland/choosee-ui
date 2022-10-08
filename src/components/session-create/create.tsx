@@ -24,7 +24,6 @@ import { createSession, createSessionAuthenticated, textSession } from '@service
 import { fetchAddress, fetchAddressAuthenticated } from '@services/maps'
 
 const METERS_PER_MILE = 1609.34
-const VOTES_PER_PAGE = 20
 
 interface VoterIds {
   [key: number]: string | undefined
@@ -48,7 +47,6 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
   const [voterCount, setVoterCount] = useState(loggedIn ? 2 : 1)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
   const [voterIdErrors, setVoterIdErrors] = useState<VoterIds>({})
-  const [votesPerRound, setVotesPerRound] = useState(20)
 
   const generateSession = async (): Promise<void> => {
     if (!address) {
@@ -75,7 +73,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
         maxPrice: priceRange[1],
         minPrice: priceRange[0],
         openNow,
-        pagesPerRound: Math.round(votesPerRound / VOTES_PER_PAGE),
+        pagesPerRound: 1,
         radius: rankBy === 'prominence' ? radius * METERS_PER_MILE : undefined,
         rankBy,
         type: choiceType,
@@ -284,21 +282,6 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
                 min={1}
                 onChange={(_: any, value: any) => setPriceRange(value)}
                 step={1}
-              />
-            </label>
-            <label>
-              Max votes per round: {votesPerRound}
-              <Slider
-                aria-label="Max votes per round"
-                defaultValue={votesPerRound}
-                disabled={isLoading}
-                marks={true}
-                max={40}
-                min={20}
-                onChange={(_: any, value: any) => setVotesPerRound(value)}
-                step={20}
-                sx={{ paddingTop: '35px' }}
-                valueLabelDisplay="auto"
               />
             </label>
             <label>
