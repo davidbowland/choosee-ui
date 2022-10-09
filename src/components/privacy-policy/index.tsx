@@ -88,13 +88,6 @@ const PrivacyPolicy = (): JSX.Element => {
         We may update this privacy policy from time to time in order to reflect, for example, changes to our practices
         or for other operational, legal or regulatory reasons.
       </Typography>
-      <Typography variant="h6">CONTACT US</Typography>
-      <Typography variant="body1">
-        For more information about our privacy practices, if you have questions, or if you would like to make a
-        complaint, please contact us by e-mail at <Link to="mailto:privacy@dbowland.com">privacy@dbowland.com</Link> or
-        by mail using the details provided below:
-      </Typography>
-      <Typography variant="body1">4000 Citation Dr, Columbia, MO, 65202, United States</Typography>
     </Stack>
   )
 }

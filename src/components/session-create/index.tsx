@@ -18,12 +18,14 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
   useEffect(() => {
     Auth.currentAuthenticatedUser()
       .then(() => setLoggedIn(true))
-      .catch(() => setLoggedIn(false))
+      .catch(() => {
+        setLoggedIn(false)
 
-    const script = document.createElement('script')
-    script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.GATSBY_RECAPTCHA_SITE_KEY}`
-    script.async = true
-    document.body.appendChild(script)
+        const script = document.createElement('script')
+        script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.GATSBY_RECAPTCHA_SITE_KEY}`
+        script.async = true
+        document.body.appendChild(script)
+      })
   }, [])
 
   return (
