@@ -116,9 +116,28 @@ describe('Session component', () => {
         await act(async () => {
           fireEvent.change(userIdInput, { target: { value: userId } })
         })
+        act(() => {
+          fireEvent.keyUp(userIdInput, { key: 'Escape' })
+        })
         const chooseButton = (await screen.findByText(/Let's choose!/i, { selector: 'button' })) as HTMLButtonElement
         await act(async () => {
           chooseButton.click()
+        })
+
+        expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
+        expect(await screen.findByText(/Shakespeare's Pizza - Downtown/i)).toBeInTheDocument()
+        expect(mocked(sessionService).fetchDecision).toHaveBeenCalledWith('aeio', '+18005551234')
+      })
+
+      test('expect enter key also logs in', async () => {
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+
+        const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
+        await act(async () => {
+          fireEvent.change(userIdInput, { target: { value: userId } })
+        })
+        act(() => {
+          fireEvent.keyUp(userIdInput, { key: 'Enter' })
         })
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()

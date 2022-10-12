@@ -63,6 +63,11 @@ const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogi
           label="Your phone number"
           name="phone_number"
           onChange={onUserIdChange}
+          onKeyUp={(event: React.KeyboardEvent) => {
+            if (event.key === 'Enter') {
+              chooseClick()
+            }
+          }}
           placeholder="+10000000000"
           type="tel"
           value={userId}
