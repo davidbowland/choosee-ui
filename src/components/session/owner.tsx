@@ -9,11 +9,13 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CircularProgress from '@mui/material/CircularProgress'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import Divider from '@mui/material/Divider'
+import { QRCodeSVG } from 'qrcode.react'
 import Slider from '@mui/material/Slider'
 import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import jsonpatch from 'fast-json-patch'
+import { useTheme } from '@mui/material/styles'
 
 import { SessionData } from '@types'
 import { updateSession } from '@services/sessions'
@@ -31,6 +33,8 @@ const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.El
   const [sessionUrl, setSessionUrl] = useState<string>('')
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
   const [workingSession, setWorkingSession] = useState(session)
+
+  const theme = useTheme()
 
   const copySessionUrl = () => {
     try {
@@ -92,6 +96,16 @@ const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.El
               Copy invite URL
             </Button>
           </CardActions>
+        </Card>
+        <Card sx={{ p: '0 15px', textAlign: 'center' }} variant="outlined">
+          <CardHeader title="Invite QR code" />
+          <CardContent>
+            <QRCodeSVG
+              bgColor={theme.palette.background.paper}
+              fgColor={theme.palette.primary.main}
+              value={sessionUrl}
+            />
+          </CardContent>
         </Card>
         {loggedIn && (
           <>

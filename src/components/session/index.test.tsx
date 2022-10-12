@@ -461,6 +461,7 @@ describe('Session component', () => {
       test('expect copy invokes writeText and displays message', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
+        await screen.findByLabelText(/Max votes per round/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -475,6 +476,7 @@ describe('Session component', () => {
       test('expect closing copy success message removes it', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
+        await screen.findByLabelText(/Max votes per round/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -497,6 +499,7 @@ describe('Session component', () => {
         })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
+        await screen.findByLabelText(/Max votes per round/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -514,6 +517,7 @@ describe('Session component', () => {
         })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
+        await screen.findByLabelText(/Max votes per round/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement

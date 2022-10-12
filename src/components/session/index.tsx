@@ -146,12 +146,17 @@ const Session = ({
       return <Expired />
     } else if (loggedInUser === undefined) {
       return (
-        <LoginPrompt
-          initialUserId={initialUserId}
-          setAuthState={setAuthState}
-          setLoggedInUser={setLoggedInUser}
-          setShowLogin={setShowLogin}
-        />
+        <Stack spacing={4}>
+          <LoginPrompt
+            initialUserId={initialUserId}
+            setAuthState={setAuthState}
+            setLoggedInUser={setLoggedInUser}
+            setShowLogin={setShowLogin}
+          />
+          {session.owner === undefined && (
+            <Owner loggedIn={false} session={session} sessionId={sessionId} setSession={setSession} />
+          )}
+        </Stack>
       )
     } else if (session?.status.current === 'deciding') {
       if (place === undefined) {
