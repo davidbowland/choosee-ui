@@ -461,7 +461,7 @@ describe('Session component', () => {
       test('expect copy invokes writeText and displays message', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        await screen.findByLabelText(/Max votes per round/i)
+        await screen.findByLabelText(/Number of voters/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -476,7 +476,7 @@ describe('Session component', () => {
       test('expect closing copy success message removes it', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        await screen.findByLabelText(/Max votes per round/i)
+        await screen.findByLabelText(/Number of voters/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -499,7 +499,7 @@ describe('Session component', () => {
         })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        await screen.findByLabelText(/Max votes per round/i)
+        await screen.findByLabelText(/Number of voters/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -517,7 +517,7 @@ describe('Session component', () => {
         })
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        await screen.findByLabelText(/Max votes per round/i)
+        await screen.findByLabelText(/Number of voters/i)
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
@@ -537,10 +537,6 @@ describe('Session component', () => {
       test('expect updateSession invoked with patched Session', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const pagesSliderInput = (await screen.findByLabelText(/Max votes per round/i)) as HTMLInputElement
-        await act(async () => {
-          fireEvent.change(pagesSliderInput, { target: { value: 40 } })
-        })
         const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
         await act(async () => {
           fireEvent.change(voterSliderInput, { target: { value: 4 } })
@@ -555,8 +551,6 @@ describe('Session component', () => {
         expect(mocked(sessionService).updateSession).toHaveBeenCalledWith(sessionId, [
           { op: 'test', path: '/voterCount', value: 2 },
           { op: 'replace', path: '/voterCount', value: 4 },
-          { op: 'test', path: '/pagesPerRound', value: 1 },
-          { op: 'replace', path: '/pagesPerRound', value: 2 },
         ])
       })
 

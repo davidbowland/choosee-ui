@@ -114,23 +114,6 @@ const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.El
               <CardHeader sx={{ textAlign: 'center' }} title="Vote Options" />
               <CardContent>
                 <label>
-                  Max votes per round: {workingSession.pagesPerRound * 20}
-                  <Slider
-                    aria-label="Max votes per round"
-                    defaultValue={workingSession.pagesPerRound * 20}
-                    disabled={isLoading}
-                    marks={true}
-                    max={40}
-                    min={20}
-                    onChange={(_: any, value: any) =>
-                      setWorkingSession({ ...workingSession, pagesPerRound: value / 20 })
-                    }
-                    step={20}
-                    sx={{ paddingTop: '35px' }}
-                    valueLabelDisplay="auto"
-                  />
-                </label>
-                <label>
                   Number of voters: {workingSession.voterCount}
                   <Slider
                     aria-label="Number of voters"
