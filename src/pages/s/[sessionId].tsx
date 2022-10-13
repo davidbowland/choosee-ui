@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Grid from '@mui/material/Grid'
 import { Helmet } from 'react-helmet'
+import { useTheme } from '@mui/material/styles'
 
 import { AuthState } from '@types'
 import Authenticated from '@components/auth'
@@ -20,8 +21,17 @@ const SessionPage = ({ params }: SessionPageProps): JSX.Element => {
   const [authState, setAuthState] = useState<AuthState>('signIn')
   const [showLogin, setShowLogin] = useState(false)
 
+  /* Required to fix an odd color issue with the Disclaimer */
+  const theme = useTheme()
+
   return (
-    <main style={{ minHeight: '90vh' }}>
+    <main
+      style={{
+        backgroundColor: theme.palette.background.default,
+        color: theme.palette.text.primary,
+        minHeight: '100vh',
+      }}
+    >
       <Helmet>
         <title>Choosee | dbowland.com</title>
       </Helmet>
