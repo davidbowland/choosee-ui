@@ -271,21 +271,6 @@ describe('Session component', () => {
         expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
       })
 
-      test('expect second page fetched when last choice in decisions', async () => {
-        mocked(sessionService).fetchDecision.mockResolvedValueOnce({ decisions: { [choices[1].name]: true } })
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
-
-        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          await yesButton.click()
-        })
-        mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
-        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choicesPage2)
-
-        expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
-        expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
-      })
-
       test('expect error message when fetch fails', async () => {
         mocked(sessionService).fetchDecision.mockRejectedValueOnce(undefined)
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
