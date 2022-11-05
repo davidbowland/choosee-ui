@@ -42,7 +42,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
 
   const deleteAccountClick = async (): Promise<void> => {
     setShowDeleteDialog(false)
-    loggedInUser.deleteUser((err) => {
+    loggedInUser.deleteUser((err: any) => {
       if (err) {
         console.error('deleteAccountClick', err)
         setShowDeleteErrorSnackbar(true)
