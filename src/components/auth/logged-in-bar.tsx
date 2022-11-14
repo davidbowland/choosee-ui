@@ -1,3 +1,4 @@
+import { Link, navigate } from 'gatsby'
 import React, { useState } from 'react'
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded'
 import Alert from '@mui/material/Alert'
@@ -13,7 +14,6 @@ import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
-import { Link } from 'gatsby'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import ListItemIcon from '@mui/material/ListItemIcon'
@@ -89,7 +89,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
       <SwipeableDrawer anchor="right" onClose={closeMenu} onOpen={openMenu} open={isDrawerOpen}>
         <Box onClick={closeMenu} role="presentation" sx={{ width: 250 }}>
           <List>
-            <ListItem button component="a" href="/privacy-policy">
+            <ListItem button onClick={() => navigate('/privacy-policy')}>
               <ListItemIcon>
                 <PrivacyTipIcon />
               </ListItemIcon>
