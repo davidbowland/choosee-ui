@@ -15,7 +15,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
+import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -89,14 +89,13 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
       <SwipeableDrawer anchor="right" onClose={closeMenu} onOpen={openMenu} open={isDrawerOpen}>
         <Box onClick={closeMenu} role="presentation" sx={{ width: 250 }}>
           <List>
-            <ListItem button onClick={() => navigate('/privacy-policy')}>
+            <ListItemButton onClick={() => navigate('/privacy-policy')}>
               <ListItemIcon>
                 <PrivacyTipIcon />
               </ListItemIcon>
               <ListItemText primary="Privacy policy" />
-            </ListItem>
-            <ListItem
-              button
+            </ListItemButton>
+            <ListItemButton
               onClick={() => {
                 closeMenu()
                 setLoggedInUser(undefined)
@@ -107,25 +106,25 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
                 <LogoutIcon />
               </ListItemIcon>
               <ListItemText primary="Sign out" />
-            </ListItem>
+            </ListItemButton>
           </List>
           <Divider />
           <List>
-            <ListItem button>
+            <ListItemButton>
               <ListItemIcon>
                 <CloseRoundedIcon />
               </ListItemIcon>
               <ListItemText primary="Close" />
-            </ListItem>
+            </ListItemButton>
           </List>
           <Divider />
           <List>
-            <ListItem button onClick={() => setShowDeleteDialog(true)}>
+            <ListItemButton onClick={() => setShowDeleteDialog(true)}>
               <ListItemIcon>
                 <DeleteIcon />
               </ListItemIcon>
               <ListItemText primary="Delete account" />
-            </ListItem>
+            </ListItemButton>
           </List>
         </Box>
       </SwipeableDrawer>

@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import * as gatsby from 'gatsby'
 import { Authenticator, ThemeProvider } from '@aws-amplify/ui-react'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
@@ -11,6 +12,7 @@ import { user } from '@test/__mocks__'
 jest.mock('aws-amplify')
 jest.mock('@aws-amplify/analytics')
 jest.mock('@aws-amplify/ui-react')
+jest.mock('gatsby')
 
 describe('Authenticated component', () => {
   const authState = 'signIn'
@@ -203,8 +205,32 @@ describe('Authenticated component', () => {
         menuButton.click()
       })
 
+      expect(await screen.findByText(/Privacy policy/i)).toBeVisible()
       expect(await screen.findByText(/Sign out/i)).toBeVisible()
       expect(await screen.findByText(/Delete account/i)).toBeVisible()
+    })
+
+    test('expect selecting privacy policy navigates', async () => {
+      render(
+        <Authenticated
+          initialAuthState={authState}
+          initialShowLogin={showLogin}
+          setInitialAuthState={setInitialAuthState}
+          setInitialShowLogin={setInitialShowLogin}
+        >
+          <p>Testing children</p>
+        </Authenticated>
+      )
+      const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
+      await act(async () => {
+        menuButton.click()
+      })
+      const privacyPolicyButton = (await screen.findByText(/Privacy policy/i)) as HTMLButtonElement
+      await act(async () => {
+        privacyPolicyButton.click()
+      })
+
+      expect(mocked(gatsby).navigate).toHaveBeenCalledWith('/privacy-policy')
     })
 
     test('expect selecting sign out signs the user out', async () => {
