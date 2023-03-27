@@ -3,8 +3,8 @@ import Grid from '@mui/material/Grid'
 import { Helmet } from 'react-helmet'
 import { useTheme } from '@mui/material/styles'
 
-import { AuthState } from '@types'
 import Authenticated from '@components/auth'
+import { AuthState } from '@types'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
 

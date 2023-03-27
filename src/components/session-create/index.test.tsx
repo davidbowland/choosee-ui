@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
-import React from 'react'
 import { mocked } from 'jest-mock'
+import React from 'react'
 
 import * as mapsService from '@services/maps'
 import * as sessionService from '@services/sessions'

@@ -4,8 +4,8 @@ import Paper from '@mui/material/Paper'
 import { useTheme } from '@mui/material/styles'
 
 import '@config/amplify'
-import { AuthState } from '@types'
 import Authenticated from '@components/auth'
+import { AuthState } from '@types'
 import PrivacyPolicy from '@components/privacy-policy'
 
 const PrivacyPage = (): JSX.Element => {

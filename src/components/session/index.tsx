@@ -3,21 +3,21 @@ import Alert from '@mui/material/Alert'
 import { Auth } from 'aws-amplify'
 import Backdrop from '@mui/material/Backdrop'
 import Box from '@mui/material/Box'
+import jsonpatch from 'fast-json-patch'
 import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import jsonpatch from 'fast-json-patch'
 
 import { AmplifyUser, AuthState, Decision, PlaceDetails, SessionData } from '@types'
 import { fetchDecision, fetchSession, updateDecisions } from '@services/sessions'
 import Deciding from './deciding'
 import Expired from './expired'
+import { fetchChoices } from '@services/maps'
 import Finished from './finished'
 import LoginPrompt from './login-prompt'
 import Logo from '@components/logo'
 import Owner from './owner'
 import Winner from './winner'
-import { fetchChoices } from '@services/maps'
 
 const MAX_STATUS_REFRESH_COUNT = 50
 const delayBetweenRefreshMs = parseInt(process.env.GATSBY_DELAY_BETWEEN_REFRESH_MS, 10)
