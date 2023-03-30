@@ -377,9 +377,9 @@ describe('Session component', () => {
         await act(async () => {
           yesButton.click()
         })
+        await screen.findByText(/Subway/i)
         mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choicesPage2)
-        await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
         await act(async () => {
           noButton.click()
@@ -397,11 +397,11 @@ describe('Session component', () => {
         await act(async () => {
           yesButton.click()
         })
+        await screen.findByText(/Subway/i)
         mocked(sessionService).fetchSession.mockResolvedValueOnce({
           ...session,
           status: { ...statusDeciding, current: 'finished' },
         })
-        await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
         await act(async () => {
           noButton.click()
