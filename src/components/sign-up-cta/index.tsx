@@ -77,7 +77,12 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
           </Stack>
         </Grid>
       </Grid>
-      <Grid container justifyContent="center" spacing={4} sx={{ minHeight: '100vh', paddingRight: 4, width: '100%' }}>
+      <Grid
+        container
+        justifyContent="center"
+        spacing={4}
+        sx={{ minHeight: '100vh', paddingRight: 4, paddingTop: 2, width: '100%' }}
+      >
         <CtaCard
           cta="Sign up"
           img={<StaticImage alt="Restaurant search" src="../../assets/images/restaurant-search.png" />}

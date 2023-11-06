@@ -147,15 +147,19 @@ const Session = ({
     } else if (loggedInUser === undefined) {
       return (
         <Stack spacing={4}>
-          <LoginPrompt
-            initialUserId={initialUserId}
-            setAuthState={setAuthState}
-            setLoggedInUser={setLoggedInUser}
-            setShowLogin={setShowLogin}
-          />
-          {session.owner === undefined && (
-            <Owner loggedIn={false} session={session} sessionId={sessionId} setSession={setSession} />
-          )}
+          <Box>
+            <LoginPrompt
+              initialUserId={initialUserId}
+              setAuthState={setAuthState}
+              setLoggedInUser={setLoggedInUser}
+              setShowLogin={setShowLogin}
+            />
+          </Box>
+          <Box>
+            {session.owner === undefined && (
+              <Owner loggedIn={false} session={session} sessionId={sessionId} setSession={setSession} />
+            )}
+          </Box>
         </Stack>
       )
     } else if (session?.status.current === 'deciding') {
@@ -173,7 +177,9 @@ const Session = ({
       } else {
         return (
           <Stack spacing={2}>
-            <Deciding address={session.address} makeChoice={makeChoice} place={place} />
+            <Box>
+              <Deciding address={session.address} makeChoice={makeChoice} place={place} />
+            </Box>
             {session.owner === loggedInUser?.attributes?.sub && (
               <Owner loggedIn={!!session.owner} session={session} sessionId={sessionId} setSession={setSession} />
             )}
@@ -230,30 +236,34 @@ const Session = ({
         sx={{ color: '#fff', textAlign: 'center', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
       >
         <Stack spacing={2} sx={{ m: { sm: '50px', xs: '25px' }, maxWidth: '100%', width: '600px' }}>
-          {isWaiting ? (
-            <>
+          <Box>
+            {isWaiting ? (
+              <>
+                <Typography color="#fff" variant="h5">
+                  Round {pageId + 1} complete
+                </Typography>
+                <Typography color="#fff" variant="h5">
+                  {statusCount < maxStatusRefreshCount ? 'Waiting for other voters' : 'Please refresh the page'}
+                </Typography>
+              </>
+            ) : (
               <Typography color="#fff" variant="h5">
-                Round {pageId + 1} complete
+                Loading
               </Typography>
-              <Typography color="#fff" variant="h5">
-                {statusCount < maxStatusRefreshCount ? 'Waiting for other voters' : 'Please refresh the page'}
-              </Typography>
-            </>
-          ) : (
-            <Typography color="#fff" variant="h5">
-              Loading
-            </Typography>
-          )}
+            )}
+          </Box>
           <Box sx={{ width: '100%' }}>
             <LinearProgress />
           </Box>
-          {isWaiting && (
-            <div>
-              <Typography color="#fff" variant="h6">
-                If other voters aren&apos;t actively voting, you can bookmark this page and come back later.
-              </Typography>
-            </div>
-          )}
+          <Box>
+            {isWaiting && (
+              <div>
+                <Typography color="#fff" variant="h6">
+                  If other voters aren&apos;t actively voting, you can bookmark this page and come back later.
+                </Typography>
+              </div>
+            )}
+          </Box>
         </Stack>
       </Backdrop>
     </>

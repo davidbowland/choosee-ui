@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Auth } from 'aws-amplify'
+import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 
@@ -30,13 +31,17 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
 
   return (
     <Stack spacing={4}>
-      <Create loggedIn={loggedIn} />
-      {!loggedIn && (
-        <>
-          <Divider />
-          <SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />
-        </>
-      )}
+      <Box>
+        <Create loggedIn={loggedIn} />
+      </Box>
+      <Box>
+        {!loggedIn && (
+          <>
+            <Divider />
+            <SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />
+          </>
+        )}
+      </Box>
     </Stack>
   )
 }
