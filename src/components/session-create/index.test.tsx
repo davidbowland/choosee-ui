@@ -21,9 +21,6 @@ describe('SessionCreate component', () => {
   const address = '90210'
   const coords = { latitude: 38.897957, longitude: -77.03656 }
 
-  const consoleError = console.error
-  const navigatorGeolocation = navigator.geolocation
-
   const getCurrentPosition = jest.fn()
   const grecaptchaExecute = jest.fn()
   const setAuthState = jest.fn()
@@ -48,14 +45,6 @@ describe('SessionCreate component', () => {
     })
     mocked(SignUpCta).mockReturnValue(<></>)
     grecaptchaExecute.mockResolvedValue(recaptchaToken)
-  })
-
-  afterAll(() => {
-    console.error = consoleError
-    Object.defineProperty(navigator, 'geolocation', {
-      configurable: true,
-      value: navigatorGeolocation,
-    })
   })
 
   describe('signed out', () => {

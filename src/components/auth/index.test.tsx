@@ -16,12 +16,10 @@ jest.mock('gatsby')
 
 describe('Authenticated component', () => {
   const authState = 'signIn'
-  const consoleError = console.error
   const mockLocationReload = jest.fn()
   const showLogin = false
   const setInitialAuthState = jest.fn()
   const setInitialShowLogin = jest.fn()
-  const windowLocationReload = window.location.reload
 
   beforeAll(() => {
     mocked(Auth).signOut.mockResolvedValue({})
@@ -32,14 +30,6 @@ describe('Authenticated component', () => {
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { reload: mockLocationReload },
-    })
-  })
-
-  afterAll(() => {
-    console.error = consoleError
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { replace: windowLocationReload },
     })
   })
 

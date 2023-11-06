@@ -7,16 +7,11 @@ import SignUpCta from './index'
 jest.mock('@components/logo')
 
 describe('SignUpCta component', () => {
-  const consoleError = console.error
   const setAuthState = jest.fn()
   const setShowLogin = jest.fn()
 
   beforeAll(() => {
     console.error = jest.fn()
-  })
-
-  afterAll(() => {
-    console.error = consoleError
   })
 
   test('expect sign up button to be rendered', async () => {

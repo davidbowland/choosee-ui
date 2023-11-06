@@ -7,18 +7,9 @@ import React from 'react'
 
 import * as mapsService from '@services/maps'
 import * as sessionService from '@services/sessions'
-import {
-  choices,
-  decisions,
-  place,
-  placeDetails,
-  session,
-  sessionId,
-  statusDeciding,
-  user,
-  userId,
-} from '@test/__mocks__'
+import { choices, decisions, placeDetails, session, sessionId, statusDeciding, user, userId } from '@test/__mocks__'
 import Logo from '@components/logo'
+import { StatusObject } from '@types'
 import VoteSession from './index'
 
 jest.mock('aws-amplify')
@@ -29,7 +20,6 @@ jest.mock('@services/maps')
 jest.mock('@services/sessions')
 
 describe('Session component', () => {
-  const consoleError = console.error
   const mockCopyToClipboard = jest.fn()
   const mockSetAuthState = jest.fn()
   const mockSetShowLogin = jest.fn()
@@ -52,10 +42,6 @@ describe('Session component', () => {
     mocked(mapsService).fetchChoices.mockResolvedValue(choices)
     mocked(sessionService).fetchDecision.mockResolvedValue(decisions)
     mocked(sessionService).fetchSession.mockResolvedValue(session)
-  })
-
-  afterAll(() => {
-    console.error = consoleError
   })
 
   describe('signed out', () => {
@@ -94,7 +80,7 @@ describe('Session component', () => {
         expect(userIdInput.value)
       })
 
-      test('expect invalid userId shows value', async () => {
+      test('expect invalid userId shows message', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
@@ -255,16 +241,16 @@ describe('Session component', () => {
         expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
       })
 
-      test('expect second page fetched when choices in in decisions', async () => {
+      test('expect second page fetched when choices are all in decisions', async () => {
         mocked(sessionService).fetchDecision.mockResolvedValueOnce({
           decisions: { [choices[0].name]: true, [choices[1].name]: true },
         })
-        mocked(sessionService).fetchSession.mockResolvedValueOnce(session)
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce(session)
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choicesPage2)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(session)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(session)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
@@ -370,42 +356,26 @@ describe('Session component', () => {
       })
 
       test('expect second set of choices displayed when first exhausted', async () => {
-        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
-
-        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          yesButton.click()
-        })
-        await screen.findByText(/Subway/i)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choicesPage2)
-        const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          noButton.click()
-        })
+        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choicesPage2)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(statusPage2)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/White Castle/i)).toBeInTheDocument()
       })
 
       test('expect finished message when all choices exhausted', async () => {
-        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
-
-        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          yesButton.click()
-        })
-        await screen.findByText(/Subway/i)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce({
+        const finishedSession = {
           ...session,
-          status: { ...statusDeciding, current: 'finished' },
-        })
-        const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          noButton.click()
-        })
+          status: { ...statusDeciding, current: 'finished' } as StatusObject,
+        }
+        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
+        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(finishedSession)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(finishedSession)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByText(/Choices exhausted/i)).toBeInTheDocument()
       })
@@ -555,58 +525,46 @@ describe('Session component', () => {
     })
 
     describe('winner', () => {
+      const winnerSession = {
+        ...session,
+        status: {
+          ...statusDeciding,
+          current: 'winner',
+          winner: placeDetails,
+        } as StatusObject,
+      }
+
       test('expect winner message when winner selected', async () => {
         mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
+        mocked(mapsService).fetchChoices.mockResolvedValueOnce(choices)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(winnerSession)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(winnerSession)
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
-        const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          yesButton.click()
-        })
-        mocked(sessionService).fetchSession.mockResolvedValueOnce({
-          ...session,
-          status: {
-            ...statusDeciding,
-            current: 'winner',
-            winner: placeDetails,
-          },
-        })
-        await screen.findByText(/Subway/i)
-        const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          noButton.click()
-        })
-
-        await waitFor(async () => {
-          expect(await screen.findByText(/The winning decision is/i)).toBeInTheDocument()
-        })
+        expect(await screen.findByText(/The winning decision is/i)).toBeInTheDocument()
         expect(await screen.findByText(/Dave's Place/i)).toBeInTheDocument()
       })
 
       test('expect no winner picture shows RestaurantIcon', async () => {
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce({
+        const noPictureWinner = {
           ...session,
           status: {
             ...statusDeciding,
             current: 'winner',
             winner: placeNoPic,
-          },
-        })
+          } as StatusObject,
+        }
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(noPictureWinner)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(noPictureWinner)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         expect(await screen.findByTitle(/Restaurant icon/i)).toBeInTheDocument()
       })
 
       test('expect make new choices navigates', async () => {
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(winnerSession)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(winnerSession)
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce({
-          ...session,
-          status: {
-            ...statusDeciding,
-            current: 'winner',
-            winner: place,
-          },
-        })
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement
         await act(async () => {
@@ -619,15 +577,17 @@ describe('Session component', () => {
 
     describe('service errors', () => {
       test('expect error message on bad status', async () => {
-        mocked(Auth).currentAuthenticatedUser.mockResolvedValueOnce(user)
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
-        mocked(sessionService).fetchSession.mockResolvedValueOnce({
+        const badSession = {
           ...session,
           status: {
             ...statusDeciding,
             current: 'bad_status',
-          },
-        } as any)
+          } as any, // "as any" required because "current" is being set to an invalid status
+        }
+        mocked(Auth).currentAuthenticatedUser.mockResolvedValueOnce(user)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(badSession)
+        mocked(sessionService).fetchSession.mockResolvedValueOnce(badSession)
+        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         await waitFor(async () => {
           expect(await screen.findByText(/An error has occurred/i)).toBeInTheDocument()
