@@ -28,9 +28,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install Node 18
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
 
@@ -48,10 +48,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Node 18
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
       - name: Build Gatsby site
@@ -60,12 +60,15 @@ jobs:
           DEVELOPMENT: true
           NODE_ENV: production
 
-      - name: Install Python 2
-        uses: actions/setup-python@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
       - name: Install AWS SAM
-        uses: aws-actions/setup-sam@v1
+        uses: aws-actions/setup-sam@v2
+
       - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-access-key-id: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
@@ -95,10 +98,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Node 18
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
       - name: Build Gatsby site
@@ -107,12 +110,15 @@ jobs:
           DEVELOPMENT: true
           NODE_ENV: production
 
-      - name: Install Python 2
-        uses: actions/setup-python@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
       - name: Install AWS SAM
-        uses: aws-actions/setup-sam@v1
+        uses: aws-actions/setup-sam@v2
+
       - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-access-key-id: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
@@ -142,10 +148,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Node 18
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
       - name: Build Gatsby site
@@ -153,12 +159,15 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Install Python 2
-        uses: actions/setup-python@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
       - name: Install AWS SAM
-        uses: aws-actions/setup-sam@v1
+        uses: aws-actions/setup-sam@v2
+
       - name: Assume the production pipeline user role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-access-key-id: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
@@ -186,9 +195,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install Node 18
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
 
