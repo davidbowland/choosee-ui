@@ -72,7 +72,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
                   <div>
                     <Rating
                       emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
-                      getLabelText={(value: number) => `${value} Dollar${value !== 1 ? 's' : ''}`}
+                      getLabelText={(value: number) => `${value} Dollar${value === 1 ? '' : 's'}`}
                       icon={<MonetizationOnIcon fontSize="inherit" />}
                       max={4}
                       precision={0.5}
@@ -88,7 +88,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
                       <Rating
                         defaultValue={place.rating}
                         emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                        getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                        getLabelText={(value: number) => `${value} Heart${value === 1 ? '' : 's'}`}
                         icon={<FavoriteIcon fontSize="inherit" />}
                         precision={0.5}
                         readOnly

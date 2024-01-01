@@ -56,7 +56,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
             {winner.priceLevel !== undefined && (
               <Rating
                 emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
-                getLabelText={(value: number) => `${value} Dollar${value !== 1 ? 's' : ''}`}
+                getLabelText={(value: number) => `${value} Dollar${value === 1 ? '' : 's'}`}
                 icon={<MonetizationOnIcon fontSize="inherit" />}
                 max={4}
                 precision={0.5}
@@ -69,7 +69,7 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
               <Rating
                 defaultValue={winner.rating}
                 emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                getLabelText={(value: number) => `${value} Heart${value === 1 ? '' : 's'}`}
                 icon={<FavoriteIcon fontSize="inherit" />}
                 precision={0.5}
                 readOnly
