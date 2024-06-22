@@ -3,7 +3,7 @@ import { CognitoUserSession } from 'amazon-cognito-identity-js'
 
 import { choiceId, choices, recaptchaToken } from '@test/__mocks__'
 import { fetchAddress, fetchAddressAuthenticated, fetchChoices } from './maps'
-import { rest, server } from '@test/setup-server'
+import { http, HttpResponse, server } from '@test/setup-server'
 
 const baseUrl = process.env.GATSBY_MAPS_API_BASE_URL
 jest.mock('@aws-amplify/analytics')
@@ -23,16 +23,21 @@ describe('Maps service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.get(`${baseUrl}/reverse-geocode`, async (req, res, ctx) => {
-          const lat = req.url.searchParams.get('lat')
-          const lng = req.url.searchParams.get('lng')
+        http.get(`${baseUrl}/reverse-geocode`, async ({ request }) => {
+          const url = new URL(request.url)
+          const lat = url.searchParams.get('lat')
+          const lng = url.searchParams.get('lng')
           if (lat !== `${coords.lat}` || lng !== `${coords.lng}`) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid coordinates' }), {
+              status: 400,
+            })
           }
-          if (req.headers.get('x-recaptcha-token') !== recaptchaToken) {
-            return res(ctx.status(401))
+          if (request.headers.get('x-recaptcha-token') !== recaptchaToken) {
+            return new HttpResponse(JSON.stringify({ error: 'Invalid recaptcha token' }), {
+              status: 401,
+            })
           }
-          return res(ctx.json({ address }))
+          return HttpResponse.json({ address })
         })
       )
     })
@@ -52,13 +57,16 @@ describe('Maps service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.get(`${baseUrl}/reverse-geocode/authed`, async (req, res, ctx) => {
-          const lat = req.url.searchParams.get('lat')
-          const lng = req.url.searchParams.get('lng')
+        http.get(`${baseUrl}/reverse-geocode/authed`, async ({ request }) => {
+          const url = new URL(request.url)
+          const lat = url.searchParams.get('lat')
+          const lng = url.searchParams.get('lng')
           if (lat !== `${coords.lat}` || lng !== `${coords.lng}`) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid coordinates' }), {
+              status: 400,
+            })
           }
-          return res(ctx.json({ address }))
+          return HttpResponse.json({ address })
         })
       )
     })
@@ -72,12 +80,14 @@ describe('Maps service', () => {
   describe('fetchChoices', () => {
     beforeAll(() => {
       server.use(
-        rest.get(`${baseUrl}/choices/:id`, async (req, res, ctx) => {
-          const { id } = req.params
+        http.get(`${baseUrl}/choices/:id`, async ({ params }) => {
+          const { id } = params
           if (id !== choiceId) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid choice id' }), {
+              status: 400,
+            })
           }
-          return res(ctx.json({ choices }))
+          return HttpResponse.json({ choices })
         })
       )
     })

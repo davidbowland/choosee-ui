@@ -11,7 +11,7 @@ import {
   updateSession,
 } from './sessions'
 import { decisions, jsonPatchOperations, newSession, recaptchaToken, session, sessionId, userId } from '@test/__mocks__'
-import { rest, server } from '@test/setup-server'
+import { http, HttpResponse, server } from '@test/setup-server'
 
 const baseUrl = process.env.GATSBY_SESSION_API_BASE_URL
 jest.mock('@aws-amplify/analytics')
@@ -27,13 +27,13 @@ describe('Sessions service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.post(`${baseUrl}/sessions`, async (req, res, ctx) => {
-          if (req.headers.get('x-recaptcha-token') !== recaptchaToken) {
-            return res(ctx.status(401))
+        http.post(`${baseUrl}/sessions`, async ({ request }) => {
+          if (request.headers.get('x-recaptcha-token') !== recaptchaToken) {
+            return new HttpResponse(JSON.stringify({ message: 'Invalid recaptcha token' }), { status: 401 })
           }
 
-          const body = postEndpoint(await req.json())
-          return res(body ? ctx.json(body) : ctx.status(400))
+          const body = postEndpoint(await request.json())
+          return body ? HttpResponse.json(body) : new HttpResponse(null, { status: 400 })
         })
       )
     })
@@ -58,9 +58,9 @@ describe('Sessions service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.post(`${baseUrl}/sessions/authed`, async (req, res, ctx) => {
-          const body = postEndpoint(await req.json())
-          return res(body ? ctx.json(body) : ctx.status(400))
+        http.post(`${baseUrl}/sessions/authed`, async ({ request }) => {
+          const body = postEndpoint(await request.json())
+          return body ? HttpResponse.json(body) : new HttpResponse(null, { status: 400 })
         })
       )
     })
@@ -83,12 +83,14 @@ describe('Sessions service', () => {
   describe('fetchDecision', () => {
     beforeAll(() => {
       server.use(
-        rest.get(`${baseUrl}/sessions/:id/decisions/:user`, async (req, res, ctx) => {
-          const { id, user } = req.params as { id: string; user: string }
+        http.get(`${baseUrl}/sessions/:id/decisions/:user`, async ({ params }) => {
+          const { id, user } = params as { id: string; user: string }
           if (id !== sessionId || decodeURIComponent(user) !== userId) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid session or user id' }), {
+              status: 400,
+            })
           }
-          return res(ctx.json(decisions))
+          return HttpResponse.json(decisions)
         })
       )
     })
@@ -102,12 +104,12 @@ describe('Sessions service', () => {
   describe('fetchSession', () => {
     beforeAll(() => {
       server.use(
-        rest.get(`${baseUrl}/sessions/:id`, async (req, res, ctx) => {
-          const { id } = req.params
+        http.get(`${baseUrl}/sessions/:id`, async ({ params }) => {
+          const { id } = params
           if (id !== sessionId) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid session id' }), { status: 400 })
           }
-          return res(ctx.json(session))
+          return HttpResponse.json(session)
         })
       )
     })
@@ -124,13 +126,15 @@ describe('Sessions service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.post(`${baseUrl}/sessions/:id/send-text/:to`, async (req, res, ctx) => {
-          const { id, to } = req.params
+        http.post(`${baseUrl}/sessions/:id/send-text/:to`, async ({ params, request }) => {
+          const { id, to } = params
           if (id !== sessionId || to !== toPhoneNumber) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid session or phone number' }), {
+              status: 400,
+            })
           }
-          const body = postEndpoint(await req.json())
-          return res(body ? ctx.json(body) : ctx.status(400))
+          const body = postEndpoint(await request.json())
+          return body ? HttpResponse.json(body) : new HttpResponse(null, { status: 400 })
         })
       )
     })
@@ -146,13 +150,15 @@ describe('Sessions service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.patch(`${baseUrl}/sessions/:id/decisions/:user`, async (req, res, ctx) => {
-          const { id, user } = req.params as { id: string; user: string }
+        http.patch(`${baseUrl}/sessions/:id/decisions/:user`, async ({ params, request }) => {
+          const { id, user } = params as { id: string; user: string }
           if (id !== sessionId || decodeURIComponent(user) !== userId) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid session or user id' }), {
+              status: 400,
+            })
           }
-          const body = patchEndpoint(await req.json())
-          return res(body ? ctx.json(body) : ctx.status(400))
+          const body = patchEndpoint(await request.json())
+          return body ? HttpResponse.json(body) : new HttpResponse(null, { status: 400 })
         })
       )
     })
@@ -168,13 +174,13 @@ describe('Sessions service', () => {
 
     beforeAll(() => {
       server.use(
-        rest.patch(`${baseUrl}/sessions/:id`, async (req, res, ctx) => {
-          const { id } = req.params
+        http.patch(`${baseUrl}/sessions/:id`, async ({ params, request }) => {
+          const { id } = params
           if (id !== sessionId) {
-            return res(ctx.status(400))
+            return new HttpResponse(JSON.stringify({ error: 'Invalid session id' }), { status: 400 })
           }
-          const body = patchEndpoint(await req.json())
-          return res(body ? ctx.json(body) : ctx.status(400))
+          const body = patchEndpoint(await request.json())
+          return body ? HttpResponse.json(body) : new HttpResponse(null, { status: 400 })
         })
       )
     })
