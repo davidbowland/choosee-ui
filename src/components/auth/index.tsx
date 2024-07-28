@@ -25,7 +25,7 @@ const Authenticated = ({
   setInitialShowLogin,
 }: AuthenticatedProps): JSX.Element => {
   const [authState, setAuthState] = useState<AuthState>(initialAuthState)
-  const [loggedInUser, setLoggedInUser] = useState<AmplifyUser | undefined>(undefined)
+  const [loggedInUser, setLoggedInUser] = useState<AmplifyUser | undefined>()
   const [showLogin, setShowLogin] = useState(initialShowLogin)
 
   useEffect(() => {

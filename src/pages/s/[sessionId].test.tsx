@@ -44,7 +44,7 @@ describe('Session page', () => {
 
   test('expect rendering SessionPage renders Session', () => {
     render(<SessionPage params={{ sessionId }} />)
-    expect(mocked(VoteSession)).toBeCalledWith(expect.objectContaining({ sessionId: 'aeio' }), {})
+    expect(mocked(VoteSession)).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 'aeio' }), {})
   })
 
   test('expect "u" query string passed to SessionPage', () => {

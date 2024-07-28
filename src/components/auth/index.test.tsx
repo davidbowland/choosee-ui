@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom'
 import * as gatsby from 'gatsby'
-import { act, render, screen, waitFor } from '@testing-library/react'
 import { Authenticator, ThemeProvider } from '@aws-amplify/ui-react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
 import { mocked } from 'jest-mock'
 import React from 'react'
@@ -51,9 +51,7 @@ describe('Authenticated component', () => {
       )
 
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        signInButton.click()
-      })
+      fireEvent.click(signInButton)
 
       expect(mocked(ThemeProvider)).toHaveBeenCalledWith(
         expect.objectContaining({ colorMode: 'system' }),
@@ -92,9 +90,7 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        signInButton.click()
-      })
+      fireEvent.click(signInButton)
 
       expect(setInitialShowLogin).toHaveBeenCalledWith(true)
       expect(mocked(Authenticator)).toHaveBeenCalledTimes(1)
@@ -121,12 +117,8 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        signInButton.click()
-      })
-      await act(async () => {
-        logInCallback()
-      })
+      fireEvent.click(signInButton)
+      logInCallback()
 
       expect(mocked(Authenticator)).toHaveBeenCalledTimes(1)
       expect(await screen.findByText(/Dave/i)).toBeInTheDocument()
@@ -145,13 +137,9 @@ describe('Authenticated component', () => {
       )
 
       const signInButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        signInButton.click()
-      })
+      fireEvent.click(signInButton)
       const goBackButton = (await screen.findByText(/Cancel/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        goBackButton.click()
-      })
+      fireEvent.click(goBackButton)
 
       expect(setInitialShowLogin).toHaveBeenCalledWith(false)
       expect(screen.queryByText(/Cancel/i)).not.toBeInTheDocument()
@@ -191,9 +179,7 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
+      fireEvent.click(menuButton)
 
       expect(await screen.findByText(/Privacy policy/i)).toBeVisible()
       expect(await screen.findByText(/Sign out/i)).toBeVisible()
@@ -212,13 +198,9 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
+      fireEvent.click(menuButton)
       const privacyPolicyButton = (await screen.findByText(/Privacy policy/i)) as HTMLButtonElement
-      await act(async () => {
-        privacyPolicyButton.click()
-      })
+      fireEvent.click(privacyPolicyButton)
 
       expect(mocked(gatsby).navigate).toHaveBeenCalledWith('/privacy-policy')
     })
@@ -235,13 +217,9 @@ describe('Authenticated component', () => {
         </Authenticated>
       )
       const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        menuButton.click()
-      })
+      fireEvent.click(menuButton)
       const signOutButton = (await screen.findByText(/Sign out/i)) as HTMLButtonElement
-      await act(async () => {
-        signOutButton.click()
-      })
+      fireEvent.click(signOutButton)
 
       expect(user.deleteUser).not.toHaveBeenCalled()
       expect(mocked(Auth).signOut).toHaveBeenCalled()
@@ -263,17 +241,11 @@ describe('Authenticated component', () => {
           </Authenticated>
         )
         const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-        await act(async () => {
-          menuButton.click()
-        })
+        fireEvent.click(menuButton)
         const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-        await act(async () => {
-          deleteAccountMenuOption.click()
-        })
+        fireEvent.click(deleteAccountMenuOption)
         const goBackButton = (await screen.findByText(/Go back/i)) as HTMLButtonElement
-        act(() => {
-          goBackButton.click()
-        })
+        fireEvent.click(goBackButton)
 
         expect(user.deleteUser).not.toHaveBeenCalled()
         expect(mocked(Auth).signOut).not.toHaveBeenCalled()
@@ -294,17 +266,11 @@ describe('Authenticated component', () => {
           </Authenticated>
         )
         const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
-          menuButton.click()
-        })
+        fireEvent.click(menuButton)
         const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-        act(() => {
-          deleteAccountMenuOption.click()
-        })
+        fireEvent.click(deleteAccountMenuOption)
         const continueButton = (await screen.findByText(/Continue/i)) as HTMLButtonElement
-        act(() => {
-          continueButton.click()
-        })
+        fireEvent.click(continueButton)
 
         expect(user.deleteUser).toHaveBeenCalled()
         expect(mocked(Auth).signOut).toHaveBeenCalled()
@@ -327,17 +293,11 @@ describe('Authenticated component', () => {
           </Authenticated>
         )
         const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
-          menuButton.click()
-        })
+        fireEvent.click(menuButton)
         const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-        act(() => {
-          deleteAccountMenuOption.click()
-        })
+        fireEvent.click(deleteAccountMenuOption)
         const continueButton = (await screen.findByText(/Continue/i)) as HTMLButtonElement
-        act(() => {
-          continueButton.click()
-        })
+        fireEvent.click(continueButton)
 
         expect(user.deleteUser).toHaveBeenCalled()
         expect(mocked(Auth).signOut).not.toHaveBeenCalled()
@@ -359,23 +319,15 @@ describe('Authenticated component', () => {
           </Authenticated>
         )
         const menuButton = (await screen.findByLabelText(/menu/i, { selector: 'button' })) as HTMLButtonElement
-        act(() => {
-          menuButton.click()
-        })
+        fireEvent.click(menuButton)
         const deleteAccountMenuOption = (await screen.findByText(/Delete account/i)) as HTMLButtonElement
-        act(() => {
-          deleteAccountMenuOption.click()
-        })
+        fireEvent.click(deleteAccountMenuOption)
         const continueButton = (await screen.findByText(/Continue/i)) as HTMLButtonElement
-        act(() => {
-          continueButton.click()
-        })
+        fireEvent.click(continueButton)
         const closeSnackbarButton = (await screen.findByLabelText(/Close/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          closeSnackbarButton.click()
-        })
+        fireEvent.click(closeSnackbarButton)
 
         expect(await screen.findByText(/There was a problem deleting your account/i)).not.toBeVisible()
       })

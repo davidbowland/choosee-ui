@@ -35,15 +35,15 @@ export interface CreateProps {
 
 const Create = ({ loggedIn }: CreateProps): JSX.Element => {
   const [address, setAddress] = useState('')
-  const [addressError, setAddressError] = useState<string | undefined>(undefined)
+  const [addressError, setAddressError] = useState<string | undefined>()
   const [choiceType, setChoiceType] = useState<PlaceType>('restaurant')
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
   const [openNow, setOpenNow] = useState(true)
   const [priceRange, setPriceRange] = useState<number[]>([1, 4])
   const [radius, setRadius] = useState(30)
   const [rankBy, setRankBy] = useState<RankByType>('prominence')
-  const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
+  const [successMessage, setSuccessMessage] = useState<string | undefined>()
   const [voterCount, setVoterCount] = useState(loggedIn ? 2 : 1)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
   const [voterIdErrors, setVoterIdErrors] = useState<VoterIds>({})
@@ -55,12 +55,14 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     }
     setAddressError(undefined)
 
-    const errors = Array.from({ length: voterCount - 1 }).reduce((agg: any, _, index: any) => {
-      if (voterIds[index]?.match(/^\+1[2-9]\d{9}$/) === null && voterIds[index] !== '') {
-        agg[index] = 'Invalid phone number. Be sure to include area code.'
+    const errors = Array.from({ length: voterCount - 1 }).reduce((acc: any, _, index: any) => {
+      const isValidPhone = voterIds[index]?.match(/^\+1[2-9]\d{9}$/) !== null
+      if (!isValidPhone && voterIds[index] !== '') {
+        acc[index] = 'Invalid phone number. Be sure to include area code.'
       }
-      return agg
-    }, {}) as VoterIds
+      return acc
+    }, {} as VoterIds) as string[]
+
     setVoterIdErrors(errors)
     if (Object.keys(errors).length > 0) {
       return
@@ -79,6 +81,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
         type: choiceType,
         voterCount,
       }
+
       const session = await postSession(newSession)
       setErrorMessage(undefined)
       setSuccessMessage('Choosee voting session starting')
@@ -94,7 +97,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
 
       navigate(`/s/${session.sessionId}`)
     } catch (error: any) {
-      console.error('generateSession', error)
+      console.error('generateSession', { error })
       if (error?.message === 'Invalid address') {
         setAddressError(error?.message)
       } else if (error?.response?.status === 403) {
@@ -137,7 +140,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
       if (error?.response?.status === 403) {
         setErrorMessage('Unusual traffic detected, please log in to continue.')
       }
-      console.error('setLatLng', error)
+      console.error('setLatLng', { error, lat, lng })
     }
   }
 

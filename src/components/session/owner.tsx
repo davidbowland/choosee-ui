@@ -28,10 +28,10 @@ export interface OwnerProps {
 }
 
 const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.Element => {
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
   const [sessionUrl, setSessionUrl] = useState<string>('')
-  const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
+  const [successMessage, setSuccessMessage] = useState<string | undefined>()
   const [workingSession, setWorkingSession] = useState(session)
 
   const theme = useTheme()
@@ -42,7 +42,7 @@ const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.El
       setSuccessMessage('Link copied to clipboard')
       setErrorMessage(undefined)
     } catch (error) {
-      console.error('copyShortenedUrl', error)
+      console.error('copyShortenedUrl', { error, sessionUrl })
       setErrorMessage('Could not copy link to clipboard')
     }
   }
@@ -55,7 +55,7 @@ const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.El
       setSession(updatedSession)
       setSuccessMessage('Vote session updated successfully')
     } catch (error) {
-      console.error('patchSession', error)
+      console.error('patchSession', { error, session, workingSession })
       setErrorMessage('Error updating vote session')
     }
     setIsLoading(false)

@@ -18,7 +18,7 @@ export interface LoginPromptProps {
 
 const LoginPrompt = ({ initialUserId, setAuthState, setLoggedInUser, setShowLogin }: LoginPromptProps): JSX.Element => {
   const [userId, setUserId] = useState(initialUserId ?? '+1')
-  const [userIdError, setUserIdError] = useState<string | undefined>(undefined)
+  const [userIdError, setUserIdError] = useState<string | undefined>()
 
   const chooseClick = (): void => {
     if (userId.match(/^\+1[2-9]\d{9}$/) === null) {

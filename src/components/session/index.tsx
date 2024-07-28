@@ -40,12 +40,12 @@ const Session = ({
   const [choices, setChoices] = useState<PlaceDetails[]>([])
   const [decision, setDecision] = useState<Decision>({ decisions: {} })
   const [decisionInitial, setDecisionInitial] = useState<Decision>({ decisions: {} })
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
-  const [loggedInUser, setLoggedInUser] = useState<AmplifyUser | undefined>(undefined)
+  const [loggedInUser, setLoggedInUser] = useState<AmplifyUser | undefined>()
   const [pageId, setPageId] = useState(-2)
-  const [place, setPlace] = useState<PlaceDetails | undefined>(undefined)
+  const [place, setPlace] = useState<PlaceDetails | undefined>()
   const [session, setSession] = useState<SessionData>({ status: { current: 'deciding', pageId: -1 } } as any)
   const [statusCount, setStatusCount] = useState(0)
 
@@ -78,7 +78,7 @@ const Session = ({
       const currentChoices = await fetchChoices(choiceId)
       setChoices(currentChoices)
     } catch (error) {
-      console.error('refreshChoices', error)
+      console.error('refreshChoices', { choiceId, error })
       setErrorMessage('Error fetching choices. Please reload the page and try again.')
     }
   }
@@ -91,7 +91,7 @@ const Session = ({
           await updateDecisions(sessionId, loggedInUser!.attributes!.phone_number, jsonPatchOperations)
           setDecisionInitial(decision)
         } catch (error) {
-          console.error('refreshDecisions', error)
+          console.error('refreshDecisions', { error, jsonPatchOperations, loggedInUser, sessionId })
           setErrorMessage('Error saving decisions. Please reload the page and try again.')
         }
       } else {
@@ -100,7 +100,7 @@ const Session = ({
           setDecision(currentDecision)
           setDecisionInitial(currentDecision)
         } catch (error) {
-          console.error('refreshDecisions', error)
+          console.error('refreshDecisions', { error, loggedInUser, sessionId })
           setErrorMessage('Error fetching decisions. Please reload the page and try again.')
         }
       }
@@ -126,7 +126,7 @@ const Session = ({
         return
       }
     } catch (error) {
-      console.error('refreshStatus', error)
+      console.error('refreshStatus', { error })
       setSession({ status: { current: 'expired', pageId: 0 } } as any)
     }
     setIsLoading(false)

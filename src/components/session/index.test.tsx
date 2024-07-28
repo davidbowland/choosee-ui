@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 import * as gatsby from 'gatsby'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
 import { mocked } from 'jest-mock'
 import React from 'react'
@@ -64,9 +64,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement
-        await act(async () => {
-          newChoicesButton.click()
-        })
+        await fireEvent.click(newChoicesButton)
 
         expect(mocked(gatsby).navigate).toHaveBeenCalledWith('/')
       })
@@ -74,23 +72,26 @@ describe('Session component', () => {
 
     describe('userId log in', () => {
       test('expect initialUserId sets userId text box', async () => {
-        render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
+        render(
+          <VoteSession
+            initialUserId={'fnord'}
+            sessionId={sessionId}
+            setAuthState={mockSetAuthState}
+            setShowLogin={mockSetShowLogin}
+          />
+        )
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
-        expect(userIdInput.value)
+        expect(userIdInput.value).toEqual('fnord')
       })
 
       test('expect invalid userId shows message', async () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
-        await act(async () => {
-          fireEvent.change(userIdInput, { target: { value: '+1555' } })
-        })
+        fireEvent.change(userIdInput, { target: { value: '+1555' } })
         const chooseButton = (await screen.findByText(/Let's choose!/i, { selector: 'button' })) as HTMLButtonElement
-        await act(async () => {
-          chooseButton.click()
-        })
+        fireEvent.click(chooseButton)
 
         expect(await screen.findByText(/Invalid phone number. Be sure to include area code./i)).toBeInTheDocument()
       })
@@ -99,16 +100,10 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
-        await act(async () => {
-          fireEvent.change(userIdInput, { target: { value: userId } })
-        })
-        act(() => {
-          fireEvent.keyUp(userIdInput, { key: 'Escape' })
-        })
+        fireEvent.change(userIdInput, { target: { value: userId } })
+        fireEvent.keyUp(userIdInput, { key: 'Escape' })
         const chooseButton = (await screen.findByText(/Let's choose!/i, { selector: 'button' })) as HTMLButtonElement
-        await act(async () => {
-          chooseButton.click()
-        })
+        fireEvent.click(chooseButton)
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Shakespeare's Pizza - Downtown/i)).toBeInTheDocument()
@@ -119,12 +114,8 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const userIdInput = (await screen.findByLabelText(/Your phone number/i)) as HTMLInputElement
-        await act(async () => {
-          fireEvent.change(userIdInput, { target: { value: userId } })
-        })
-        act(() => {
-          fireEvent.keyUp(userIdInput, { key: 'Enter' })
-        })
+        fireEvent.change(userIdInput, { target: { value: userId } })
+        fireEvent.keyUp(userIdInput, { key: 'Enter' })
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Shakespeare's Pizza - Downtown/i)).toBeInTheDocument()
@@ -137,9 +128,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const chooseButton = (await screen.findByText(/Sign in/i, { selector: 'button' })) as HTMLButtonElement
-        await act(async () => {
-          chooseButton.click()
-        })
+        fireEvent.click(chooseButton)
 
         expect(mockSetAuthState).toHaveBeenCalledWith('signIn')
         expect(mockSetShowLogin).toHaveBeenCalledWith(true)
@@ -151,9 +140,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const chooseButton = (await screen.findByText(/Sign up/i, { selector: 'button' })) as HTMLButtonElement
-        await act(async () => {
-          chooseButton.click()
-        })
+        fireEvent.click(chooseButton)
 
         expect(mockSetAuthState).toHaveBeenCalledWith('signUp')
         expect(mockSetShowLogin).toHaveBeenCalledWith(true)
@@ -190,9 +177,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          await yesButton.click()
-        })
+        fireEvent.click(yesButton)
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Subway/i)).toBeInTheDocument()
@@ -202,9 +187,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          await yesButton.click()
-        })
+        fireEvent.click(yesButton)
 
         expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith()
       })
@@ -213,9 +196,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          await noButton.click()
-        })
+        fireEvent.click(noButton)
 
         expect(await screen.findByText(/Columbia, MO 65203, USA/i)).toBeInTheDocument()
         expect(await screen.findByText(/Subway/i)).toBeInTheDocument()
@@ -269,14 +250,10 @@ describe('Session component', () => {
 
         await screen.findByText(/Shakespeare's Pizza - Downtown/i)
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          await yesButton.click()
-        })
+        fireEvent.click(yesButton)
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          await noButton.click()
-        })
+        fireEvent.click(noButton)
 
         expect(mocked(sessionService).updateDecisions).toHaveBeenCalledWith(
           'aeio',
@@ -293,14 +270,10 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          await yesButton.click()
-        })
+        fireEvent.click(yesButton)
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          await noButton.click()
-        })
+        fireEvent.click(noButton)
 
         expect(await screen.findByText(/Error saving decisions/i)).toBeInTheDocument()
       })
@@ -320,14 +293,10 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          yesButton.click()
-        })
+        fireEvent.click(yesButton)
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          noButton.click()
-        })
+        fireEvent.click(noButton)
 
         expect(await screen.findByText(/Waiting for other voters/i)).toBeInTheDocument()
       })
@@ -343,14 +312,10 @@ describe('Session component', () => {
         )
 
         const yesButton = (await screen.findByText(/Sounds good/i)) as HTMLButtonElement
-        await act(async () => {
-          yesButton.click()
-        })
+        fireEvent.click(yesButton)
         await screen.findByText(/Subway/i)
         const noButton = (await screen.findByText(/Maybe later/i)) as HTMLButtonElement
-        await act(async () => {
-          noButton.click()
-        })
+        fireEvent.click(noButton)
 
         expect(await screen.findByText(/Please refresh the page/i)).toBeInTheDocument()
       })
@@ -388,9 +353,7 @@ describe('Session component', () => {
         })
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement
-        act(() => {
-          newChoicesButton.click()
-        })
+        fireEvent.click(newChoicesButton)
 
         expect(mocked(gatsby).navigate).toHaveBeenCalledWith('/')
       })
@@ -420,9 +383,7 @@ describe('Session component', () => {
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          copyLinkButton.click()
-        })
+        fireEvent.click(copyLinkButton)
 
         expect(mockCopyToClipboard).toHaveBeenCalled()
         expect(await screen.findByText(/Link copied to clipboard/i)).toBeInTheDocument()
@@ -435,15 +396,11 @@ describe('Session component', () => {
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          copyLinkButton.click()
-        })
+        fireEvent.click(copyLinkButton)
         const closeSnackbarButton = (await screen.findByLabelText(/Close/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          closeSnackbarButton.click()
-        })
+        fireEvent.click(closeSnackbarButton)
 
         expect(screen.queryByText(/Link copied to clipboard/i)).not.toBeInTheDocument()
       })
@@ -458,9 +415,7 @@ describe('Session component', () => {
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          copyLinkButton.click()
-        })
+        fireEvent.click(copyLinkButton)
 
         expect(mockCopyToClipboard).toHaveBeenCalled()
         expect(await screen.findByText(/Could not copy link to clipboard/i)).toBeInTheDocument()
@@ -476,15 +431,11 @@ describe('Session component', () => {
         const copyLinkButton = (await screen.findByText(/Copy invite URL/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          copyLinkButton.click()
-        })
+        fireEvent.click(copyLinkButton)
         const closeSnackbarButton = (await screen.findByLabelText(/Close/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        act(() => {
-          closeSnackbarButton.click()
-        })
+        fireEvent.click(closeSnackbarButton)
 
         expect(screen.queryByText(/Could not copy link to clipboard/i)).not.toBeInTheDocument()
       })
@@ -493,15 +444,11 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-        await act(async () => {
-          fireEvent.change(voterSliderInput, { target: { value: 4 } })
-        })
+        fireEvent.change(voterSliderInput, { target: { value: 4 } })
         const updateButton = (await screen.findByText(/Update vote options/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        await act(async () => {
-          updateButton.click()
-        })
+        fireEvent.click(updateButton)
 
         expect(mocked(sessionService).updateSession).toHaveBeenCalledWith(sessionId, [
           { op: 'test', path: '/voterCount', value: 2 },
@@ -516,9 +463,7 @@ describe('Session component', () => {
         const updateButton = (await screen.findByText(/Update vote options/i, {
           selector: 'button',
         })) as HTMLButtonElement
-        await act(async () => {
-          updateButton.click()
-        })
+        fireEvent.click(updateButton)
 
         expect(await screen.findByText(/Error updating vote session/i)).toBeInTheDocument()
       })
@@ -567,9 +512,7 @@ describe('Session component', () => {
         render(<VoteSession sessionId={sessionId} setAuthState={mockSetAuthState} setShowLogin={mockSetShowLogin} />)
 
         const newChoicesButton = (await screen.findByText(/Make new choices/i)) as HTMLButtonElement
-        await act(async () => {
-          newChoicesButton.click()
-        })
+        fireEvent.click(newChoicesButton)
 
         expect(mocked(gatsby).navigate).toHaveBeenCalledWith('/')
       })

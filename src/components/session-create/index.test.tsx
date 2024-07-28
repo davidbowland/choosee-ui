@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Auth } from 'aws-amplify'
 import { mocked } from 'jest-mock'
 import React from 'react'
@@ -95,38 +95,23 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const radioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
-      await act(async () => {
-        radioButton.click()
-      })
+      fireEvent.click(radioButton)
       const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
-      await act(async () => {
-        checkboxInput.click()
-      })
+      fireEvent.click(checkboxInput)
       const milesSliderInput = (await screen.findByLabelText(/Max distance to restaurant/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(milesSliderInput, { target: { value: 1 } })
-      })
+      fireEvent.change(milesSliderInput, { target: { value: 1 } })
       const maxPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[1] as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(maxPriceSliderInput, { target: { value: 3 } })
-      })
+      fireEvent.change(maxPriceSliderInput, { target: { value: 3 } })
       const minPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[0] as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
-      })
+      fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
       const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(voterSliderInput, { target: { value: 4 } })
-      })
+      fireEvent.change(voterSliderInput, { target: { value: 4 } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
+      await waitFor(() => expect(mocked(sessionService).createSession).toHaveBeenCalled())
       expect(mocked(sessionService).createSession).toHaveBeenCalledWith(
         {
           address: '90210',
@@ -147,13 +132,9 @@ describe('SessionCreate component', () => {
       mocked(sessionService).createSession.mockRejectedValueOnce({ response: { status: 403 } })
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
       expect(await screen.findByText(/Unusual traffic detected, please log in to continue/i)).toBeInTheDocument()
     })
@@ -191,9 +172,7 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
       expect(await screen.findByText(/Please enter your address to begin/i)).toBeInTheDocument()
     })
@@ -202,37 +181,21 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const radioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
-      await act(async () => {
-        radioButton.click()
-      })
+      fireEvent.click(radioButton)
       const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
-      await act(async () => {
-        checkboxInput.click()
-      })
+      fireEvent.click(checkboxInput)
       const milesSliderInput = (await screen.findByLabelText(/Max distance to restaurant/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(milesSliderInput, { target: { value: 1 } })
-      })
+      fireEvent.change(milesSliderInput, { target: { value: 1 } })
       const maxPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[1] as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(maxPriceSliderInput, { target: { value: 3 } })
-      })
+      fireEvent.change(maxPriceSliderInput, { target: { value: 3 } })
       const minPriceSliderInput = (await screen.findAllByLabelText(/Price range/i))[0] as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
-      })
+      fireEvent.change(minPriceSliderInput, { target: { value: 2 } })
       const voterSliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(voterSliderInput, { target: { value: 4 } })
-      })
+      fireEvent.change(voterSliderInput, { target: { value: 4 } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
       expect(mocked(sessionService).createSessionAuthenticated).toHaveBeenCalledWith({
         address: '90210',
@@ -251,34 +214,20 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const typeRadioButton = (await screen.findByLabelText(/Takeout/i)) as HTMLInputElement
-      await act(async () => {
-        typeRadioButton.click()
-      })
+      fireEvent.click(typeRadioButton)
       const rankRadioButton = (await screen.findByLabelText(/Closest first/i)) as HTMLInputElement
-      await act(async () => {
-        rankRadioButton.click()
-      })
+      fireEvent.click(rankRadioButton)
       const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(sliderInput, { target: { value: 4 } })
-      })
+      fireEvent.change(sliderInput, { target: { value: 4 } })
       const checkboxInput = (await screen.findByLabelText(/Only show choices currently open/i)) as HTMLInputElement
-      await act(async () => {
-        checkboxInput.click()
-      })
+      fireEvent.click(checkboxInput)
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
       await waitFor(() => screen.findByText(/Choosee voting session starting/i))
       const closeSnackbarButton = (await screen.findByLabelText(/Close/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        closeSnackbarButton.click()
-      })
+      fireEvent.click(closeSnackbarButton)
 
       await expect(() => screen.findByText(/Choosee voting session starting/i)).rejects.toBeDefined()
     })
@@ -287,21 +236,13 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(sliderInput, { target: { value: 2 } })
-      })
+      fireEvent.change(sliderInput, { target: { value: 2 } })
       const voterPhoneInput = (await screen.findByLabelText(/Voter #2 phone number/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(voterPhoneInput, { target: { value: '+12345' } })
-      })
+      fireEvent.change(voterPhoneInput, { target: { value: '+12345' } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        await chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
       expect(await screen.findByText(/Invalid phone number/i)).toBeInTheDocument()
     })
@@ -310,22 +251,15 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const sliderInput = (await screen.findByLabelText(/Number of voters/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(sliderInput, { target: { value: 2 } })
-      })
+      fireEvent.change(sliderInput, { target: { value: 2 } })
       const voterPhoneInput = (await screen.findByLabelText(/Voter #2 phone number/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(voterPhoneInput, { target: { value: otherVoterPhone } })
-      })
+      fireEvent.change(voterPhoneInput, { target: { value: otherVoterPhone } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        await chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
+      await waitFor(() => expect(mocked(sessionService).textSession).toHaveBeenCalled())
       expect(mocked(sessionService).textSession).toHaveBeenCalledWith(sessionId, otherVoterPhone)
     })
 
@@ -334,13 +268,9 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
       expect(await screen.findByText(/Please try again/i)).toBeInTheDocument()
     })
@@ -350,17 +280,11 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
       const closeSnackbarButton = (await screen.findByLabelText(/Close/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        closeSnackbarButton.click()
-      })
+      fireEvent.click(closeSnackbarButton)
 
       await expect(() => screen.findByText(/Please try again/i)).rejects.toBeDefined()
     })
@@ -370,13 +294,9 @@ describe('SessionCreate component', () => {
       render(<SessionCreate setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
       const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        fireEvent.change(addressInput, { target: { value: address } })
-      })
+      fireEvent.change(addressInput, { target: { value: address } })
       const chooseButton = (await screen.findByText(/Choose restaurants/i, { selector: 'button' })) as HTMLButtonElement
-      await act(async () => {
-        chooseButton.click()
-      })
+      fireEvent.click(chooseButton)
 
       expect(await screen.findByText(/Invalid address/i)).toBeInTheDocument()
     })

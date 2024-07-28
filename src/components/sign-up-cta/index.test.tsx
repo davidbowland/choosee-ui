@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { act, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 
 import SignUpCta from './index'
@@ -23,9 +23,7 @@ describe('SignUpCta component', () => {
     render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
     const signUpButton = (await screen.findAllByText(/Sign up/i, { selector: 'button' }))[0] as HTMLButtonElement
-    await act(async () => {
-      signUpButton.click()
-    })
+    fireEvent.click(signUpButton)
 
     expect(setAuthState).toHaveBeenCalledWith('signUp')
     expect(setShowLogin).toHaveBeenCalledWith(true)
