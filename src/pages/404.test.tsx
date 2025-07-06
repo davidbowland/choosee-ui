@@ -1,12 +1,11 @@
-import '@testing-library/jest-dom'
-import { mocked } from 'jest-mock'
-import React from 'react'
-import { render } from '@testing-library/react'
-
 import Authenticated from '@components/auth'
-import NotFound from './404'
 import ServerErrorMessage from '@components/server-error-message'
 import Themed from '@components/themed'
+import '@testing-library/jest-dom'
+import { render } from '@testing-library/react'
+import React from 'react'
+
+import NotFound, { Head } from './404'
 
 jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
@@ -15,9 +14,9 @@ jest.mock('@components/themed')
 
 describe('404 error page', () => {
   beforeAll(() => {
-    mocked(Authenticated).mockImplementation(({ children }) => <>{children}</>)
-    mocked(ServerErrorMessage).mockReturnValue(<></>)
-    mocked(Themed).mockImplementation(({ children }) => <>{children}</>)
+    jest.mocked(Authenticated).mockImplementation(({ children }) => <>{children}</>)
+    jest.mocked(ServerErrorMessage).mockReturnValue(<></>)
+    jest.mocked(Themed).mockImplementation(({ children }) => <>{children}</>)
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { pathname: '' },
@@ -28,30 +27,41 @@ describe('404 error page', () => {
     window.location.pathname = '/an-invalid-page'
   })
 
-  test('expect rendering NotFound renders Authenticated', () => {
+  it('should render Authenticated', () => {
     render(<NotFound />)
-    expect(mocked(Authenticated)).toHaveBeenCalledTimes(1)
+    expect(Authenticated).toHaveBeenCalledTimes(1)
   })
 
-  test('expect rendering NotFound renders ServerErrorMessage', () => {
+  it('should render ServerErrorMessage', () => {
     const expectedTitle = '404: Not Found'
     render(<NotFound />)
-    expect(mocked(ServerErrorMessage)).toHaveBeenCalledWith(
+    expect(ServerErrorMessage).toHaveBeenCalledWith(
       expect.objectContaining({ title: expectedTitle }),
-      expect.anything()
+      expect.anything(),
     )
-    expect(mocked(ServerErrorMessage)).toHaveBeenCalledTimes(1)
+    expect(ServerErrorMessage).toHaveBeenCalledTimes(1)
   })
 
-  test('expect no render when path begins /s/', () => {
+  it('should not render when path begins /s/', () => {
     window.location.pathname = '/s/aeiou'
     render(<NotFound />)
-    expect(mocked(ServerErrorMessage)).toHaveBeenCalledTimes(0)
+    expect(ServerErrorMessage).toHaveBeenCalledTimes(0)
   })
 
-  test('expect render when pathname has three slashes', () => {
+  it('should render when pathname has three slashes', () => {
     window.location.pathname = '/s/aeiou/y'
     render(<NotFound />)
-    expect(mocked(ServerErrorMessage)).toHaveBeenCalledTimes(1)
+    expect(ServerErrorMessage).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return title in Head component', () => {
+    const { container } = render(<Head {...({} as any)} />)
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <title>
+          404: Not Found | dbowland.com
+        </title>
+      </div>
+    `)
   })
 })

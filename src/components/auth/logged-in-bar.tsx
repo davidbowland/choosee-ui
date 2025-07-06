@@ -1,12 +1,15 @@
+import { Auth } from 'aws-amplify'
 import { Link, navigate } from 'gatsby'
 import React, { useState } from 'react'
+
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded'
-import Alert from '@mui/material/Alert'
-import { Auth } from 'aws-amplify'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import DeleteIcon from '@mui/icons-material/Delete'
+import LogoutIcon from '@mui/icons-material/Logout'
+import PrivacyTipIcon from '@mui/icons-material/PrivacyTip'
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
@@ -18,8 +21,6 @@ import List from '@mui/material/List'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
-import LogoutIcon from '@mui/icons-material/Logout'
-import PrivacyTipIcon from '@mui/icons-material/PrivacyTip'
 import Snackbar from '@mui/material/Snackbar'
 import SwipeableDrawer from '@mui/material/SwipeableDrawer'
 import Typography from '@mui/material/Typography'
@@ -42,7 +43,7 @@ const LoggedInBar = ({ loggedInUser, setLoggedInUser }: LoggedInBarProps): JSX.E
 
   const deleteAccountClick = async (): Promise<void> => {
     setShowDeleteDialog(false)
-    loggedInUser.deleteUser((error: any) => {
+    loggedInUser.deleteUser((error: Error | undefined) => {
       if (error) {
         console.error('deleteAccountClick', { error, loggedInUser })
         setShowDeleteErrorSnackbar(true)

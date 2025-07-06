@@ -1,7 +1,8 @@
 import { Authenticator, defaultDarkModeOverride, ThemeProvider } from '@aws-amplify/ui-react'
-import Button from '@mui/material/Button'
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import React from 'react'
+
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
+import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 
 import { AmplifyUser, AuthState } from '@types'

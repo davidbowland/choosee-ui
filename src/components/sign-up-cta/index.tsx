@@ -1,13 +1,14 @@
+import { StaticImage } from 'gatsby-plugin-image'
+import React from 'react'
+
+import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
-import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns'
 import Grid from '@mui/material/Grid'
-import React from 'react'
 import Stack from '@mui/material/Stack'
-import { StaticImage } from 'gatsby-plugin-image'
 import Typography from '@mui/material/Typography'
 
 import { AuthState } from '@types'

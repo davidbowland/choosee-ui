@@ -1,24 +1,26 @@
+import { Link } from 'gatsby'
 import React, { useRef } from 'react'
+import Carousel from 'react-material-ui-carousel'
+
+import CheckIcon from '@mui/icons-material/Check'
+import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
+import RestaurantIcon from '@mui/icons-material/Restaurant'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
-import Carousel from 'react-material-ui-carousel'
-import CheckIcon from '@mui/icons-material/Check'
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb'
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
-import FavoriteIcon from '@mui/icons-material/Favorite'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
-import { Link } from 'gatsby'
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
-import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import NativeSelect from '@mui/material/NativeSelect'
 import Rating from '@mui/material/Rating'
-import RestaurantIcon from '@mui/icons-material/Restaurant'
 import Stack from '@mui/material/Stack'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
 import { PlaceDetails } from '@types'
@@ -32,7 +34,7 @@ export interface DecidingProps {
 const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element => {
   const cardRef = useRef<HTMLDivElement>(null)
 
-  const onDecision = (_: any, value: number) => {
+  const onDecision = (_: unknown, value: number) => {
     makeChoice(place.name, value === 0)
     cardRef.current && cardRef.current.scrollIntoView()
   }
@@ -43,9 +45,16 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
         {place && (
           <Card ref={cardRef}>
             {place.photos.length > 0 ? (
-              <Carousel>
+              <Carousel key={place.name}>
                 {place.photos.map((photo, index) => (
-                  <CardMedia alt={`Photo of ${place.name}`} component="img" height="300" image={photo} key={index} />
+                  <CardMedia
+                    alt={`Photo of ${place.name}`}
+                    component="img"
+                    height="300"
+                    image={photo}
+                    key={`${index}`}
+                    referrerPolicy="no-referrer"
+                  />
                 ))}
               </Carousel>
             ) : (
@@ -68,33 +77,33 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
                     </Link>
                   </Typography>
                 )}
-                {place.priceLevel !== undefined && (
-                  <div>
+                {place.formattedPriceLevel !== undefined && (
+                  <Tooltip arrow title={place.formattedPriceLevel.label}>
                     <Rating
                       emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
-                      getLabelText={(value: number) => `${value} Dollar${value === 1 ? '' : 's'}`}
                       icon={<MonetizationOnIcon fontSize="inherit" />}
                       max={4}
                       precision={0.5}
                       readOnly
                       sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
-                      value={place.priceLevel}
+                      value={place.formattedPriceLevel.rating}
                     />
-                  </div>
+                  </Tooltip>
                 )}
                 {place.rating !== undefined && (
                   <>
                     <div>
-                      <Rating
-                        defaultValue={place.rating}
-                        emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                        getLabelText={(value: number) => `${value} Heart${value === 1 ? '' : 's'}`}
-                        icon={<FavoriteIcon fontSize="inherit" />}
-                        precision={0.5}
-                        readOnly
-                        sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
-                        value={place.rating}
-                      />
+                      <Tooltip arrow title={`${place.rating} heart${place.rating === 1 ? '' : 's'}`}>
+                        <Rating
+                          defaultValue={place.rating}
+                          emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                          icon={<FavoriteIcon fontSize="inherit" />}
+                          precision={0.5}
+                          readOnly
+                          sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
+                          value={place.rating}
+                        />
+                      </Tooltip>
                     </div>
                     {place.ratingsTotal && (
                       <Typography color="text.secondary" variant="caption">
@@ -139,7 +148,7 @@ const Deciding = ({ address, place, makeChoice }: DecidingProps): JSX.Element =>
         )}
       </Box>
       <Box>
-        <Typography component={'div'} sx={{ textAlign: 'center' }} variant="caption">
+        <Typography component="div" sx={{ textAlign: 'center' }} variant="caption">
           Showing choices near {address}
         </Typography>
       </Box>

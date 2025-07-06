@@ -1,12 +1,13 @@
-import React, { useState } from 'react'
-import Grid from '@mui/material/Grid'
-import { Helmet } from 'react-helmet'
-import { useTheme } from '@mui/material/styles'
-
 import Authenticated from '@components/auth'
-import { AuthState } from '@types'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
+import type { HeadFC } from 'gatsby'
+import React, { useState } from 'react'
+
+import Grid from '@mui/material/Grid'
+import { useTheme } from '@mui/material/styles'
+
+import { AuthState } from '@types'
 
 const Index = (): JSX.Element => {
   const [authState, setAuthState] = useState<AuthState>('signIn')
@@ -23,9 +24,6 @@ const Index = (): JSX.Element => {
         minHeight: '100vh',
       }}
     >
-      <Helmet>
-        <title>Choosee | dbowland.com</title>
-      </Helmet>
       <Authenticated
         initialAuthState={authState}
         initialShowLogin={showLogin}
@@ -42,5 +40,7 @@ const Index = (): JSX.Element => {
     </main>
   )
 }
+
+export const Head: HeadFC = () => <title>Choosee | dbowland.com</title>
 
 export default Index

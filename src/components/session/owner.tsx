@@ -1,24 +1,25 @@
+import jsonpatch from 'fast-json-patch'
+import { QRCodeSVG } from 'qrcode.react'
 import React, { useEffect, useState } from 'react'
+
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
-import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CircularProgress from '@mui/material/CircularProgress'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import Divider from '@mui/material/Divider'
-import jsonpatch from 'fast-json-patch'
-import { QRCodeSVG } from 'qrcode.react'
 import Slider from '@mui/material/Slider'
 import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
-import TextField from '@mui/material/TextField'
 import { useTheme } from '@mui/material/styles'
+import TextField from '@mui/material/TextField'
 
+import { updateSession } from '@services/choosee'
 import { SessionData } from '@types'
-import { updateSession } from '@services/sessions'
 
 export interface OwnerProps {
   loggedIn: boolean
@@ -122,7 +123,9 @@ const Owner = ({ loggedIn, session, sessionId, setSession }: OwnerProps): JSX.El
                     marks={true}
                     max={10}
                     min={1}
-                    onChange={(_: any, value: any) => setWorkingSession({ ...workingSession, voterCount: value })}
+                    onChange={(_: unknown, value: number | number[]) =>
+                      setWorkingSession({ ...workingSession, voterCount: value as number })
+                    }
                     step={1}
                     sx={{ paddingTop: '35px' }}
                     valueLabelDisplay="auto"

@@ -1,12 +1,13 @@
+import Authenticated from '@components/auth'
+import PrivacyPolicy from '@components/privacy-policy'
+import type { HeadFC } from 'gatsby'
 import React, { useState } from 'react'
-import { Helmet } from 'react-helmet'
+
 import Paper from '@mui/material/Paper'
 import { useTheme } from '@mui/material/styles'
 
 import '@config/amplify'
-import Authenticated from '@components/auth'
 import { AuthState } from '@types'
-import PrivacyPolicy from '@components/privacy-policy'
 
 const PrivacyPage = (): JSX.Element => {
   const [authState, setAuthState] = useState<AuthState>('signIn')
@@ -17,9 +18,6 @@ const PrivacyPage = (): JSX.Element => {
 
   return (
     <main style={{ backgroundColor: theme.palette.background.default, color: theme.palette.text.primary }}>
-      <Helmet>
-        <title>Privacy Policy -- choosee.dbowland.com</title>
-      </Helmet>
       <Authenticated
         initialAuthState={authState}
         initialShowLogin={showLogin}
@@ -33,5 +31,7 @@ const PrivacyPage = (): JSX.Element => {
     </main>
   )
 }
+
+export const Head: HeadFC = () => <title>Privacy Policy | dbowland.com</title>
 
 export default PrivacyPage

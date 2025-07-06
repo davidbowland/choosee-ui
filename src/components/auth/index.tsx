@@ -1,13 +1,14 @@
 import '@aws-amplify/ui-react/styles.css'
-import React, { useEffect, useState } from 'react'
-import AppBar from '@mui/material/AppBar'
 import { Auth } from 'aws-amplify'
+import React, { useEffect, useState } from 'react'
+
+import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 
-import { AmplifyUser, AuthState } from '@types'
 import ChooseeAuthenticator from './choosee-authenticator'
 import LoggedInBar from './logged-in-bar'
 import LoggedOutBar from './logged-out-bar'
+import { AmplifyUser, AuthState } from '@types'
 
 export interface AuthenticatedProps {
   children: JSX.Element | JSX.Element[]

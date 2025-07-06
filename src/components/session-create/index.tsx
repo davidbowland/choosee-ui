@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import SignUpCta from '@components/sign-up-cta'
 import { Auth } from 'aws-amplify'
+import React, { useEffect, useState } from 'react'
+
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 
-import { AuthState } from '@types'
 import Create from './create'
-import SignUpCta from '@components/sign-up-cta'
+import { AuthState } from '@types'
 
 export interface SessionCreateProps {
   setAuthState: (state: AuthState) => void

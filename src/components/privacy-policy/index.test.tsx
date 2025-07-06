@@ -5,7 +5,7 @@ import React from 'react'
 import PrivacyPolicy from './index'
 
 describe('provacy-policy component', () => {
-  test('expect privacy policy rendered', async () => {
+  it('should render privacy policy', async () => {
     render(<PrivacyPolicy />)
 
     expect(screen.queryAllByText(/privacy policy/i).length).toBeGreaterThan(0)

@@ -1,21 +1,23 @@
 import { Link, navigate } from 'gatsby'
+import React from 'react'
+
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
+import RestaurantIcon from '@mui/icons-material/Restaurant'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
-import CheckBoxIcon from '@mui/icons-material/CheckBox'
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
-import FavoriteIcon from '@mui/icons-material/Favorite'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
-import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined'
 import Rating from '@mui/material/Rating'
-import React from 'react'
-import RestaurantIcon from '@mui/icons-material/Restaurant'
 import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 
 import { PlaceDetails } from '@types'
@@ -53,29 +55,31 @@ const Winner = ({ winner }: WinnerProps): JSX.Element => {
                 </Link>
               </Typography>
             )}
-            {winner.priceLevel !== undefined && (
-              <Rating
-                emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
-                getLabelText={(value: number) => `${value} Dollar${value === 1 ? '' : 's'}`}
-                icon={<MonetizationOnIcon fontSize="inherit" />}
-                max={4}
-                precision={0.5}
-                readOnly
-                sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
-                value={winner.priceLevel}
-              />
+            {winner.formattedPriceLevel !== undefined && (
+              <Tooltip arrow title={winner.formattedPriceLevel.label}>
+                <Rating
+                  emptyIcon={<MonetizationOnOutlinedIcon fontSize="inherit" />}
+                  icon={<MonetizationOnIcon fontSize="inherit" />}
+                  max={4}
+                  precision={0.5}
+                  readOnly
+                  sx={{ '& .MuiRating-iconFilled': { color: '#d4af37' } }}
+                  value={winner.formattedPriceLevel.rating}
+                />
+              </Tooltip>
             )}
             {winner.rating !== undefined && (
-              <Rating
-                defaultValue={winner.rating}
-                emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                getLabelText={(value: number) => `${value} Heart${value === 1 ? '' : 's'}`}
-                icon={<FavoriteIcon fontSize="inherit" />}
-                precision={0.5}
-                readOnly
-                sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
-                value={winner.rating}
-              />
+              <Tooltip arrow title={`${winner.rating} heart${winner.rating === 1 ? '' : 's'}`}>
+                <Rating
+                  defaultValue={winner.rating}
+                  emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                  icon={<FavoriteIcon fontSize="inherit" />}
+                  precision={0.5}
+                  readOnly
+                  sx={{ '& .MuiRating-iconFilled': { color: '#ff6d75' } }}
+                  value={winner.rating}
+                />
+              </Tooltip>
             )}
             {winner.website && (
               <Typography>

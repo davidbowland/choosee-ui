@@ -4,9 +4,8 @@ export { Theme } from '@mui/material/styles'
 
 export type AuthState = 'signIn' | 'signUp' | 'resetPassword'
 
-export type PlaceType = 'restaurant' | 'meal_delivery' | 'meal_takeaway'
-
-export type RankByType = 'distance' | 'prominence'
+export type PlaceType = string
+export type RankByType = 'DISTANCE' | 'POPULARITY'
 
 export interface AddressResult {
   address: string
@@ -15,6 +14,7 @@ export interface AddressResult {
 export interface PlaceDetails {
   formattedAddress?: string
   formattedPhoneNumber?: string
+  formattedPriceLevel: { label: string; rating: number }
   internationalPhoneNumber?: string
   name: string
   openHours?: string[]
@@ -26,6 +26,17 @@ export interface PlaceDetails {
   website?: string
 }
 
+export interface PlaceTypeDisplay {
+  canBeExcluded?: boolean
+  defaultExclude?: boolean
+  defaultType?: boolean
+  display: string
+  mustBeSingleType?: boolean
+  value: PlaceType
+}
+
+// Decisions
+
 export interface DecisionObject {
   [key: string]: boolean
 }
@@ -34,41 +45,38 @@ export interface Decision {
   decisions: DecisionObject
 }
 
+// Sessions
+
 export interface StatusObject {
-  current: 'deciding' | 'winner' | 'finished' | 'expired'
-  pageId: number
+  current: 'waiting' | 'deciding' | 'winner' | 'finished' | 'expired'
   winner?: PlaceDetails
 }
 
 export interface SessionData {
   address: string
   choiceId: string
+  exclude: PlaceType[]
   expiration: number
   lastAccessed: number
-  location: { lat: number; lng: number }
-  maxPrice: number
-  minPrice: number
-  openNow: boolean
+  location: { latitude: number; longitude: number }
   owner?: string
-  pagesPerRound: number
   sessionId?: string
   status: StatusObject
-  type: PlaceType
+  type: PlaceType[]
   voterCount: number
 }
 
 export interface NewSession {
   address: string
+  exclude: PlaceType[]
   expiration?: number
-  maxPrice?: number
-  minPrice?: number
-  openNow?: boolean
-  pagesPerRound?: number
   radius?: number
   rankBy?: string
-  type: PlaceType
+  type: PlaceType[]
   voterCount: number
 }
+
+// Misc
 
 export interface StringObject {
   [key: string]: string

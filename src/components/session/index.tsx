@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from 'react'
-import Alert from '@mui/material/Alert'
+import Logo from '@components/logo'
 import { Auth } from 'aws-amplify'
+import jsonpatch from 'fast-json-patch'
+import React, { useEffect, useState } from 'react'
+
+import Alert from '@mui/material/Alert'
 import Backdrop from '@mui/material/Backdrop'
 import Box from '@mui/material/Box'
-import jsonpatch from 'fast-json-patch'
 import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
-import { AmplifyUser, AuthState, Decision, PlaceDetails, SessionData } from '@types'
-import { fetchDecision, fetchSession, updateDecisions } from '@services/sessions'
 import Deciding from './deciding'
 import Expired from './expired'
-import { fetchChoices } from '@services/maps'
 import Finished from './finished'
 import LoginPrompt from './login-prompt'
-import Logo from '@components/logo'
 import Owner from './owner'
 import Winner from './winner'
+import { fetchChoices, fetchDecision, fetchSession, updateDecision } from '@services/choosee'
+import { AmplifyUser, AuthState, Decision, PlaceDetails, SessionData } from '@types'
 
 const MAX_STATUS_REFRESH_COUNT = 50
 const delayBetweenRefreshMs = parseInt(process.env.GATSBY_DELAY_BETWEEN_REFRESH_MS, 10)
@@ -44,9 +44,8 @@ const Session = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
   const [loggedInUser, setLoggedInUser] = useState<AmplifyUser | undefined>()
-  const [pageId, setPageId] = useState(-2)
   const [place, setPlace] = useState<PlaceDetails | undefined>()
-  const [session, setSession] = useState<SessionData>({ status: { current: 'deciding', pageId: -1 } } as any)
+  const [session, setSession] = useState<SessionData>({ status: { current: 'waiting' } } as any)
   const [statusCount, setStatusCount] = useState(0)
 
   const findNextPlace = (availableChoices: PlaceDetails[]): void => {
@@ -81,6 +80,7 @@ const Session = ({
       console.error('refreshChoices', { choiceId, error })
       setErrorMessage('Error fetching choices. Please reload the page and try again.')
     }
+    setIsLoading(false)
   }
 
   const refreshDecisions = async (): Promise<void> => {
@@ -88,7 +88,7 @@ const Session = ({
       const jsonPatchOperations = jsonpatch.compare(decisionInitial, decision, true)
       if (jsonPatchOperations.length > 0) {
         try {
-          await updateDecisions(sessionId, loggedInUser!.attributes!.phone_number, jsonPatchOperations)
+          await updateDecision(sessionId, loggedInUser!.attributes!.phone_number, jsonPatchOperations)
           setDecisionInitial(decision)
         } catch (error) {
           console.error('refreshDecisions', { error, jsonPatchOperations, loggedInUser, sessionId })
@@ -113,9 +113,8 @@ const Session = ({
     try {
       const currentSession = await fetchSession(sessionId)
       setSession(currentSession)
-      if (currentSession.status.pageId !== pageId) {
+      if (currentSession.status.current !== session.status.current) {
         setIsWaiting(false)
-        setPageId(currentSession.status.pageId)
         await refreshChoices(currentSession.choiceId)
       } else if (currentSession.status.current === 'deciding') {
         setIsWaiting(true)
@@ -123,13 +122,13 @@ const Session = ({
           setStatusCount(statusCount + 1)
           setTimeout(refreshStatus, delayBetweenRefreshMs)
         }
-        return
+      } else {
+        setIsLoading(false)
       }
     } catch (error) {
       console.error('refreshStatus', { error })
-      setSession({ status: { current: 'expired', pageId: 0 } } as any)
+      setSession({ status: { current: 'expired' } } as any)
     }
-    setIsLoading(false)
   }
 
   const renderSession = (): JSX.Element => {
@@ -240,7 +239,7 @@ const Session = ({
             {isWaiting ? (
               <>
                 <Typography color="#fff" variant="h5">
-                  Round {pageId + 1} complete
+                  Voting complete
                 </Typography>
                 <Typography color="#fff" variant="h5">
                   {statusCount < maxStatusRefreshCount ? 'Waiting for other voters' : 'Please refresh the page'}

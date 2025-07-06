@@ -1,7 +1,7 @@
-import React from 'react'
-
 import Authenticated from '@components/auth'
 import ServerErrorMessage from '@components/server-error-message'
+import type { HeadFC } from 'gatsby'
+import React from 'react'
 
 const InternalServerError = (): JSX.Element => {
   return (
@@ -13,5 +13,7 @@ const InternalServerError = (): JSX.Element => {
     </Authenticated>
   )
 }
+
+export const Head: HeadFC = () => <title>500: Internal Server Error | dbowland.com</title>
 
 export default InternalServerError

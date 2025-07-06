@@ -1,16 +1,17 @@
+import { navigate } from 'gatsby'
 import React, { useEffect, useState } from 'react'
+
 import Alert from '@mui/material/Alert'
+import Autocomplete from '@mui/material/Autocomplete'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
-import Checkbox from '@mui/material/Checkbox'
 import CircularProgress from '@mui/material/CircularProgress'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import FormLabel from '@mui/material/FormLabel'
-import { navigate } from 'gatsby'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
 import Slider from '@mui/material/Slider'
@@ -19,9 +20,15 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
-import { AddressResult, NewSession, PlaceType, RankByType, StringObject } from '@types'
-import { createSession, createSessionAuthenticated, textSession } from '@services/sessions'
-import { fetchAddress, fetchAddressAuthenticated } from '@services/maps'
+import {
+  createSession,
+  createSessionAuthenticated,
+  fetchAddress,
+  fetchAddressAuthenticated,
+  fetchPlaceTypes,
+  textSession,
+} from '@services/choosee'
+import { AddressResult, NewSession, PlaceTypeDisplay, RankByType, StringObject } from '@types'
 
 const METERS_PER_MILE = 1609.34
 
@@ -36,13 +43,13 @@ export interface CreateProps {
 const Create = ({ loggedIn }: CreateProps): JSX.Element => {
   const [address, setAddress] = useState('')
   const [addressError, setAddressError] = useState<string | undefined>()
-  const [choiceType, setChoiceType] = useState<PlaceType>('restaurant')
+  const [choiceTypes, setChoiceTypes] = useState<PlaceTypeDisplay[]>([])
   const [errorMessage, setErrorMessage] = useState<string | undefined>()
+  const [excludedTypes, setExcludedTypes] = useState<PlaceTypeDisplay[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [openNow, setOpenNow] = useState(true)
-  const [priceRange, setPriceRange] = useState<number[]>([1, 4])
+  const [placeTypes, setPlaceTypes] = useState<PlaceTypeDisplay[]>([])
   const [radius, setRadius] = useState(30)
-  const [rankBy, setRankBy] = useState<RankByType>('prominence')
+  const [rankBy, setRankBy] = useState<RankByType>('POPULARITY')
   const [successMessage, setSuccessMessage] = useState<string | undefined>()
   const [voterCount, setVoterCount] = useState(loggedIn ? 2 : 1)
   const [voterIds, setVoterIds] = useState<VoterIds>({})
@@ -55,13 +62,13 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     }
     setAddressError(undefined)
 
-    const errors = Array.from({ length: voterCount - 1 }).reduce((acc: any, _, index: any) => {
+    const errors = Array.from({ length: voterCount - 1 }).reduce((acc: VoterIds, _: unknown, index: number) => {
       const isValidPhone = voterIds[index]?.match(/^\+1[2-9]\d{9}$/) !== null
       if (!isValidPhone && voterIds[index] !== '') {
         acc[index] = 'Invalid phone number. Be sure to include area code.'
       }
       return acc
-    }, {} as VoterIds) as string[]
+    }, {} as VoterIds)
 
     setVoterIdErrors(errors)
     if (Object.keys(errors).length > 0) {
@@ -72,13 +79,10 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     try {
       const newSession: NewSession = {
         address,
-        maxPrice: priceRange[1],
-        minPrice: priceRange[0],
-        openNow,
-        pagesPerRound: 1,
-        radius: rankBy === 'prominence' ? radius * METERS_PER_MILE : undefined,
+        exclude: excludedTypes.map((excludedType: PlaceTypeDisplay) => excludedType.value),
+        radius: radius * METERS_PER_MILE,
         rankBy,
-        type: choiceType,
+        type: choiceTypes.map((chosenType: PlaceTypeDisplay) => chosenType.value),
         voterCount,
       }
 
@@ -87,20 +91,21 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
       setSuccessMessage('Choosee voting session starting')
 
       await Promise.all(
-        Array.from({ length: voterCount - 1 }).map((_, index: any) => {
+        Array.from({ length: voterCount - 1 }).map((_, index: number) => {
           const phoneNumber = voterIds[index]
           if (phoneNumber) {
             textSession(session.sessionId, phoneNumber)
           }
-        })
+        }),
       )
 
       navigate(`/s/${session.sessionId}`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('generateSession', { error })
-      if (error?.message === 'Invalid address') {
-        setAddressError(error?.message)
-      } else if (error?.response?.status === 403) {
+      const err = error as { message?: string; response?: { status?: number } }
+      if (err?.message === 'Invalid address') {
+        setAddressError(err.message)
+      } else if (err?.response?.status === 403) {
         setErrorMessage('Unusual traffic detected, please log in to continue.')
       } else {
         setErrorMessage('Error generating Choosee voting session. Please try again later.')
@@ -109,12 +114,12 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     }
   }
 
-  const getAddress = async (lat: number, lng: number): Promise<AddressResult> => {
+  const getAddress = async (latitude: number, longitude: number): Promise<AddressResult> => {
     if (loggedIn) {
-      return await fetchAddressAuthenticated(lat, lng)
+      return await fetchAddressAuthenticated(latitude, longitude)
     }
     const token = await grecaptcha.execute(process.env.GATSBY_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
-    return await fetchAddress(lat, lng, token)
+    return await fetchAddress(latitude, longitude, token)
   }
 
   const onVoterIdChange = (index: number, value: string): void => {
@@ -132,15 +137,16 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     return await createSession(newSession, token)
   }
 
-  const setLatLng = async (lat: number, lng: number): Promise<void> => {
+  const setLatLng = async (latitude: number, longitude: number): Promise<void> => {
     try {
-      const fetchedAddress = await getAddress(lat, lng)
+      const fetchedAddress = await getAddress(latitude, longitude)
       setAddress(fetchedAddress.address)
-    } catch (error: any) {
-      if (error?.response?.status === 403) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } }
+      if (err?.response?.status === 403) {
         setErrorMessage('Unusual traffic detected, please log in to continue.')
       }
-      console.error('setLatLng', { error, lat, lng })
+      console.error('setLatLng', { error, latitude, longitude })
     }
   }
 
@@ -153,15 +159,25 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
   }
 
   useEffect(() => {
+    if (!choiceTypes.length && !excludedTypes.length) {
+      const defaultChoiceTypes = placeTypes.filter((t) => t.defaultType)
+      setChoiceTypes(defaultChoiceTypes)
+      const defaultExcludedTypes = placeTypes.filter((t) => t.defaultExclude)
+      setExcludedTypes(defaultExcludedTypes)
+    }
+  }, [placeTypes])
+
+  useEffect(() => {
     navigator.geolocation &&
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setLatLng(pos.coords.latitude, pos.coords.longitude)
         },
         undefined,
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true },
       )
-  }, [loggedIn])
+    fetchPlaceTypes().then(setPlaceTypes)
+  }, [])
 
   return (
     <>
@@ -186,51 +202,53 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
               />
             </label>
             <FormControl>
-              <FormLabel id="restaurant-type-group-label">Restaurant type</FormLabel>
-              <RadioGroup
-                name="restaurant-type-radio-buttons-group"
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  setChoiceType(event.target.value as PlaceType)
-                }
-                value={choiceType}
-              >
-                <FormControlLabel
-                  control={<Radio />}
-                  disabled={isLoading}
-                  id="dine-in"
-                  label="Dine-in"
-                  value="restaurant"
-                />
-                <FormControlLabel
-                  control={<Radio />}
-                  disabled={isLoading}
-                  id="delivery"
-                  label="Delivery"
-                  value="meal_delivery"
-                />
-                <FormControlLabel
-                  control={<Radio />}
-                  disabled={isLoading}
-                  id="takeout"
-                  label="Takeout"
-                  value="meal_takeaway"
-                />
-                <FormControlLabel control={<Radio />} disabled={isLoading} id="bar" label="Bar" value="bar" />
-                <FormControlLabel control={<Radio />} disabled={isLoading} id="cafe" label="Café" value="cafe" />
-                <FormControlLabel
-                  control={<Radio />}
-                  disabled={isLoading}
-                  id="night-club"
-                  label="Night club"
-                  value="night_club"
-                />
-              </RadioGroup>
+              <Autocomplete
+                disabled={isLoading}
+                getOptionLabel={(t: PlaceTypeDisplay) => t.display}
+                loading={placeTypes.length === 0}
+                multiple
+                onChange={(event, value: PlaceTypeDisplay[]) => {
+                  const currentChoices = new Set(choiceTypes)
+                  const addedChoices = value.filter((choice) => !currentChoices.has(choice))
+
+                  if (addedChoices.some((choice) => choice.mustBeSingleType)) {
+                    const singleTypeChoice = addedChoices.filter((choice) => choice.mustBeSingleType).pop()
+                    setChoiceTypes(singleTypeChoice ? [singleTypeChoice] : [])
+                  } else {
+                    setChoiceTypes(value.filter((choice) => !choice.mustBeSingleType))
+                  }
+                }}
+                options={placeTypes}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Restaurant type"
+                    placeholder="Select restaurant type"
+                    variant="standard"
+                  />
+                )}
+                value={choiceTypes}
+              />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox checked={openNow} onClick={(event: any) => setOpenNow(event.target.checked)} />}
-              disabled={isLoading}
-              label="Only show choices currently open"
-            />
+            <FormControl>
+              <Autocomplete
+                disabled={isLoading}
+                getOptionLabel={(t: PlaceTypeDisplay) => t.display}
+                loading={placeTypes.length === 0}
+                multiple
+                onChange={(event, value) => setExcludedTypes(value)}
+                options={placeTypes.filter((type) => type.canBeExcluded !== false)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Excluded types"
+                    placeholder="Select excluded restaurant types"
+                    variant="standard"
+                  />
+                )}
+                value={excludedTypes}
+              />
+            </FormControl>
             <FormControl>
               <FormLabel id="sort-by-group-label">Sort by</FormLabel>
               <RadioGroup
@@ -241,50 +259,32 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
                 <FormControlLabel
                   control={<Radio />}
                   disabled={isLoading}
-                  id="sort-prominence"
-                  label="Most prominent first"
-                  value="prominence"
+                  id="sort-popularity"
+                  label="Most popular"
+                  value="POPULARITY"
                 />
                 <FormControlLabel
                   control={<Radio />}
                   disabled={isLoading}
                   id="sort-distance"
                   label="Closest first"
-                  value="distance"
+                  value="DISTANCE"
                 />
               </RadioGroup>
             </FormControl>
-            {rankBy === 'prominence' && (
-              <label>
-                Maximum distance: {radius} {radius === 1 ? 'mile' : 'miles'}
-                <Slider
-                  aria-label="Max distance to restaurant"
-                  defaultValue={radius}
-                  disabled={isLoading}
-                  marks={true}
-                  max={30}
-                  min={1}
-                  onChange={(_: any, value: any) => setRadius(value)}
-                  step={1}
-                  sx={{ paddingTop: '35px' }}
-                  valueLabelDisplay="auto"
-                />
-              </label>
-            )}
             <label>
-              Price range
+              Maximum distance: {radius} {radius === 1 ? 'mile' : 'miles'}
               <Slider
-                aria-label="Price range"
-                defaultValue={priceRange}
+                aria-label="Max distance to restaurant"
+                defaultValue={radius}
                 disabled={isLoading}
-                marks={[
-                  { label: 'Cheapest', value: 1 },
-                  { label: 'Priciest', value: 4 },
-                ]}
-                max={4}
+                marks={true}
+                max={30}
                 min={1}
-                onChange={(_: any, value: any) => setPriceRange(value)}
+                onChange={(_: unknown, value: number | number[]) => setRadius(value as number)}
                 step={1}
+                sx={{ paddingTop: '35px' }}
+                valueLabelDisplay="auto"
               />
             </label>
             <label>
@@ -296,7 +296,7 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
                 marks={true}
                 max={10}
                 min={1}
-                onChange={(_: any, value: any) => setVoterCount(value)}
+                onChange={(_: unknown, value: number | number[]) => setVoterCount(value as number)}
                 step={1}
                 sx={{ paddingTop: '35px' }}
                 valueLabelDisplay="auto"

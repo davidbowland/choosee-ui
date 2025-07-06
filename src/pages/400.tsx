@@ -1,7 +1,7 @@
-import React from 'react'
-
 import Authenticated from '@components/auth'
 import ServerErrorMessage from '@components/server-error-message'
+import type { HeadFC } from 'gatsby'
+import React from 'react'
 
 const BadRequest = (): JSX.Element => {
   return (
@@ -13,5 +13,7 @@ const BadRequest = (): JSX.Element => {
     </Authenticated>
   )
 }
+
+export const Head: HeadFC = () => <title>400: Bad Request | dbowland.com</title>
 
 export default BadRequest

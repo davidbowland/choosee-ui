@@ -1,7 +1,7 @@
-import React from 'react'
-
 import Authenticated from '@components/auth'
 import ServerErrorMessage from '@components/server-error-message'
+import type { HeadFC } from 'gatsby'
+import React from 'react'
 
 const NotFound = (): JSX.Element => {
   const display404 = typeof window !== 'undefined' && window.location.pathname.match(/^\/s\/[^/]+$/) === null
@@ -20,5 +20,7 @@ const NotFound = (): JSX.Element => {
   }
   return <></>
 }
+
+export const Head: HeadFC = () => <title>404: Not Found | dbowland.com</title>
 
 export default NotFound

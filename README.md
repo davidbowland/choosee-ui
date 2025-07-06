@@ -73,13 +73,13 @@ npm run workflow
 
 ## Additional Documentation
 
-### Additional Gastby Documentation
+### Additional Gatsby Documentation
 
 - [Documentation](https://www.gatsbyjs.com/docs/)
 
 - [Tutorials](https://www.gatsbyjs.com/tutorial/)
 
-- [Guides](https://www.gatsbyjs.com/tutorial/)
+- [Guides](https://www.gatsbyjs.com/docs/how-to/)
 
 - [API Reference](https://www.gatsbyjs.com/docs/api-reference/)
 

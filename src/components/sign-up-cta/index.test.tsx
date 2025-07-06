@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import SignUpCta from './index'
@@ -14,16 +15,19 @@ describe('SignUpCta component', () => {
     console.error = jest.fn()
   })
 
-  test('expect sign up button to be rendered', async () => {
+  it('should render sign up button', async () => {
     render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
     expect((await screen.findAllByText(/Sign up/i, { selector: 'button' }))[0]).toBeInTheDocument()
   })
 
-  test('expect sign up button invokes setAuthState and setShowLogin', async () => {
+  it('should invoke setAuthState and setShowLogin when sign up button is clicked', async () => {
     render(<SignUpCta setAuthState={setAuthState} setShowLogin={setShowLogin} />)
 
+    const user = userEvent.setup()
     const signUpButton = (await screen.findAllByText(/Sign up/i, { selector: 'button' }))[0] as HTMLButtonElement
-    fireEvent.click(signUpButton)
+    await act(async () => {
+      await user.click(signUpButton)
+    })
 
     expect(setAuthState).toHaveBeenCalledWith('signUp')
     expect(setShowLogin).toHaveBeenCalledWith(true)

@@ -14,6 +14,7 @@ export const choiceId = '123abc'
 
 export const choices: PlaceDetails[] = [
   {
+    formattedPriceLevel: { label: 'Moderate', rating: 2 },
     name: "Shakespeare's Pizza - Downtown",
     photos: ['https://lh3.googleusercontent.com/places/Shakespeares'],
     priceLevel: 2,
@@ -22,6 +23,7 @@ export const choices: PlaceDetails[] = [
     vicinity: '225 South 9th Street, Columbia',
   },
   {
+    formattedPriceLevel: { label: 'Inexpensive', rating: 1 },
     name: 'Subway',
     photos: ['https://lh3.googleusercontent.com/places/Subway'],
     priceLevel: 1,
@@ -38,11 +40,13 @@ export const jsonPatchOperations: PatchOperation[] = [{ op: 'replace', path: '/a
 
 export const newSession: NewSession = {
   address: '90210',
-  type: 'restaurant',
+  exclude: [],
+  type: ['restaurant'],
   voterCount: 2,
 }
 
 export const place: PlaceDetails = {
+  formattedPriceLevel: { label: 'Moderate', rating: 2 },
   name: "Dave's Place",
   openHours: [
     'Monday: 10:00 AM – 2:00 AM',
@@ -68,27 +72,29 @@ export const placeDetails: PlaceDetails = {
   website: 'https://dbowland.com/',
 }
 
+export const placeTypesResults = [
+  { defaultType: true, display: 'Any restaurant', value: 'restaurant' },
+  { display: 'Cat cafe', value: 'cat_cafe' },
+  { defaultExclude: true, display: 'Fast food', value: 'fast_food_restaurant' },
+]
+
 export const recaptchaToken = 'qwertyuiokjhgffgh'
 
 export const session: SessionData = {
   address: 'Columbia, MO 65203, USA',
   choiceId,
+  exclude: [],
   expiration: 1649131360051,
   lastAccessed: 123456789,
   location: {
-    lat: 38.9538484,
-    lng: -92.3714428,
+    latitude: 38.9538484,
+    longitude: -92.3714428,
   },
-  maxPrice: 4,
-  minPrice: 1,
-  openNow: false,
   owner: '178300fb-3ab6-41e2-bab6-231964026e42',
-  pagesPerRound: 1,
   status: {
     current: 'deciding',
-    pageId: 0,
   },
-  type: 'restaurant',
+  type: ['restaurant'],
   voterCount: 2,
 }
 
@@ -96,7 +102,6 @@ export const sessionId = 'aeio'
 
 export const statusDeciding: StatusObject = {
   current: 'deciding',
-  pageId: 0,
 }
 
 export const user: AmplifyUser = {
