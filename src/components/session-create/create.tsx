@@ -62,6 +62,11 @@ const Create = ({ loggedIn }: CreateProps): JSX.Element => {
     }
     setAddressError(undefined)
 
+    if (choiceTypes.length === 0) {
+      setErrorMessage('Please select at least one restaurant type')
+      return
+    }
+
     const errors = Array.from({ length: voterCount - 1 }).reduce((acc: VoterIds, _: unknown, index: number) => {
       const isValidPhone = voterIds[index]?.match(/^\+1[2-9]\d{9}$/) !== null
       if (!isValidPhone && voterIds[index] !== '') {

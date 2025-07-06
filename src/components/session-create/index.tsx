@@ -15,7 +15,7 @@ export interface SessionCreateProps {
 }
 
 const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.Element => {
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
 
   useEffect(() => {
     Auth.currentAuthenticatedUser()
@@ -32,9 +32,7 @@ const SessionCreate = ({ setAuthState, setShowLogin }: SessionCreateProps): JSX.
 
   return (
     <Stack spacing={4}>
-      <Box>
-        <Create loggedIn={loggedIn} />
-      </Box>
+      <Box>{loggedIn !== null && <Create loggedIn={loggedIn} />}</Box>
       <Box>
         {!loggedIn && (
           <>
