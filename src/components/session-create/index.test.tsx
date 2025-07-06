@@ -1,4 +1,3 @@
-import SignUpCta from '@components/sign-up-cta'
 import { placeTypesResults, recaptchaToken, sessionId, user } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -7,6 +6,7 @@ import { Auth } from 'aws-amplify'
 import React from 'react'
 
 import SessionCreate from './index'
+import SignUpCta from '@components/sign-up-cta'
 import * as chooseeService from '@services/choosee'
 
 jest.mock('aws-amplify')

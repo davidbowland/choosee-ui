@@ -1,4 +1,3 @@
-import Logo from '@components/logo'
 import { choices, decisions, placeDetails, session, sessionId, statusDeciding, user, userId } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -8,6 +7,7 @@ import * as gatsby from 'gatsby'
 import React from 'react'
 
 import VoteSession from './index'
+import Logo from '@components/logo'
 import * as chooseeService from '@services/choosee'
 import { PlaceDetails, StatusObject } from '@types'
 

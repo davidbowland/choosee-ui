@@ -1,13 +1,13 @@
-import Authenticated from '@components/auth'
-import PrivacyLink from '@components/privacy-link'
-import VoteSession from '@components/session'
-import Themed from '@components/themed'
 import { sessionId } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 import React from 'react'
 
 import SessionPage, { Head } from './[sessionId]'
+import Authenticated from '@components/auth'
+import PrivacyLink from '@components/privacy-link'
+import VoteSession from '@components/session'
+import Themed from '@components/themed'
 
 jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')

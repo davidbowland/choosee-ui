@@ -1,4 +1,3 @@
-import Logo from '@components/logo'
 import { Auth } from 'aws-amplify'
 import jsonpatch from 'fast-json-patch'
 import React, { useEffect, useState } from 'react'
@@ -16,6 +15,7 @@ import Finished from './finished'
 import LoginPrompt from './login-prompt'
 import Owner from './owner'
 import Winner from './winner'
+import Logo from '@components/logo'
 import { fetchChoices, fetchDecision, fetchSession, updateDecision } from '@services/choosee'
 import { AmplifyUser, AuthState, Decision, PlaceDetails, SessionData } from '@types'
 

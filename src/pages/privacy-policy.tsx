@@ -1,11 +1,11 @@
-import Authenticated from '@components/auth'
-import PrivacyPolicy from '@components/privacy-policy'
 import type { HeadFC } from 'gatsby'
 import React, { useState } from 'react'
 
 import Paper from '@mui/material/Paper'
 import { useTheme } from '@mui/material/styles'
 
+import Authenticated from '@components/auth'
+import PrivacyPolicy from '@components/privacy-policy'
 import '@config/amplify'
 import { AuthState } from '@types'
 

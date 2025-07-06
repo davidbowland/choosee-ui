@@ -1,12 +1,12 @@
-import Authenticated from '@components/auth'
-import PrivacyLink from '@components/privacy-link'
-import VoteSession from '@components/session'
 import type { HeadFC } from 'gatsby'
 import React, { useState } from 'react'
 
 import Grid from '@mui/material/Grid'
 import { useTheme } from '@mui/material/styles'
 
+import Authenticated from '@components/auth'
+import PrivacyLink from '@components/privacy-link'
+import VoteSession from '@components/session'
 import { AuthState } from '@types'
 
 export interface SessionPageProps {
