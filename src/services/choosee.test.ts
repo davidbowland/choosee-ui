@@ -27,7 +27,6 @@ import {
 } from './choosee'
 import { PlaceTypeDisplay } from '@types'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('aws-amplify')
 
 describe('Maps service', () => {

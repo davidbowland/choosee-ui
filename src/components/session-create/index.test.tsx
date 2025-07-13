@@ -10,7 +10,6 @@ import SignUpCta from '@components/sign-up-cta'
 import * as chooseeService from '@services/choosee'
 
 jest.mock('aws-amplify')
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/sign-up-cta')
 jest.mock('gatsby')
 jest.mock('@services/choosee')

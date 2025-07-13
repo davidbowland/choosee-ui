@@ -7,7 +7,6 @@ import Authenticated from '@components/auth'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
 jest.mock('@components/privacy-link')
 jest.mock('@components/session-create')

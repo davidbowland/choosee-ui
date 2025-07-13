@@ -54,7 +54,7 @@ const SignUpCta = ({ setAuthState, setShowLogin }: SignUpCtaProps): JSX.Element 
 
   return (
     <>
-      <Grid container justifyContent="center">
+      <Grid container justifyContent="center" sx={{ paddingTop: 4 }}>
         <Grid item maxWidth="800px">
           <Stack margin="auto" spacing={2}>
             <Typography sx={{ textAlign: 'center' }} variant="h6">

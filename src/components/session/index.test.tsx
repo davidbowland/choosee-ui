@@ -12,7 +12,6 @@ import * as chooseeService from '@services/choosee'
 import { PlaceDetails, StatusObject } from '@types'
 
 jest.mock('aws-amplify')
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/logo')
 jest.mock('gatsby')
 jest.mock('@services/choosee')

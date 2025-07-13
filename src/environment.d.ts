@@ -6,7 +6,6 @@ declare global {
       GATSBY_COGNITO_USER_POOL_ID: string
       GATSBY_DELAY_BETWEEN_REFRESH_MS: string
       GATSBY_IDENTITY_POOL_ID: string
-      GATSBY_PINPOINT_ID: string
       GATSBY_RECAPTCHA_SITE_KEY: string
     }
   }

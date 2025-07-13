@@ -46,10 +46,9 @@ const PrivacyPolicy = (): JSX.Element => {
         advertising campaigns).
       </Typography>
       <Typography variant="body1">
-        We do not share your Personal Information with third parties except in the extreme cases defined below. We use{' '}
-        <Link to="https://aws.amazon.com/pinpoint/">Amazon Pinpoint</Link> to help us understand how our customers use
-        the Site. We also use <Link to="https://www.google.com/intl/en/policies/privacy/">reCAPTCHA v3</Link> to protect
-        our site from unauthorized use.
+        We do not share your Personal Information with third parties except in the cases defined below. We use{' '}
+        <Link to="https://www.google.com/intl/en/policies/privacy/">reCAPTCHA v3</Link> to protect our site from
+        unauthorized use.
       </Typography>
       <Typography variant="body1">
         Finally, we may share your Personal Information to comply with applicable laws and regulations, to respond to a

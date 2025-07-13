@@ -7,7 +7,6 @@ import Authenticated from '@components/auth'
 import ServerErrorMessage from '@components/server-error-message'
 import Themed from '@components/themed'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
 jest.mock('@components/server-error-message')
 jest.mock('@components/themed')

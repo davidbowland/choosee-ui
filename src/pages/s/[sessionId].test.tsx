@@ -9,7 +9,6 @@ import PrivacyLink from '@components/privacy-link'
 import VoteSession from '@components/session'
 import Themed from '@components/themed'
 
-jest.mock('@aws-amplify/analytics')
 jest.mock('@components/auth')
 jest.mock('@components/privacy-link')
 jest.mock('@components/session')

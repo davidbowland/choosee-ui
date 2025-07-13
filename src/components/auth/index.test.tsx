@@ -10,7 +10,6 @@ import React from 'react'
 import Authenticated from './index'
 
 jest.mock('aws-amplify')
-jest.mock('@aws-amplify/analytics')
 jest.mock('@aws-amplify/ui-react')
 jest.mock('gatsby')
 
