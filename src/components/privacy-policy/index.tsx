@@ -45,11 +45,7 @@ const PrivacyPolicy = (): JSX.Element => {
         about how our customers browse and interact with the Site, and to assess the success of our marketing and
         advertising campaigns).
       </Typography>
-      <Typography variant="body1">
-        We do not share your Personal Information with third parties except in the cases defined below. We use{' '}
-        <Link to="https://www.google.com/intl/en/policies/privacy/">reCAPTCHA v3</Link> to protect our site from
-        unauthorized use.
-      </Typography>
+      <Typography variant="body1">We do not share your Personal Information with third parties.</Typography>
       <Typography variant="body1">
         Finally, we may share your Personal Information to comply with applicable laws and regulations, to respond to a
         subpoena, search warrant or other lawful request for information we receive, or to otherwise protect our rights.
