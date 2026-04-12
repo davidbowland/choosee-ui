@@ -1,6 +1,6 @@
 # choosee-ui
 
-Gatsby and Amplify implementation of choosee-session-api and choosee-infrastructure. Example: <https://choosee.dbowland.com/>
+Next.js and Amplify implementation of choosee-session-api and choosee-infrastructure. Example: <https://choosee.dbowland.com/>
 
 ## Static Site
 
@@ -11,7 +11,7 @@ Gatsby and Amplify implementation of choosee-session-api and choosee-infrastruct
 
 ### Local Development
 
-The Gatsby development server automatically rerenders in the browser when the source code changes. Start the local development server with:
+The Next.js development server automatically rerenders in the browser when the source code changes. Start the local development server with:
 
 ```bash
 npm run start
@@ -56,49 +56,3 @@ npm run deploy
 ```
 
 The `developer` role and [AWS SAM CLI](https://aws.amazon.com/serverless/sam/) are required to deploy this project.
-
-### Testing the Workflow
-
-Use [act](https://github.com/nektos/act) to test the GitHub workflow. Install it with:
-
-```bash
-brew install act
-```
-
-When running locally, workflow needs some secret values specified. If the necessary environment variables are declared, the secrets can be specified with:
-
-```bash
-npm run workflow
-```
-
-## Additional Documentation
-
-### Additional Gatsby Documentation
-
-- [Documentation](https://www.gatsbyjs.com/docs/)
-
-- [Tutorials](https://www.gatsbyjs.com/tutorial/)
-
-- [Guides](https://www.gatsbyjs.com/docs/how-to/)
-
-- [API Reference](https://www.gatsbyjs.com/docs/api-reference/)
-
-- [Plugin Library](https://www.gatsbyjs.com/plugins)
-
-- [Cheat Sheet](https://www.gatsbyjs.com/docs/cheat-sheet/)
-
-### Additional Deploy Documentation
-
-- [SSH2 module](https://www.npmjs.com/package/ssh2)
-
-- [SFTP stream methods](https://github.com/mscdex/ssh2-streams/blob/master/SFTPStream.md#sftpstream-methods)
-
-### Additional Workflow Documentation
-
-- [Workflow Syntax for GitHub Actions](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)
-
-- [actions/setup_node](https://github.com/actions/setup-node)
-
-- [actions/checkout](https://github.com/actions/checkout)
-
-- [ad-m/github-push-action](https://github.com/ad-m/github-push-action)

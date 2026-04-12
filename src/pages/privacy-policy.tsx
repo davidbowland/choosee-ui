@@ -1,37 +1,21 @@
-import type { HeadFC } from 'gatsby'
-import React, { useState } from 'react'
+import Head from 'next/head'
+import React from 'react'
 
-import Paper from '@mui/material/Paper'
-import { useTheme } from '@mui/material/styles'
-
-import Authenticated from '@components/auth'
+import AppBar from '@components/app-bar'
 import PrivacyPolicy from '@components/privacy-policy'
-import '@config/amplify'
-import { AuthState } from '@types'
 
-const PrivacyPage = (): JSX.Element => {
-  const [authState, setAuthState] = useState<AuthState>('signIn')
-  const [showLogin, setShowLogin] = useState(false)
-
-  /* Required to fix an odd color issue with the Disclaimer */
-  const theme = useTheme()
-
+const PrivacyPage = (): React.ReactNode => {
   return (
-    <main style={{ backgroundColor: theme.palette.background.default, color: theme.palette.text.primary }}>
-      <Authenticated
-        initialAuthState={authState}
-        initialShowLogin={showLogin}
-        setInitialAuthState={setAuthState}
-        setInitialShowLogin={setShowLogin}
-      >
-        <Paper elevation={3} sx={{ margin: 'auto', maxWidth: '900px' }}>
-          <PrivacyPolicy />
-        </Paper>
-      </Authenticated>
-    </main>
+    <>
+      <Head>
+        <title>Privacy Policy | dbowland.com</title>
+      </Head>
+      <AppBar />
+      <div className="mx-auto max-w-[900px] shadow-md">
+        <PrivacyPolicy />
+      </div>
+    </>
   )
 }
-
-export const Head: HeadFC = () => <title>Privacy Policy | dbowland.com</title>
 
 export default PrivacyPage

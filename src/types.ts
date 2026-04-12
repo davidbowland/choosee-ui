@@ -1,83 +1,101 @@
-export { AmplifyUser } from '@aws-amplify/ui'
-export { Operation as PatchOperation } from 'fast-json-patch'
-export { Theme } from '@mui/material/styles'
+export type { Operation as PatchOperation } from 'fast-json-patch'
 
-export type AuthState = 'signIn' | 'signUp' | 'resetPassword'
+export type PriceLevel =
+  | 'PRICE_LEVEL_UNSPECIFIED'
+  | 'PRICE_LEVEL_FREE'
+  | 'PRICE_LEVEL_INEXPENSIVE'
+  | 'PRICE_LEVEL_MODERATE'
+  | 'PRICE_LEVEL_EXPENSIVE'
+  | 'PRICE_LEVEL_VERY_EXPENSIVE'
 
-export type PlaceType = string
-export type RankByType = 'DISTANCE' | 'POPULARITY'
+export enum ErrorCode {
+  ROUND_NOT_CURRENT = 'ROUND_NOT_CURRENT',
+}
 
 export interface AddressResult {
   address: string
 }
 
-export interface PlaceDetails {
+export interface PlaceTypeDisplay {
+  value: string
+  display: string
+  defaultType?: boolean
+  canBeExcluded?: boolean
+  defaultExclude?: boolean
+  mustBeSingleType?: boolean
+}
+
+export interface ChoiceDetail {
+  choiceId: string
+  name: string
   formattedAddress?: string
   formattedPhoneNumber?: string
-  formattedPriceLevel: { label: string; rating: number }
   internationalPhoneNumber?: string
-  name: string
-  openHours?: string[]
-  photos: string[]
-  priceLevel: number
-  rating: number
+  priceLevel?: PriceLevel
+  rating?: number
   ratingsTotal?: number
-  vicinity: string
+  photos: string[]
+  openHours?: string[]
+  placeTypes?: string[]
   website?: string
 }
 
-export interface PlaceTypeDisplay {
-  canBeExcluded?: boolean
-  defaultExclude?: boolean
-  defaultType?: boolean
-  display: string
-  mustBeSingleType?: boolean
-  value: PlaceType
-}
-
-// Decisions
-
-export interface DecisionObject {
-  [key: string]: boolean
-}
-
-export interface Decision {
-  decisions: DecisionObject
-}
-
-// Sessions
-
-export interface StatusObject {
-  current: 'waiting' | 'deciding' | 'winner' | 'finished' | 'expired'
-  winner?: PlaceDetails
-}
+export type ChoicesMap = Record<string, ChoiceDetail>
 
 export interface SessionData {
+  sessionId: string
   address: string
-  choiceId: string
-  exclude: PlaceType[]
-  expiration: number
-  lastAccessed: number
   location: { latitude: number; longitude: number }
-  owner?: string
-  sessionId?: string
-  status: StatusObject
-  type: PlaceType[]
+  currentRound: number
+  totalRounds: number
+  bracket: [string, string][][]
+  byes: (string | null)[]
+  isReady: boolean
+  errorMessage: string | null
+  timeoutAt?: number
+  users: string[]
+  winner: string | null
+  type: string[]
+  exclude: string[]
+  radius: number
+  rankBy: string
   voterCount: number
+  votersSubmitted: number
 }
 
-export interface NewSession {
+export interface User {
+  userId: string
+  name: string | null
+  phone: string | null
+  subscribedRounds: number[]
+  votes: (string | null)[][]
+  textsSent: number
+}
+
+export interface SortOption {
+  value: string
+  label: string
+  description: string
+}
+
+export interface RadiusConfig {
+  defaultMiles: number
+  minMiles: number
+  maxMiles: number
+}
+
+export interface SessionConfig {
+  placeTypes: PlaceTypeDisplay[]
+  sortOptions: SortOption[]
+  radius: RadiusConfig
+}
+
+export interface NewSessionRequest {
   address: string
-  exclude: PlaceType[]
-  expiration?: number
-  radius?: number
-  rankBy?: string
-  type: PlaceType[]
-  voterCount: number
-}
-
-// Misc
-
-export interface StringObject {
-  [key: string]: string
+  type: string[]
+  exclude: string[]
+  radiusMiles: number
+  rankBy: string
+  latitude?: number
+  longitude?: number
 }

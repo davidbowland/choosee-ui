@@ -9,4 +9,9 @@ public/
 static/
 *.min.*
 jest.*.*
+next-env.d.ts
+next.config.mjs
+next-sitemap.config.js
+export-images.config.js
+scripts/
 package-lock.json

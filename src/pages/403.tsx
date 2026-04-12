@@ -1,20 +1,33 @@
-import type { HeadFC } from 'gatsby'
+import { AlertDescription, AlertRoot } from '@heroui/react'
+import Head from 'next/head'
+import Link from 'next/link'
 import React from 'react'
 
-import Authenticated from '@components/auth'
-import ServerErrorMessage from '@components/server-error-message'
+import AppBar from '@components/app-bar'
 
-const Forbidden = (): JSX.Element => {
+const Forbidden = (): React.ReactNode => {
   return (
-    <Authenticated initialAuthState="signIn" initialShowLogin={false}>
-      <ServerErrorMessage title="403: Forbidden">
-        You are not allowed to access the resource you requested. If you feel you have reached this page in error,
-        please contact the webmaster.
-      </ServerErrorMessage>
-    </Authenticated>
+    <>
+      <Head>
+        <title>403: Forbidden | dbowland.com</title>
+      </Head>
+      <AppBar />
+      <div className="mx-auto mt-8 max-w-md px-4">
+        <h1 className="mb-4 text-xl font-semibold">403: Forbidden</h1>
+        <AlertRoot status="danger">
+          <AlertDescription>
+            You are not allowed to access the resource you requested. If you feel you have reached this page in error,
+            please contact the webmaster.
+          </AlertDescription>
+        </AlertRoot>
+        <div className="mt-4 text-center">
+          <Link className="text-primary underline" href="/">
+            Go home
+          </Link>
+        </div>
+      </div>
+    </>
   )
 }
-
-export const Head: HeadFC = () => <title>403: Forbidden | dbowland.com</title>
 
 export default Forbidden

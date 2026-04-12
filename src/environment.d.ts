@@ -1,12 +1,12 @@
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      GATSBY_CHOOSEE_API_BASE_URL: string
-      GATSBY_COGNITO_APP_CLIENT_ID: string
-      GATSBY_COGNITO_USER_POOL_ID: string
-      GATSBY_DELAY_BETWEEN_REFRESH_MS: string
-      GATSBY_IDENTITY_POOL_ID: string
-      GATSBY_RECAPTCHA_SITE_KEY: string
+      NEXT_PUBLIC_CHOOSEE_API_BASE_URL: string
+      NEXT_PUBLIC_COGNITO_APP_CLIENT_ID: string
+      NEXT_PUBLIC_COGNITO_USER_POOL_ID: string
+      NEXT_PUBLIC_DELAY_BETWEEN_REFRESH_MS: string
+      NEXT_PUBLIC_IDENTITY_POOL_ID: string
+      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: string
     }
   }
 }

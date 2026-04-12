@@ -1,14 +1,10 @@
+import { Separator } from '@heroui/react'
 import React from 'react'
 
-import Divider from '@mui/material/Divider'
-import Typography from '@mui/material/Typography'
-
-const Logo = (): JSX.Element => (
+const Logo = (): React.ReactNode => (
   <>
-    <Typography sx={{ textAlign: 'center' }} variant="h2">
-      Choosee
-    </Typography>
-    <Divider sx={{ marginBottom: '2em' }} />
+    <h2 className="text-center text-4xl font-light">Choosee</h2>
+    <Separator className="mb-8" />
   </>
 )
 

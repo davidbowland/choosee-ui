@@ -1,0 +1,82 @@
+import { Button, Input, Label, Modal, Spinner, TextField, FieldError } from '@heroui/react'
+import { Check, Copy, Send, Share2 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
+import React from 'react'
+
+export const ShareModal = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <Modal>
+    <Modal.Trigger>
+      <Button variant="outline">
+        <Share2 className="h-4 w-4" />
+        Share
+      </Button>
+    </Modal.Trigger>
+    <Modal.Backdrop variant="blur">
+      <Modal.Container size="sm">
+        <Modal.Dialog>
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Heading>Share session</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-4 p-0.5">{children}</div>
+          </Modal.Body>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  </Modal>
+)
+
+export const CopyUrlButton = ({ copied, onPress }: { copied: boolean; onPress: () => void }): React.ReactNode => (
+  <Button className="w-full" onPress={onPress} variant="outline">
+    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+    {copied ? 'Copied!' : 'Copy URL'}
+  </Button>
+)
+
+export const QrCode = ({ url }: { url: string }): React.ReactNode => (
+  <div className="flex justify-center rounded-xl bg-white p-4">
+    <QRCodeSVG size={140} value={url} />
+  </div>
+)
+
+export const SmsForm = ({
+  isSending,
+  isValid,
+  error,
+  onChange,
+  onSend,
+  phone,
+}: {
+  isSending: boolean
+  isValid: boolean
+  error?: string
+  onChange: (value: string) => void
+  onSend: () => void
+  phone: string
+}): React.ReactNode => (
+  <div className="flex flex-col gap-2">
+    <TextField isInvalid={!!error}>
+      <Label>Phone number</Label>
+      <Input
+        disabled={isSending}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="+1 (555) 123-4567"
+        type="tel"
+        value={phone}
+      />
+      {error && <FieldError>{error}</FieldError>}
+    </TextField>
+    <Button className="w-full" isDisabled={!isValid || isSending} onPress={onSend}>
+      {isSending ? <Spinner color="current" size="sm" /> : <Send className="h-4 w-4" />}
+      {isSending ? 'Sending...' : 'Send invite'}
+    </Button>
+  </div>
+)
+
+export const StatusMessage = ({ error, status }: { error: string; status: string }): React.ReactNode => (
+  <>
+    {status === 'sent' && <p className="text-center text-sm text-success">Invite sent</p>}
+    {status === 'error' && <p className="text-sm text-danger">{error}</p>}
+  </>
+)
