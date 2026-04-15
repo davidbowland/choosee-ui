@@ -5,10 +5,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 
+// @ts-expect-error — mock-only export from __mocks__/index.tsx
+import { mockSetAuthState } from '@components/auth-context'
 import WaitingPhase from '@components/session/waiting'
 import * as api from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 
+jest.mock('@components/auth-context')
 jest.mock('@services/api')
 
 jest.mock('@heroui/react', () => ({
@@ -79,6 +82,7 @@ const defaultProps = {
 
 describe('WaitingPhase', () => {
   beforeEach(() => {
+    mockSetAuthState({ isSignedIn: true })
     jest.mocked(toast.info).mockClear()
     jest.mocked(toast.danger).mockClear()
   })
@@ -160,7 +164,7 @@ describe('WaitingPhase', () => {
     await user.click(screen.getByText(/Text me when the next round starts/i))
 
     await waitFor(() => {
-      expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1')
+      expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true)
     })
   })
 
@@ -177,12 +181,15 @@ describe('WaitingPhase', () => {
     await user.click(screen.getByText('Save'))
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
-        { op: 'replace', path: '/phone', value: '+15559999999' },
-      ])
+      expect(api.patchUser).toHaveBeenCalledWith(
+        'test-session',
+        'user-1',
+        [{ op: 'replace', path: '/phone', value: '+15559999999' }],
+        true,
+      )
     })
     await waitFor(() => {
-      expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1')
+      expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true)
     })
   })
 
@@ -309,5 +316,22 @@ describe('WaitingPhase', () => {
     renderWithClient(<WaitingPhase {...defaultProps} session={laterSession} />)
     expect(screen.queryByText(/You're the only voter/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
+  })
+
+  describe('when not signed in', () => {
+    beforeEach(() => {
+      mockSetAuthState({ isSignedIn: false, handleSignIn: jest.fn() })
+    })
+
+    it('should show auth gate instead of notify checkbox', () => {
+      renderWithClient(<WaitingPhase {...defaultProps} />)
+      expect(screen.getByText('Sign in with Google to get SMS notifications')).toBeInTheDocument()
+      expect(screen.queryByText(/Text me when the next round starts/i)).not.toBeInTheDocument()
+    })
+
+    it('should not show phone input', () => {
+      renderWithClient(<WaitingPhase {...defaultProps} />)
+      expect(screen.queryByPlaceholderText('+1 (555) 123-4567')).not.toBeInTheDocument()
+    })
   })
 })

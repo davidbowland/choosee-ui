@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import axios from 'axios'
+import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -73,7 +73,7 @@ const SessionCreate = (): React.ReactNode => {
       router.push(`/s/${data.sessionId}`)
     },
     onError: (error: unknown) => {
-      if (axios.isAxiosError(error) && error.response?.status === 403) {
+      if (error instanceof ApiError && error.response?.statusCode === 403) {
         setErrorMessage('Unusual traffic detected. Please try again later.')
       } else {
         setErrorMessage('Error generating voting session. Please try again later.')

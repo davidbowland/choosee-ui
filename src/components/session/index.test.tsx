@@ -8,6 +8,7 @@ import * as api from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
+jest.mock('@components/auth-context')
 jest.mock('next/router', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
@@ -69,6 +70,11 @@ describe('Session phase router', () => {
   const originalLocation = window.location
   const replaceStateSpy = jest.spyOn(window.history, 'replaceState')
   const originalRandom = Math.random
+
+  afterEach(async () => {
+    await queryClient?.cancelQueries()
+    queryClient?.clear()
+  })
 
   beforeAll(() => {
     Math.random = jest.fn(() => 0.5)

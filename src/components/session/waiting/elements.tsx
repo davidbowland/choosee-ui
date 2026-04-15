@@ -2,6 +2,8 @@ import { AlertDialog, Button, FieldError, Input, ProgressBar, Spinner, TextField
 import { BellRing, Check, Eye } from 'lucide-react'
 import React from 'react'
 
+import { GoogleLogo } from '@components/google-logo'
+
 export const WaitingContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mx-auto flex w-full max-w-md flex-col items-center gap-5 p-4">{children}</div>
 )
@@ -172,4 +174,14 @@ export const BracketButton = ({ onPress }: { onPress: () => void }): React.React
     <Eye className="h-4 w-4" />
     View bracket
   </Button>
+)
+
+export const NotifyAuthGate = ({ onSignIn }: { onSignIn: () => void }): React.ReactNode => (
+  <div className="flex flex-col items-center gap-2">
+    <p className="text-center text-sm text-default-500">Sign in with Google to get SMS notifications</p>
+    <Button onPress={onSignIn} size="sm" variant="outline">
+      <GoogleLogo />
+      Sign in with Google
+    </Button>
+  </div>
 )

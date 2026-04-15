@@ -3,10 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 
+// @ts-expect-error — mock-only export from __mocks__/index.tsx
+import { mockSetAuthState } from '@components/auth-context'
 import Share from '@components/share'
 import { shareSession } from '@services/api'
 
-jest.mock('@services/api')
+jest.mock('@components/auth-context')
+jest.mock('@services/api', () => ({
+  ...jest.requireActual('@services/api'),
+  shareSession: jest.fn(),
+}))
 
 const mockShareSession = jest.mocked(shareSession)
 
@@ -15,6 +21,10 @@ const PHONE_PLACEHOLDER = '+1 (555) 123-4567'
 describe('Share', () => {
   const sessionId = 'test-session'
   const userId = 'test-user'
+
+  beforeEach(() => {
+    mockSetAuthState({ isSignedIn: true })
+  })
 
   async function renderWithModalOpen() {
     const user = userEvent.setup()
@@ -67,7 +77,12 @@ describe('Share', () => {
   })
 
   it('should show rate limit error on 429', async () => {
-    mockShareSession.mockRejectedValueOnce({ response: { status: 429 } })
+    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
+    const error = new ApiError({ message: 'Too Many Requests', name: 'ApiError', recoverySuggestion: '' })
+    Object.defineProperty(error, '_response', {
+      value: { statusCode: 429, headers: {}, body: '{}' },
+    })
+    mockShareSession.mockRejectedValueOnce(error)
     const user = await renderWithModalOpen()
 
     const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
@@ -76,6 +91,46 @@ describe('Share', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Rate limit reached. Please try again later.')).toBeInTheDocument()
+    })
+  })
+
+  it('should show server message on 400', async () => {
+    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
+    const error = new ApiError({ message: 'Bad Request', name: 'ApiError', recoverySuggestion: '' })
+    Object.defineProperty(error, '_response', {
+      value: {
+        statusCode: 400,
+        headers: {},
+        body: JSON.stringify({ message: 'You must set your phone number before sharing' }),
+      },
+    })
+    mockShareSession.mockRejectedValueOnce(error)
+    const user = await renderWithModalOpen()
+
+    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
+    await user.type(input, '2125551234')
+    await user.click(screen.getByText('Send invite'))
+
+    await waitFor(() => {
+      expect(screen.getByText('You must set your phone number before sharing')).toBeInTheDocument()
+    })
+  })
+
+  it('should show fallback message on 400 with unparseable body', async () => {
+    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
+    const error = new ApiError({ message: 'Bad Request', name: 'ApiError', recoverySuggestion: '' })
+    Object.defineProperty(error, '_response', {
+      value: { statusCode: 400, headers: {}, body: 'not json' },
+    })
+    mockShareSession.mockRejectedValueOnce(error)
+    const user = await renderWithModalOpen()
+
+    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
+    await user.type(input, '2125551234')
+    await user.click(screen.getByText('Send invite'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Bad request. Please try again.')).toBeInTheDocument()
     })
   })
 
@@ -109,5 +164,23 @@ describe('Share', () => {
     // Send invite button should be disabled when phone is empty
     const sendBtn = screen.getByText('Send invite')
     expect(sendBtn).toBeDisabled()
+  })
+
+  describe('when not signed in', () => {
+    beforeEach(() => {
+      mockSetAuthState({ isSignedIn: false, handleSignIn: jest.fn() })
+    })
+
+    it('should show auth gate instead of SMS form', async () => {
+      await renderWithModalOpen()
+      expect(screen.getByText('Sign in with Google to send SMS invites')).toBeInTheDocument()
+      expect(screen.queryByPlaceholderText(PHONE_PLACEHOLDER)).not.toBeInTheDocument()
+      expect(screen.queryByText('Send invite')).not.toBeInTheDocument()
+    })
+
+    it('should still show copy URL and QR code', async () => {
+      await renderWithModalOpen()
+      expect(screen.getByText('Copy URL')).toBeInTheDocument()
+    })
   })
 })

@@ -7,12 +7,14 @@ import {
   BracketButton,
   ConfirmDialog,
   ForceRoundButton,
+  NotifyAuthGate,
   NotifyCheckbox,
   NotifySection,
   PhoneInput,
   ProgressText,
   WaitingContainer,
 } from './elements'
+import { useAuthContext } from '@components/auth-context'
 import BracketView from '@components/bracket-view'
 import { SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
@@ -30,6 +32,7 @@ export interface WaitingPhaseProps {
 
 const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
+  const { isSignedIn, handleSignIn } = useAuthContext()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [notifyChecked, setNotifyChecked] = useState(false)
@@ -57,7 +60,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
 
   const phoneMutation = useMutation({
     mutationFn: (phone: string) =>
-      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/phone', value: phone }]),
+      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/phone', value: phone }], isSignedIn),
   })
 
   const savePhoneAndSubscribe = async (phone?: string): Promise<void> => {
@@ -66,7 +69,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       if (phone) {
         await phoneMutation.mutateAsync(phone)
       }
-      await subscribeToRound(sessionId, currentRound + 1, currentUser.userId)
+      await subscribeToRound(sessionId, currentRound + 1, currentUser.userId, isSignedIn)
       setNotifyStatus('subscribed')
     } catch {
       setNotifyChecked(false)
@@ -105,21 +108,27 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
 
       {/* Notification opt-in grouped together */}
       <NotifySection>
-        <NotifyCheckbox
-          checked={notifyChecked}
-          disabled={notifyStatus === 'subscribed'}
-          onChange={handleNotifyToggle}
-          subscribed={notifyStatus === 'subscribed'}
-        />
-        {notifyChecked && !currentUser.phone && notifyStatus !== 'subscribed' && (
-          <PhoneInput
-            error={phoneInput.error}
-            isLoading={notifyStatus === 'saving'}
-            isValid={phoneInput.isValid}
-            onChange={phoneInput.onChange}
-            onSubmit={handlePhoneSubmit}
-            value={phoneInput.value}
-          />
+        {isSignedIn ? (
+          <>
+            <NotifyCheckbox
+              checked={notifyChecked}
+              disabled={notifyStatus === 'subscribed'}
+              onChange={handleNotifyToggle}
+              subscribed={notifyStatus === 'subscribed'}
+            />
+            {notifyChecked && !currentUser.phone && notifyStatus !== 'subscribed' && (
+              <PhoneInput
+                error={phoneInput.error}
+                isLoading={notifyStatus === 'saving'}
+                isValid={phoneInput.isValid}
+                onChange={phoneInput.onChange}
+                onSubmit={handlePhoneSubmit}
+                value={phoneInput.value}
+              />
+            )}
+          </>
+        ) : (
+          <NotifyAuthGate onSignIn={handleSignIn} />
         )}
       </NotifySection>
 

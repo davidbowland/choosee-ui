@@ -12,6 +12,7 @@ import {
   VotingContainer,
   VsLabel,
 } from './elements'
+import { useAuthContext } from '@components/auth-context'
 import BracketView from '@components/bracket-view'
 import RestaurantCard from '@components/restaurant-card'
 import { SoloVoterHint } from '@components/session/elements'
@@ -31,6 +32,7 @@ export interface VotingPhaseProps {
 
 const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
+  const { isSignedIn } = useAuthContext()
   const [bracketOpen, setBracketOpen] = useState(false)
 
   const currentRound = session.currentRound
@@ -67,9 +69,12 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
 
   const voteMutation = useMutation({
     mutationFn: ({ idx, choiceId }: { idx: number; choiceId: string }) =>
-      patchUser(sessionId, currentUser.userId, [
-        { op: 'replace', path: `/votes/${currentRound}/${idx}`, value: choiceId },
-      ]),
+      patchUser(
+        sessionId,
+        currentUser.userId,
+        [{ op: 'replace', path: `/votes/${currentRound}/${idx}`, value: choiceId }],
+        isSignedIn,
+      ),
     onMutate: async ({ idx, choiceId }) => {
       setPendingVote({ idx, choiceId })
       await queryClient.cancelQueries({ queryKey: ['users', sessionId] })
@@ -113,7 +118,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
 
   const nameMutation = useMutation({
     mutationFn: (newName: string) =>
-      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/name', value: newName }]),
+      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/name', value: newName }], isSignedIn),
     onMutate: async (newName) => {
       await queryClient.cancelQueries({ queryKey: ['users', sessionId] })
       const previous = queryClient.getQueryData<User[]>(['users', sessionId])

@@ -3,7 +3,7 @@ import { sessionConfigResult, recaptchaToken, sessionId } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AxiosError, AxiosHeaders } from 'axios'
+import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
 import React from 'react'
 
@@ -14,6 +14,7 @@ const mockPush = jest.fn()
 jest.mock('next/router', () => ({
   useRouter: jest.fn().mockReturnValue({ push: jest.fn(), replace: jest.fn() }),
 }))
+jest.mock('@components/auth-context')
 jest.mock('@services/api')
 
 const renderWithClient = (ui: React.ReactElement) => {
@@ -182,12 +183,13 @@ describe('SessionCreate component', () => {
     })
 
     it('should show 403 error message', async () => {
-      const error = new AxiosError('Request failed', '403', undefined, undefined, {
-        status: 403,
-        data: {},
-        statusText: 'Forbidden',
-        headers: {},
-        config: { headers: new AxiosHeaders() },
+      const error = new ApiError({
+        message: 'Forbidden',
+        name: 'ApiError',
+        recoverySuggestion: '',
+      })
+      Object.defineProperty(error, 'response', {
+        get: () => ({ statusCode: 403, headers: {}, body: '{}' }),
       })
       jest.mocked(api).createSession.mockRejectedValueOnce(error)
       renderWithClient(<SessionCreate />)
@@ -208,14 +210,7 @@ describe('SessionCreate component', () => {
     })
 
     it('should show generic error message on non-403 error', async () => {
-      const error = new AxiosError('Request failed', '500', undefined, undefined, {
-        status: 500,
-        data: {},
-        statusText: 'Internal Server Error',
-        headers: {},
-        config: { headers: new AxiosHeaders() },
-      })
-      jest.mocked(api).createSession.mockRejectedValueOnce(error)
+      jest.mocked(api).createSession.mockRejectedValueOnce(new Error('Server error'))
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()

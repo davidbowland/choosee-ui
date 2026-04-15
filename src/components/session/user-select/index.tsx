@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import React, { useEffect, useRef, useState } from 'react'
+import { ApiError } from 'aws-amplify/api'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   ConfirmButton,
@@ -10,7 +11,8 @@ import {
   SectionTitle,
   UserOption,
 } from './elements'
-import { createUser } from '@services/api'
+import { useAuthContext } from '@components/auth-context'
+import { createUser, parseApiMessage } from '@services/api'
 import { User } from '@types'
 import { displayName } from '@utils/users'
 
@@ -21,22 +23,25 @@ export interface UserSelectPhaseProps {
 }
 
 const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhaseProps): React.ReactNode => {
+  const { isSignedIn, isLoading: isAuthLoading } = useAuthContext()
   const [selected, setSelected] = useState<string | null>(null)
   const [createNew, setCreateNew] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Prevents double-fire if the component re-renders while the auto-create mutation is in-flight
   const autoCreateFired = useRef(false)
 
+  // Keep a ref so the mutation closure always reads the latest value.
+  const isSignedInRef = useRef(isSignedIn)
+  isSignedInRef.current = isSignedIn
+
   const createMutation = useMutation({
-    mutationFn: () => createUser(sessionId),
+    mutationFn: () => createUser(sessionId, isSignedInRef.current),
     onSuccess: (newUser) => {
       onUserSelected(newUser.userId)
     },
     onError: (err: unknown) => {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const response = (err as { response?: { status?: number; data?: { message?: string } } }).response
-        if (response?.status === 400) {
-          setError(response.data?.message ?? 'Maximum number of voters reached.')
+      if (err instanceof ApiError && err.response) {
+        if (err.response.statusCode === 400) {
+          setError(parseApiMessage(err.response.body, 'Maximum number of voters reached.'))
           return
         }
       }
@@ -45,14 +50,19 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
   })
 
   const isEmpty = users.length === 0
-  useEffect(() => {
-    if (isEmpty && !autoCreateFired.current) {
+  const doAutoCreate = useCallback(() => {
+    if (isEmpty && !isAuthLoading && !autoCreateFired.current) {
       autoCreateFired.current = true
       createMutation.mutate()
     }
-  }, [isEmpty]) // eslint-disable-line
+  }, [isEmpty, isAuthLoading, createMutation])
+
+  useEffect(() => {
+    doAutoCreate()
+  }, [doAutoCreate])
 
   const handleConfirm = (): void => {
+    if (isAuthLoading) return
     if (createNew) {
       createMutation.mutate()
     } else if (selected) {
@@ -92,7 +102,7 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
 
       <ConfirmButton
         isDisabled={!createNew && !selected}
-        isLoading={createMutation.isPending}
+        isLoading={createMutation.isPending || isAuthLoading}
         onPress={handleConfirm}
       />
 

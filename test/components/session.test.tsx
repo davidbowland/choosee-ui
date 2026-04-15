@@ -9,6 +9,7 @@ import * as api from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
+jest.mock('@components/auth-context')
 
 // Mock child phases to keep tests focused on Session orchestration
 jest.mock('@components/session/loading', () => ({
@@ -77,23 +78,32 @@ const mockChoices: ChoicesMap = {
   b: { choiceId: 'b', name: 'Restaurant B', photos: [] },
 }
 
+let queryClient: QueryClient
+
 function renderWithClient(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
+  queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
 describe('Session', () => {
+  afterEach(async () => {
+    await queryClient?.cancelQueries()
+    queryClient?.clear()
+  })
+
   beforeEach(() => {
     mockUserId = null
     mockSetUserId.mockClear()
   })
 
   it('should show loading phase when session is not yet loaded', () => {
-    jest.mocked(api.fetchSession).mockReturnValue(new Promise(() => {}))
+    const resolve = jest.fn()
+    jest.mocked(api.fetchSession).mockReturnValue(new Promise((r) => resolve.mockImplementation(r)))
     renderWithClient(<Session sessionId="test-session" />)
     expect(screen.getByTestId('loading-phase')).toBeInTheDocument()
+    resolve(baseSession)
   })
 
   it('should show loading phase when session is not ready', async () => {

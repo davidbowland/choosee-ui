@@ -1,8 +1,10 @@
+import { ApiError } from 'aws-amplify/api'
 import React, { useState } from 'react'
 
-import { CopyUrlButton, QrCode, ShareModal, SmsForm, StatusMessage } from './elements'
+import { CopyUrlButton, QrCode, ShareModal, SmsAuthGate, SmsForm, StatusMessage } from './elements'
+import { useAuthContext } from '@components/auth-context'
 import { usePhoneInput } from '@hooks/use-phone-input'
-import { shareSession } from '@services/api'
+import { parseApiMessage, shareSession } from '@services/api'
 
 export interface ShareProps {
   sessionId: string
@@ -10,6 +12,7 @@ export interface ShareProps {
 }
 
 const Share = ({ sessionId, userId }: ShareProps): React.ReactNode => {
+  const { isSignedIn, handleSignIn } = useAuthContext()
   const [copied, setCopied] = useState(false)
   const phone = usePhoneInput()
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -39,10 +42,22 @@ const Share = ({ sessionId, userId }: ShareProps): React.ReactNode => {
       phone.reset()
     } catch (err: unknown) {
       setStatus('error')
-      if (err && typeof err === 'object' && 'response' in err) {
-        const response = (err as { response?: { status?: number } }).response
-        if (response?.status === 429) {
+      if (err instanceof ApiError && err.response) {
+        const { statusCode, body } = err.response
+        if (statusCode === 401) {
+          setErrorMsg('You must be signed in to send SMS invites.')
+          return
+        }
+        if (statusCode === 403) {
+          setErrorMsg(parseApiMessage(body, 'Phone number mismatch with your Google account.'))
+          return
+        }
+        if (statusCode === 429) {
           setErrorMsg('Rate limit reached. Please try again later.')
+          return
+        }
+        if (statusCode === 400) {
+          setErrorMsg(parseApiMessage(body, 'Bad request. Please try again.'))
           return
         }
       }
@@ -51,21 +66,25 @@ const Share = ({ sessionId, userId }: ShareProps): React.ReactNode => {
   }
 
   return (
-    <>
-      <ShareModal>
-        <CopyUrlButton copied={copied} onPress={handleCopy} />
-        <QrCode url={sessionUrl} />
-        <SmsForm
-          error={phone.error}
-          isSending={status === 'sending'}
-          isValid={phone.isValid}
-          onChange={phone.onChange}
-          onSend={handleSendSms}
-          phone={phone.value}
-        />
-        <StatusMessage error={errorMsg} status={status} />
-      </ShareModal>
-    </>
+    <ShareModal>
+      <CopyUrlButton copied={copied} onPress={handleCopy} />
+      <QrCode url={sessionUrl} />
+      {isSignedIn ? (
+        <>
+          <SmsForm
+            error={phone.error}
+            isSending={status === 'sending'}
+            isValid={phone.isValid}
+            onChange={phone.onChange}
+            onSend={handleSendSms}
+            phone={phone.value}
+          />
+          <StatusMessage error={errorMsg} status={status} />
+        </>
+      ) : (
+        <SmsAuthGate onSignIn={handleSignIn} />
+      )}
+    </ShareModal>
   )
 }
 

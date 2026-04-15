@@ -6,7 +6,9 @@ import type { AppProps } from 'next/app'
 import React, { useEffect, useState } from 'react'
 
 import '@assets/css/index.css'
+import { AuthProvider } from '@components/auth-context'
 import CookieDisclaimer from '@components/cookie-disclaimer'
+import '@config/amplify'
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(
@@ -32,10 +34,12 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="bg-background text-foreground min-h-screen">
-        <Component {...pageProps} />
-        <CookieDisclaimer />
-      </div>
+      <AuthProvider>
+        <div className="bg-background text-foreground min-h-screen">
+          <Component {...pageProps} />
+          <CookieDisclaimer />
+        </div>
+      </AuthProvider>
       <ToastProvider placement="bottom" />
     </QueryClientProvider>
   )

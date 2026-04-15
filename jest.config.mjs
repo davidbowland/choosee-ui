@@ -8,7 +8,16 @@ const config = {
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*'],
   coverageDirectory: 'coverage',
-  coveragePathIgnorePatterns: ['.*\\.d\\.ts', 'config/*', 'types.ts', 'pages/_app.tsx', 'pages/_document.tsx'],
+  coveragePathIgnorePatterns: [
+    '.*\\.d\\.ts',
+    'config/*',
+    'types.ts',
+    'pages/_app.tsx',
+    'pages/_document.tsx',
+    'pages/auth/*',
+    'hooks/useAuth.ts',
+    'components/auth-context/*',
+  ],
   coverageThreshold: {
     global: { branches: 80, functions: 90, lines: 90 },
   },

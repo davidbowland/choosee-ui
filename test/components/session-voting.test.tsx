@@ -10,6 +10,7 @@ import VotingPhase from '@components/session/voting'
 import * as api from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 
+jest.mock('@components/auth-context')
 jest.mock('@services/api')
 
 jest.mock('@heroui/react', () => ({
@@ -169,9 +170,12 @@ describe('VotingPhase', () => {
     await user.click(screen.getByTestId('card-Restaurant A'))
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
-        { op: 'replace', path: '/votes/0/0', value: 'a' },
-      ])
+      expect(api.patchUser).toHaveBeenCalledWith(
+        'test-session',
+        'user-1',
+        [{ op: 'replace', path: '/votes/0/0', value: 'a' }],
+        false,
+      )
     })
   })
 
@@ -237,9 +241,12 @@ describe('VotingPhase', () => {
     await user.keyboard('{Enter}')
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
-        { op: 'replace', path: '/name', value: 'New Name' },
-      ])
+      expect(api.patchUser).toHaveBeenCalledWith(
+        'test-session',
+        'user-1',
+        [{ op: 'replace', path: '/name', value: 'New Name' }],
+        false,
+      )
     })
   })
 

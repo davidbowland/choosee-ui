@@ -4,6 +4,8 @@ import React from 'react'
 
 import AppBar from '@components/app-bar'
 
+jest.mock('@components/auth-context')
+
 describe('AppBar', () => {
   it('should render the Choosee branding', () => {
     render(<AppBar />)

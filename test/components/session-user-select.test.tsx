@@ -4,11 +4,17 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 
+// @ts-expect-error — mock-only export from __mocks__/index.tsx
+import { mockSetAuthState } from '@components/auth-context'
 import UserSelectPhase from '@components/session/user-select'
 import * as api from '@services/api'
 import { User } from '@types'
 
-jest.mock('@services/api')
+jest.mock('@components/auth-context')
+jest.mock('@services/api', () => ({
+  ...jest.requireActual('@services/api'),
+  createUser: jest.fn(),
+}))
 
 const mockUsers: User[] = [
   { userId: 'brave-tiger', name: null, phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
@@ -62,7 +68,7 @@ describe('UserSelectPhase', () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />)
 
     await waitFor(() => {
-      expect(api.createUser).toHaveBeenCalledWith('s1')
+      expect(api.createUser).toHaveBeenCalledWith('s1', false)
     })
     await waitFor(() => {
       expect(onUserSelected).toHaveBeenCalledWith('new-user')
@@ -96,9 +102,12 @@ describe('UserSelectPhase', () => {
   })
 
   it('should show error when create user returns 400', async () => {
-    jest.mocked(api.createUser).mockRejectedValue({
-      response: { status: 400, data: { message: 'Max players reached' } },
+    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
+    const error = new ApiError({ message: 'Bad Request', name: 'ApiError', recoverySuggestion: '' })
+    Object.defineProperty(error, '_response', {
+      value: { statusCode: 400, headers: {}, body: JSON.stringify({ message: 'Max players reached' }) },
     })
+    jest.mocked(api.createUser).mockRejectedValue(error)
 
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
@@ -150,5 +159,59 @@ describe('UserSelectPhase', () => {
     await user.click(screen.getByText(/Copy invite link/i))
     // Should not crash
     expect(screen.getByText(/Invite a new voter/i)).toBeInTheDocument()
+  })
+
+  it('should not auto-create user while auth is still loading', () => {
+    mockSetAuthState({ isSignedIn: false, isLoading: true })
+    renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />)
+    expect(api.createUser).not.toHaveBeenCalled()
+  })
+
+  it('should not create user on manual confirm while auth is still loading', async () => {
+    mockSetAuthState({ isSignedIn: false, isLoading: true })
+    const user = userEvent.setup()
+    renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
+
+    await user.click(screen.getByText('New voter'))
+    await user.click(screen.getByRole('button', { name: /Joining/i }))
+
+    expect(api.createUser).not.toHaveBeenCalled()
+  })
+
+  it('should auto-create with authenticated=true once auth finishes loading', async () => {
+    const newUser: User = {
+      userId: 'new-user',
+      name: 'Google User',
+      phone: null,
+      subscribedRounds: [],
+      votes: [],
+      textsSent: 0,
+    }
+    jest.mocked(api.createUser).mockResolvedValue(newUser)
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+    })
+
+    // Start with auth loading
+    mockSetAuthState({ isSignedIn: false, isLoading: true })
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />
+      </QueryClientProvider>,
+    )
+    expect(api.createUser).not.toHaveBeenCalled()
+
+    // Auth finishes — user is signed in
+    mockSetAuthState({ isSignedIn: true, isLoading: false })
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => {
+      expect(api.createUser).toHaveBeenCalledWith('s1', true)
+    })
   })
 })
