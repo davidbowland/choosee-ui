@@ -15,7 +15,7 @@ import {
 import { useAuthContext } from '@components/auth-context'
 import BracketView from '@components/bracket-view'
 import RestaurantCard from '@components/restaurant-card'
-import { SoloVoterHint } from '@components/session/elements'
+import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
 import { patchUser, hasErrorCode } from '@services/api'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
@@ -145,6 +145,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
   return (
     <VotingContainer>
       {isSoloVoter(session) && <SoloVoterHint />}
+      {session.filterClosingSoon && <FilterClosingSoonBadge />}
 
       <TournamentHeader
         matchCurrent={matchupIndex + 1}

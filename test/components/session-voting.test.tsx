@@ -44,6 +44,7 @@ const mockSession: SessionData = {
   byes: [null],
   isReady: true,
   errorMessage: null,
+  filterClosingSoon: false,
   users: ['user-1'],
   winner: null,
   type: ['restaurant'],

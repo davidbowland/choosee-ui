@@ -54,6 +54,7 @@ const baseSession: SessionData = {
   byes: [null],
   isReady: true,
   errorMessage: null,
+  filterClosingSoon: false,
   users: ['user-1'],
   winner: null,
   type: ['restaurant'],
@@ -120,6 +121,18 @@ describe('Session', () => {
     })
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByText('Something broke')).toBeInTheDocument())
+  })
+
+  it('should show contextual closing-soon error when session error mentions closing-soon filter', async () => {
+    jest.mocked(api.fetchSession).mockResolvedValue({
+      ...baseSession,
+      isReady: false,
+      errorMessage:
+        'Not enough restaurants are open right now (or staying open long enough). Try again later or disable the closing-soon filter.',
+    })
+    renderWithClient(<Session sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByText(/Not enough open restaurants nearby/i)).toBeInTheDocument())
+    expect(screen.getByText(/Try again/i)).toHaveAttribute('href', '/')
   })
 
   it('should show winner phase when session has a winner', async () => {

@@ -16,7 +16,7 @@ import {
 } from './elements'
 import { useAuthContext } from '@components/auth-context'
 import BracketView from '@components/bracket-view'
-import { SoloVoterHint } from '@components/session/elements'
+import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
 import { usePhoneInput } from '@hooks/use-phone-input'
 import { closeRound, patchUser, subscribeToRound, hasErrorCode } from '@services/api'
@@ -99,6 +99,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
   return (
     <WaitingContainer>
       {solo && <SoloVoterHint />}
+      {session.filterClosingSoon && <FilterClosingSoonBadge />}
 
       <ProgressText
         finished={session.votersSubmitted}

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { BracketButton, NewSessionButton, WinnerContainer, WinnerLoading, WinnerTitle } from './elements'
 import BracketView from '@components/bracket-view'
 import RestaurantCard from '@components/restaurant-card'
+import { FilterClosingSoonBadge } from '@components/session/elements'
 import { ChoicesMap, SessionData } from '@types'
 
 export interface WinnerPhaseProps {
@@ -23,6 +24,7 @@ const WinnerPhase = ({ session, choices }: WinnerPhaseProps): React.ReactNode =>
   return (
     <WinnerContainer>
       <WinnerTitle />
+      {session.filterClosingSoon && <FilterClosingSoonBadge />}
       <RestaurantCard choice={winnerChoice} variant="winner" />
       <NewSessionButton onPress={() => router.push('/')} />
       <BracketButton onPress={() => setBracketOpen(true)} />

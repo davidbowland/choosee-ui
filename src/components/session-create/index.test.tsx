@@ -173,6 +173,7 @@ describe('SessionCreate component', () => {
         {
           address: '90210',
           exclude: ['fast_food_restaurant'],
+          filterClosingSoon: false,
           radiusMiles: 1,
           rankBy: 'POPULARITY',
           type: ['restaurant'],
@@ -381,6 +382,43 @@ describe('SessionCreate component', () => {
 
       expect(bothRadio).toBeChecked()
       expect(screen.getByRole('radio', { name: /Most popular/i })).not.toBeChecked()
+    })
+  })
+
+  describe('filter closing soon toggle', () => {
+    it('should render the toggle defaulting to off', async () => {
+      renderWithClient(<SessionCreate />)
+      const toggle = await screen.findByRole('switch', { name: /Hide closing soon/i })
+      expect(toggle).toBeInTheDocument()
+      expect(toggle).not.toBeChecked()
+    })
+
+    it('should send filterClosingSoon true when toggle is enabled', async () => {
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const toggle = await screen.findByRole('switch', { name: /Hide closing soon/i })
+      await act(async () => {
+        await user.click(toggle)
+      })
+      expect(toggle).toBeChecked()
+
+      const addressInput = await screen.findByLabelText(/Your address/i)
+      await act(async () => {
+        await user.clear(addressInput)
+        await user.type(addressInput, '90210')
+      })
+
+      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      await act(async () => {
+        await user.click(chooseButton)
+      })
+
+      await waitFor(() => expect(api.createSession).toHaveBeenCalled())
+      expect(api.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ filterClosingSoon: true }),
+        recaptchaToken,
+      )
     })
   })
 

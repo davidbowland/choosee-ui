@@ -22,6 +22,7 @@ const baseSession: SessionData = {
   byes: [null, 'g', null],
   isReady: true,
   errorMessage: null,
+  filterClosingSoon: false,
   users: [],
   winner: null,
   type: ['restaurant'],

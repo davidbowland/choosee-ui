@@ -7,6 +7,7 @@ import {
   AddressField,
   CreateCard,
   DistanceSlider,
+  FilterClosingSoonToggle,
   LoadingCard,
   MultiSelect,
   SortByFieldset,
@@ -46,6 +47,7 @@ const SessionCreate = (): React.ReactNode => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>()
   const [radiusMiles, setRadiusMiles] = useState<number | undefined>()
   const [rankBy, setRankBy] = useState<string | undefined>()
+  const [filterClosingSoon, setFilterClosingSoon] = useState(false)
   const addressTouchedRef = useRef(false)
   const [defaultsApplied, setDefaultsApplied] = useState(false)
 
@@ -168,6 +170,7 @@ const SessionCreate = (): React.ReactNode => {
       exclude: excludedTypes.map((t) => t.value),
       radiusMiles,
       rankBy,
+      filterClosingSoon,
     })
   }
 
@@ -222,6 +225,7 @@ const SessionCreate = (): React.ReactNode => {
           onChange={(v) => setRadiusMiles(v)}
           value={radiusMiles ?? config.radius.defaultMiles}
         />
+        <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
         <p className="text-center text-xs">Voting sessions automatically expire after 24 hours</p>
         <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
       </CreateCard>

@@ -21,12 +21,14 @@ import {
   SliderThumb,
   SliderTrack,
   Spinner,
+  Switch,
   Tag,
   TagGroup,
   Input,
   useFilter,
 } from '@heroui/react'
 import type { Key } from '@heroui/react'
+import { Clock } from 'lucide-react'
 import React from 'react'
 
 import { LoadingSpinner } from '@components/session/loading'
@@ -261,3 +263,40 @@ export const MultiSelect = ({
     </Autocomplete>
   )
 }
+
+export const FilterClosingSoonToggle = ({
+  checked,
+  disabled,
+  onChange,
+}: {
+  checked: boolean
+  disabled: boolean
+  onChange: (checked: boolean) => void
+}): React.ReactNode => (
+  <div
+    className={`rounded-xl border p-3.5 transition-all ${
+      checked ? 'border-primary bg-primary/5' : 'border-default-200 hover:border-default-300 hover:bg-default-50'
+    }`}
+  >
+    <Switch className="w-full" isDisabled={disabled} isSelected={checked} onChange={onChange}>
+      <Switch.Content className="flex-1">
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
+              checked ? 'bg-primary/15 text-primary' : 'bg-default-100 text-default-400'
+            }`}
+          >
+            <Clock className="h-4 w-4" />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Label className="text-sm font-medium text-default-700">Hide closing soon</Label>
+            <Description className="text-xs text-default-400">Skip places closing within an hour</Description>
+          </div>
+        </div>
+      </Switch.Content>
+      <Switch.Control>
+        <Switch.Thumb />
+      </Switch.Control>
+    </Switch>
+  </div>
+)

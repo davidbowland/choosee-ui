@@ -52,6 +52,7 @@ export interface SessionData {
   byes: (string | null)[]
   isReady: boolean
   errorMessage: string | null
+  filterClosingSoon: boolean
   timeoutAt?: number
   users: string[]
   winner: string | null
@@ -96,6 +97,7 @@ export interface NewSessionRequest {
   exclude: string[]
   radiusMiles: number
   rankBy: string
+  filterClosingSoon?: boolean
   latitude?: number
   longitude?: number
 }

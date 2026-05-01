@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useMemo, useRef } from 'react'
 
-import { ErrorBanner } from './elements'
+import { ClosingSoonErrorAlert, ErrorBanner } from './elements'
 import { firstUnvotedIndex } from './helpers'
 import LoadingPhase from './loading'
 import UserSelectPhase from './user-select'
@@ -13,6 +13,7 @@ import ErrorBoundary from '@components/error-boundary'
 import { useSessionCookie } from '@hooks/useSessionCookie'
 import { fetchChoices, fetchSession, fetchUsers, patchUser } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
+import { isClosingSoonError } from '@utils/session'
 
 type Phase = 'loading' | 'error' | 'winner' | 'user-select' | 'voting' | 'waiting'
 
@@ -146,7 +147,11 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
     case 'loading':
       return <LoadingPhase session={session} />
     case 'error':
-      return <ErrorBanner message={session?.errorMessage ?? 'An unexpected error occurred'} />
+      return isClosingSoonError(session?.errorMessage) ? (
+        <ClosingSoonErrorAlert />
+      ) : (
+        <ErrorBanner message={session?.errorMessage ?? 'An unexpected error occurred'} />
+      )
     case 'winner':
       return <WinnerPhase choices={choices ?? {}} session={session!} />
     case 'user-select':

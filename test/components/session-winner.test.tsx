@@ -32,6 +32,7 @@ const mockSession: SessionData = {
   byes: [null, null],
   isReady: true,
   errorMessage: null,
+  filterClosingSoon: false,
   users: ['user-1'],
   winner: 'a',
   type: ['restaurant'],
@@ -94,5 +95,15 @@ describe('WinnerPhase', () => {
     const noWinnerSession = { ...mockSession, winner: null }
     render(<WinnerPhase choices={mockChoices} session={noWinnerSession} />)
     expect(screen.getByText(/Revealing the winner/i)).toBeInTheDocument()
+  })
+
+  it('should show filter badge when filterClosingSoon is true', () => {
+    render(<WinnerPhase choices={mockChoices} session={{ ...mockSession, filterClosingSoon: true }} />)
+    expect(screen.getByText(/Open restaurants only/i)).toBeInTheDocument()
+  })
+
+  it('should not show filter badge when filterClosingSoon is false', () => {
+    render(<WinnerPhase choices={mockChoices} session={mockSession} />)
+    expect(screen.queryByText(/Open restaurants only/i)).not.toBeInTheDocument()
   })
 })
