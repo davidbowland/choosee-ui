@@ -15,7 +15,7 @@ Amplify.configure({
       loginWith: {
         oauth: {
           domain: process.env.NEXT_PUBLIC_COGNITO_DOMAIN,
-          scopes: ['openid', 'profile', 'phone'],
+          scopes: ['openid', 'email', 'profile'],
           redirectSignIn: [`${origin}/auth/callback/`],
           redirectSignOut: [`${origin}/`],
           responseType: 'code',
