@@ -21,8 +21,8 @@ import {
 jest.mock('aws-amplify/api')
 jest.mock('aws-amplify/auth')
 jest.mock('@config/amplify', () => ({
-  apiName: 'ChooSeeAPI',
-  apiNameUnauthenticated: 'ChooSeeAPIUnauthenticated',
+  apiName: 'ChooseeAPI',
+  apiNameUnauthenticated: 'ChooseeAPIUnauthenticated',
 }))
 
 const mockGet = jest.mocked(get)
@@ -61,7 +61,7 @@ describe('API service', () => {
       mockGet.mockReturnValue(mockResponse(addressResult))
       const result = await fetchAddress(38.897, -77.036, recaptchaToken)
       expect(mockGet).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: '/reverse-geocode',
         options: {
           headers: { 'x-recaptcha-token': recaptchaToken },
@@ -78,7 +78,7 @@ describe('API service', () => {
       mockGet.mockReturnValue(mockResponse(config))
       const result = await fetchSessionConfig()
       expect(mockGet).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: '/sessions/config',
         options: { headers: undefined, queryParams: undefined },
       })
@@ -100,7 +100,7 @@ describe('API service', () => {
       mockPost.mockReturnValue(mockResponse(response))
       const result = await createSession(session, recaptchaToken)
       expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: '/sessions',
         options: { headers: { 'x-recaptcha-token': recaptchaToken }, body: session },
       })
@@ -114,7 +114,7 @@ describe('API service', () => {
       mockGet.mockReturnValue(mockResponse(session))
       const result = await fetchSession(sessionId)
       expect(mockGet).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}`,
         options: { headers: undefined, queryParams: undefined },
       })
@@ -128,7 +128,7 @@ describe('API service', () => {
       mockGet.mockReturnValue(mockResponse(choices))
       const result = await fetchChoices(sessionId)
       expect(mockGet).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}/choices`,
         options: { headers: undefined, queryParams: undefined },
       })
@@ -152,7 +152,7 @@ describe('API service', () => {
       mockPost.mockReturnValue(mockResponse(newUser))
       const result = await createUser(sessionId, true)
       expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPI',
+        apiName: 'ChooseeAPI',
         path: `/sessions/${encodeURIComponent(sessionId)}/users/authed`,
         options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: {} },
       })
@@ -163,7 +163,7 @@ describe('API service', () => {
       mockPost.mockReturnValue(mockResponse(newUser))
       const result = await createUser(sessionId, false)
       expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}/users`,
         options: { headers: undefined, body: {} },
       })
@@ -206,7 +206,7 @@ describe('API service', () => {
       expect(mockPost).toHaveBeenNthCalledWith(
         3,
         expect.objectContaining({
-          apiName: 'ChooSeeAPIUnauthenticated',
+          apiName: 'ChooseeAPIUnauthenticated',
           path: `/sessions/${encodeURIComponent(sessionId)}/users`,
         }),
       )
@@ -293,7 +293,7 @@ describe('API service', () => {
       mockPatch.mockReturnValue(mockResponse(updatedUser))
       const result = await patchUser(sessionId, userId, operations, true)
       expect(mockPatch).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPI',
+        apiName: 'ChooseeAPI',
         path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`,
         options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: operations },
       })
@@ -304,7 +304,7 @@ describe('API service', () => {
       mockPatch.mockReturnValue(mockResponse(updatedUser))
       const result = await patchUser(sessionId, userId, operations, false)
       expect(mockPatch).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`,
         options: { headers: undefined, body: operations },
       })
@@ -318,7 +318,7 @@ describe('API service', () => {
       mockPost.mockReturnValue(mockResponse(updatedSession))
       const result = await closeRound(sessionId, 0)
       expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPIUnauthenticated',
+        apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}/rounds/0/close`,
         options: { headers: undefined, body: undefined },
       })
@@ -332,7 +332,7 @@ describe('API service', () => {
       mockPost.mockReturnValue(mockResponse(updatedUser))
       const result = await subscribeToRound(sessionId, 1, userId, true)
       expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPI',
+        apiName: 'ChooseeAPI',
         path: `/sessions/${encodeURIComponent(sessionId)}/rounds/1/subscribe`,
         options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { userId, roundId: 1 } },
       })
@@ -346,7 +346,7 @@ describe('API service', () => {
       mockPost.mockReturnValue(mockResponse(response))
       const result = await shareSession(sessionId, userId, '+15559876543')
       expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooSeeAPI',
+        apiName: 'ChooseeAPI',
         path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/share`,
         options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { phone: '+15559876543', type: 'text' } },
       })

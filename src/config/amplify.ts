@@ -1,11 +1,14 @@
 import { Amplify } from 'aws-amplify'
+// Side-effect import: registers the OAuth listener that detects ?code=
+// on the callback page and exchanges it for tokens with Cognito.
+import 'aws-amplify/auth/enable-oauth-listener'
 
 const origin = process.env.NEXT_PUBLIC_ORIGIN
 const baseUrl = process.env.NEXT_PUBLIC_CHOOSEE_API_BASE_URL
 
 // API endpoint names used by services/api.ts
-export const apiName = 'ChooSeeAPI'
-export const apiNameUnauthenticated = 'ChooSeeAPIUnauthenticated'
+export const apiName = 'ChooseeAPI'
+export const apiNameUnauthenticated = 'ChooseeAPIUnauthenticated'
 
 Amplify.configure({
   Auth: {
