@@ -25,7 +25,6 @@ permissions:
 jobs:
   test:
     name: Run unit tests
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
@@ -34,7 +33,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-
       - name: Install and audit packages
         run: npm ci --legacy-peer-deps && npm audit --audit-level=critical
         env:
@@ -42,64 +40,13 @@ jobs:
       - name: Run tests
         run: npm run test
 
-  build-and-deploy-feature:
-    name: Deploy feature branch
-    if: github.ref != 'refs/heads/master'
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout latest code
-        uses: actions/checkout@v6
-
-      - name: Install Node 24
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.x
-      - name: Build Next.js site
-        run: npm run build
-        env:
-          DEVELOPMENT: true
-
-      - name: Install Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.12
-      - name: Install AWS SAM
-        uses: aws-actions/setup-sam@v2
-
-      - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ env.PIPELINE_USER_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: feature-deployment
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
-
-      - name: Deploy test infrastructure
-        shell: bash
-        run: |
-          sam deploy --stack-name ${{ env.TESTING_STACK_NAME }} \
-            --template-file ${{ env.TEMPLATE_NAME }} \
-            --region ${{ secrets.AWS_REGION }} \
-            --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --capabilities CAPABILITY_NAMED_IAM \
-            --parameter-overrides 'Environment=test'
-      - name: Copy static site to test S3 bucket
-        run: ./scripts/copyToS3.sh ${TESTING_S3_BUCKET}
-
   deploy-testing:
     name: Deploy to test environment
-    if: github.ref == 'refs/heads/master'
     needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-
       - name: Install Node 24
         uses: actions/setup-node@v6
         with:
@@ -108,14 +55,12 @@ jobs:
         run: npm run build
         env:
           DEVELOPMENT: true
-
       - name: Install Python 3
         uses: actions/setup-python@v6
         with:
           python-version: 3.12
       - name: Install AWS SAM
         uses: aws-actions/setup-sam@v2
-
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -123,18 +68,16 @@ jobs:
           aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.TESTING_REGION }}
           role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: feature-deployment
+          role-session-name: testing-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
-
       - name: Deploy test infrastructure
-        shell: bash
         run: |
           sam deploy --stack-name ${{ env.TESTING_STACK_NAME }} \
             --template-file ${{ env.TEMPLATE_NAME }} \
-            --region ${{ secrets.AWS_REGION }} \
+            --region ${{ env.TESTING_REGION }} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
+            --role-arn ${{ env.TESTING_CLOUDFORMATION_EXECUTION_ROLE }} \
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides 'Environment=test'
       - name: Copy static site to test S3 bucket
@@ -148,21 +91,18 @@ jobs:
     steps:
       - name: Checkout latest code
         uses: actions/checkout@v6
-
       - name: Install Node 24
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
       - name: Build Next.js site
         run: npm run build
-
       - name: Install Python 3
         uses: actions/setup-python@v6
         with:
           python-version: 3.12
       - name: Install AWS SAM
         uses: aws-actions/setup-sam@v2
-
       - name: Assume the production pipeline user role
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -170,18 +110,16 @@ jobs:
           aws-secret-access-key: ${{ env.PIPELINE_USER_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.PROD_REGION }}
           role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: feature-deployment
+          role-session-name: production-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
-
       - name: Deploy production infrastructure
-        shell: bash
         run: |
           sam deploy --stack-name ${{ env.PROD_STACK_NAME }} \
             --template-file ${{ env.TEMPLATE_NAME }} \
-            --region ${{ secrets.AWS_REGION }} \
+            --region ${{ env.PROD_REGION }} \
             --no-fail-on-empty-changeset \
-            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
+            --role-arn ${{ env.PROD_CLOUDFORMATION_EXECUTION_ROLE }} \
             --capabilities CAPABILITY_NAMED_IAM
       - name: Copy static site to production S3 bucket
         run: ./scripts/copyToS3.sh ${{ env.PROD_S3_BUCKET }}
@@ -197,10 +135,9 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-
       - name: Set git name and email
         run: |
-          git config --local user.email "${GIT_EMAIL}"
+          git config --local user.email "${{ env.GIT_EMAIL }}"
           git config --local user.name "github-actions[bot]"
       - name: Bump the minor version
         run: npm version minor
