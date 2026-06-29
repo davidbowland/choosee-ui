@@ -29,7 +29,7 @@ describe('Share', () => {
   async function renderWithModalOpen() {
     const user = userEvent.setup()
     render(<Share sessionId={sessionId} userId={userId} />)
-    await user.click(screen.getByText('Share'))
+    await user.click(screen.getByText('Invite'))
     return user
   }
 
@@ -42,7 +42,7 @@ describe('Share', () => {
     const user = userEvent.setup()
     render(<Share sessionId={sessionId} userId={userId} />)
     const writeTextSpy = jest.spyOn(navigator.clipboard, 'writeText')
-    await user.click(screen.getByText('Share'))
+    await user.click(screen.getByText('Invite'))
     await user.click(screen.getByText('Copy URL'))
     expect(writeTextSpy).toHaveBeenCalledWith(expect.stringContaining(`/s/${sessionId}`))
     writeTextSpy.mockRestore()
@@ -51,7 +51,7 @@ describe('Share', () => {
   it('should render a QR code', async () => {
     const user = userEvent.setup()
     const { container } = render(<Share sessionId={sessionId} userId={userId} />)
-    await user.click(screen.getByText('Share'))
+    await user.click(screen.getByText('Invite'))
     expect(container.querySelector('svg')).toBeInTheDocument()
   })
 
@@ -90,7 +90,7 @@ describe('Share', () => {
     await user.click(screen.getByText('Send invite'))
 
     await waitFor(() => {
-      expect(screen.getByText('Rate limit reached. Please try again later.')).toBeInTheDocument()
+      expect(screen.getByText("You're going a bit fast — try again in a minute.")).toBeInTheDocument()
     })
   })
 
@@ -130,7 +130,7 @@ describe('Share', () => {
     await user.click(screen.getByText('Send invite'))
 
     await waitFor(() => {
-      expect(screen.getByText('Bad request. Please try again.')).toBeInTheDocument()
+      expect(screen.getByText("That didn't work. Try again.")).toBeInTheDocument()
     })
   })
 
@@ -138,7 +138,7 @@ describe('Share', () => {
     // Override writeText after userEvent.setup() installs its clipboard
     const user = userEvent.setup()
     render(<Share sessionId={sessionId} userId={userId} />)
-    await user.click(screen.getByText('Share'))
+    await user.click(screen.getByText('Invite'))
     jest.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('Permission denied'))
     await user.click(screen.getByText('Copy URL'))
     await waitFor(() => {
@@ -173,7 +173,7 @@ describe('Share', () => {
 
     it('should show auth gate instead of SMS form', async () => {
       await renderWithModalOpen()
-      expect(screen.getByText('Sign in with Google to send SMS invites')).toBeInTheDocument()
+      expect(screen.getByText('Sign in with Google to invite people by text')).toBeInTheDocument()
       expect(screen.queryByPlaceholderText(PHONE_PLACEHOLDER)).not.toBeInTheDocument()
       expect(screen.queryByText('Send invite')).not.toBeInTheDocument()
     })

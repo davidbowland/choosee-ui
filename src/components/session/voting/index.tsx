@@ -19,7 +19,7 @@ import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/eleme
 import Share from '@components/share'
 import { patchUser, hasErrorCode } from '@services/api'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
-import { displayName, isSoloVoter } from '@utils/users'
+import { displayName } from '@utils/users'
 
 const VOTE_ACCEPT_DELAY_MS = 300 // Time green check shows
 
@@ -28,9 +28,10 @@ export interface VotingPhaseProps {
   session: SessionData
   currentUser: User
   choices: ChoicesMap
+  usersCount: number
 }
 
-const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhaseProps): React.ReactNode => {
+const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: VotingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
   const { isSignedIn } = useAuthContext()
   const [bracketOpen, setBracketOpen] = useState(false)
@@ -144,7 +145,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
 
   return (
     <VotingContainer>
-      {isSoloVoter(session) && <SoloVoterHint />}
+      {usersCount <= 1 && session.currentRound === 0 && <SoloVoterHint />}
       {session.filterClosingSoon && <FilterClosingSoonBadge />}
 
       <TournamentHeader

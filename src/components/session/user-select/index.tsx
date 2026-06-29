@@ -41,11 +41,11 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
     onError: (err: unknown) => {
       if (err instanceof ApiError && err.response) {
         if (err.response.statusCode === 400) {
-          setError(parseApiMessage(err.response.body, 'Maximum number of voters reached.'))
+          setError(parseApiMessage(err.response.body, 'This group is full.'))
           return
         }
       }
-      setError('Failed to join. Please try again.')
+      setError("Couldn't join. Try again.")
     },
   })
 
@@ -75,7 +75,7 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
 
   return (
     <SectionContainer>
-      <SectionTitle>{users.length === 1 ? 'Welcome back' : 'Returning voter? Select your profile'}</SectionTitle>
+      <SectionTitle>{users.length === 1 ? 'Welcome back' : 'Back again? Choose your name'}</SectionTitle>
 
       <div className="flex flex-col gap-2">
         <CreateNewOption

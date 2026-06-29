@@ -18,12 +18,12 @@ export const ProgressText = ({
   total: number
 }): React.ReactNode => (
   <div className="w-full">
-    <ProgressBar color="success" maxValue={total || 1} minValue={0} value={finished}>
+    <ProgressBar color="warning" maxValue={total || 1} minValue={0} value={finished}>
       <div className="mb-2 flex items-center justify-between text-sm">
         <ProgressBar.Output>
-          <span className="font-medium text-default-600">Voters finished</span>
+          <span className="font-medium text-[#D4D4D4]">Voted</span>
         </ProgressBar.Output>
-        <span className="tabular-nums text-default-500">
+        <span className="tabular-nums text-[#6B7280]">
           {finished} / {total}
         </span>
       </div>
@@ -31,13 +31,12 @@ export const ProgressText = ({
         <ProgressBar.Fill />
       </ProgressBar.Track>
     </ProgressBar>
-    <p className="mt-2 text-center text-xs text-default-400">{subtitle}</p>
+    <p className="mt-2 text-center text-xs text-[#4B5563]">{subtitle}</p>
   </div>
 )
 
-/** Groups the notification checkbox + phone input together */
 export const NotifySection = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="w-full rounded-xl border border-divider bg-surface p-4">
+  <div className="w-full rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-4">
     <div className="flex flex-col gap-3">{children}</div>
   </div>
 )
@@ -49,9 +48,15 @@ export const ForceRoundButton = ({
   isLoading: boolean
   onPress: () => void
 }): React.ReactNode => (
-  <Button isDisabled={isLoading} onPress={onPress} size="sm" variant="outline">
+  <Button
+    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+    isDisabled={isLoading}
+    onPress={onPress}
+    size="sm"
+    variant="outline"
+  >
     {isLoading && <Spinner color="current" size="sm" />}
-    Force next round
+    Skip to next round
   </Button>
 )
 
@@ -71,18 +76,27 @@ export const ConfirmDialog = ({
     <AlertDialog.Container size="sm">
       <AlertDialog.Dialog>
         <AlertDialog.Header>
-          <AlertDialog.Heading>Force next round?</AlertDialog.Heading>
+          <AlertDialog.Heading>Skip to next round?</AlertDialog.Heading>
         </AlertDialog.Header>
         <AlertDialog.Body>
-          <p className="text-sm text-default-500">
-            Some voters haven&apos;t finished voting. Their unfinished votes will be skipped.
-          </p>
+          <p className="text-sm text-[#6B7280]">Not everyone has voted yet. We&apos;ll skip their picks and move on.</p>
         </AlertDialog.Body>
         <AlertDialog.Footer className="flex justify-end gap-2">
-          <Button isDisabled={isLoading} onPress={onCancel} slot="close" variant="outline">
+          <Button
+            className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+            isDisabled={isLoading}
+            onPress={onCancel}
+            slot="close"
+            variant="outline"
+          >
             Cancel
           </Button>
-          <Button isDisabled={isLoading} onPress={onConfirm} variant="primary">
+          <Button
+            className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+            isDisabled={isLoading}
+            onPress={onConfirm}
+            variant="primary"
+          >
             {isLoading && <Spinner color="current" size="sm" />}
             Confirm
           </Button>
@@ -111,22 +125,22 @@ export const NotifyCheckbox = ({
   >
     <div
       className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-        subscribed ? 'bg-success/15 text-success' : 'bg-primary/10 text-primary'
+        subscribed ? 'bg-success/15 text-success' : 'bg-[rgba(245,158,11,0.1)] text-[#F59E0B]'
       }`}
     >
       {subscribed ? <Check className="h-5 w-5" /> : <BellRing className="h-5 w-5" />}
     </div>
     <div className="min-w-0 flex-1">
-      <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-default-700'}`}>
-        {subscribed ? "You'll be notified!" : 'Text me when the next round starts'}
+      <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-[#D4D4D4]'}`}>
+        {subscribed ? "We'll text you!" : 'Text me when voting opens'}
       </p>
-      <p className="text-xs text-default-400">
+      <p className="text-xs text-[#4B5563]">
         {subscribed ? "We'll send you a text when voting opens" : 'Tap to get a text reminder'}
       </p>
     </div>
     <div
       className={`relative h-6 w-11 flex-shrink-0 rounded-full border transition-colors duration-200 ${
-        checked || subscribed ? 'border-primary bg-primary' : 'border-default-400 bg-default-300'
+        checked || subscribed ? 'border-[#F59E0B] bg-[#F59E0B]' : 'border-white/[0.15] bg-white/[0.05]'
       }`}
     >
       <div
@@ -158,7 +172,12 @@ export const PhoneInput = ({
       <Input onChange={(e) => onChange(e.target.value)} placeholder="+1 (555) 123-4567" type="tel" value={value} />
       {error && <FieldError>{error}</FieldError>}
     </TextField>
-    <Button isDisabled={!isValid || isLoading} onPress={onSubmit} variant="primary">
+    <Button
+      className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+      isDisabled={!isValid || isLoading}
+      onPress={onSubmit}
+      variant="primary"
+    >
       {isLoading && <Spinner color="current" size="sm" />}
       Save
     </Button>
@@ -170,7 +189,12 @@ export const ActionRow = ({ children }: { children: React.ReactNode }): React.Re
 )
 
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button onPress={onPress} size="sm" variant="outline">
+  <Button
+    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+    onPress={onPress}
+    size="sm"
+    variant="outline"
+  >
     <Eye className="h-4 w-4" />
     View bracket
   </Button>
@@ -178,8 +202,13 @@ export const BracketButton = ({ onPress }: { onPress: () => void }): React.React
 
 export const NotifyAuthGate = ({ onSignIn }: { onSignIn: () => void }): React.ReactNode => (
   <div className="flex flex-col items-center gap-2">
-    <p className="text-center text-sm text-default-500">Sign in with Google to get SMS notifications</p>
-    <Button onPress={onSignIn} size="sm" variant="outline">
+    <p className="text-center text-sm text-[#6B7280]">Sign in with Google for text reminders</p>
+    <Button
+      className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#D4D4D4]"
+      onPress={onSignIn}
+      size="sm"
+      variant="outline"
+    >
       <GoogleLogo />
       Sign in with Google
     </Button>

@@ -10,6 +10,7 @@ import {
   CardName,
   ChooseButton,
   ChosenOverlay,
+  DistanceDisplay,
   HoursList,
   PhoneLink,
   PhotoGallery,
@@ -22,6 +23,7 @@ import {
 } from './elements'
 import PhotoCarousel from '@components/photo-carousel'
 import { ChoiceDetail, PriceLevel } from '@types'
+import { getTodayHours } from '@utils/hours'
 
 export interface RestaurantCardProps {
   choice: ChoiceDetail
@@ -54,12 +56,17 @@ const RestaurantCard = ({ choice, disabled, onClick, selected, variant }: Restau
       choice.website ||
       (choice.placeTypes && choice.placeTypes.length > 0)
 
+    const todayHours = choice.openHours ? getTodayHours(choice.openHours) : null
+
     const photoOverlay = (
       <VotingPhotoOverlay
+        isClosingSoon={choice.isClosingSoon}
         name={choice.name}
+        openNow={choice.openNow}
         priceLabel={priceLabel}
         rating={choice.rating}
         ratingsTotal={choice.ratingsTotal}
+        todayHours={todayHours}
       />
     )
 
@@ -88,7 +95,9 @@ const RestaurantCard = ({ choice, disabled, onClick, selected, variant }: Restau
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                {choice.formattedAddress && <AddressMapLink address={choice.formattedAddress} />}
+                {choice.formattedAddress && (
+                  <AddressMapLink address={choice.formattedAddress} distanceMiles={choice.distanceMiles ?? undefined} />
+                )}
                 {hasDetails && (
                   <VotingInfoToggle>
                     {choice.formattedPhoneNumber && <PhoneLink phone={choice.formattedPhoneNumber} />}
@@ -118,6 +127,7 @@ const RestaurantCard = ({ choice, disabled, onClick, selected, variant }: Restau
       <PhotoGallery name={choice.name} photos={choice.photos} />
       <CardName>{choice.name}</CardName>
       {choice.formattedAddress && <AddressLine>{choice.formattedAddress}</AddressLine>}
+      {choice.distanceMiles != null && <DistanceDisplay distanceMiles={choice.distanceMiles} />}
       {choice.formattedPhoneNumber && <PhoneLink phone={choice.formattedPhoneNumber} />}
       <CardMeta priceLabel={priceLabel} rating={choice.rating} ratingsTotal={choice.ratingsTotal} />
       {choice.website && <WebsiteLink url={choice.website} />}

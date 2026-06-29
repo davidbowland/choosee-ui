@@ -19,12 +19,12 @@ describe('400 error page', () => {
 
   it('should render heading', () => {
     render(<BadRequest />)
-    expect(screen.getByRole('heading', { name: /400: bad request/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /something went wrong/i })).toBeInTheDocument()
   })
 
   it('should render error message', () => {
     render(<BadRequest />)
-    expect(screen.getByText(/malformed/i)).toBeInTheDocument()
+    expect(screen.getByText(/couldn't process/i)).toBeInTheDocument()
   })
 
   it('should render a link to home', () => {

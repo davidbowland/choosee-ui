@@ -1,5 +1,6 @@
 import Autoplay from 'embla-carousel-autoplay'
 import useEmblaCarousel from 'embla-carousel-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
 
 export interface CarouselImage {
@@ -57,6 +58,34 @@ const PhotoCarousel = ({ images, overlay, showThumbnails = true }: PhotoCarousel
           ))}
         </div>
         {overlay && <div className="pointer-events-none absolute inset-0">{overlay}</div>}
+        {!showThumbnails && images.length > 1 && (
+          <>
+            <button
+              aria-label="Previous photo"
+              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white/80 hover:bg-black/70"
+              onClick={(e) => {
+                e.stopPropagation()
+                emblaMainApi?.scrollPrev()
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              type="button"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              aria-label="Next photo"
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white/80 hover:bg-black/70"
+              onClick={(e) => {
+                e.stopPropagation()
+                emblaMainApi?.scrollNext()
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              type="button"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
       </div>
 
       {showThumbnails && (

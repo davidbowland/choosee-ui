@@ -85,6 +85,7 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
     queryKey: ['users', sessionId],
     queryFn: () => fetchUsers(sessionId),
     enabled: session?.isReady === true,
+    refetchInterval: 30_000,
   })
 
   const { data: choices } = useQuery<ChoicesMap>({
@@ -158,7 +159,13 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
       return <UserSelectPhase onUserSelected={handleUserSelected} sessionId={sessionId} users={users ?? []} />
     case 'voting':
       return (
-        <VotingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
+        <VotingPhase
+          choices={choices ?? {}}
+          currentUser={currentUser!}
+          session={session!}
+          sessionId={sessionId}
+          usersCount={users?.length ?? 1}
+        />
       )
     case 'waiting':
       return (

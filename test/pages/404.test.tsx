@@ -31,14 +31,14 @@ describe('404 error page', () => {
     await act(async () => {
       render(<NotFound />)
     })
-    await waitFor(() => expect(screen.getByRole('heading', { name: /404: not found/i })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('heading', { name: /page not found/i })).toBeInTheDocument())
   })
 
   it('should render error message', async () => {
     await act(async () => {
       render(<NotFound />)
     })
-    expect(await screen.findByText(/unavailable/i)).toBeInTheDocument()
+    expect(await screen.findByText(/expired|mistyped/i)).toBeInTheDocument()
   })
 
   it('should not render error content when path begins /s/', async () => {
@@ -46,7 +46,7 @@ describe('404 error page', () => {
     await act(async () => {
       render(<NotFound />)
     })
-    expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/expired|mistyped/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('heading')).not.toBeInTheDocument()
     expect(AppBar).not.toHaveBeenCalled()
   })
@@ -56,7 +56,7 @@ describe('404 error page', () => {
     await act(async () => {
       render(<NotFound />)
     })
-    await waitFor(() => expect(screen.getByText(/unavailable/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/expired|mistyped/i)).toBeInTheDocument())
   })
 
   it('should render a link to home', async () => {

@@ -25,7 +25,7 @@ const SessionPage = (): React.ReactNode => {
         <title>Choosee | dbowland.com</title>
       </Head>
       <AppBar />
-      <main className="mx-auto flex min-h-[calc(100vh-56px)] max-w-4xl flex-col px-4 py-6">
+      <main className="mx-auto flex min-h-[100dvh] max-w-4xl flex-col px-4 py-6">
         <div className="flex-1">{sessionId ? <Session sessionId={sessionId} /> : null}</div>
         <PrivacyLink />
       </main>

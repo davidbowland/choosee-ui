@@ -43,13 +43,13 @@ export const LoadingSpinner = (): React.ReactNode => {
   return (
     <div className="flex flex-col items-center gap-6 px-4 py-16">
       <div className="relative h-16 w-16">
-        <div className="absolute inset-0 animate-spin rounded-full border-4 border-default-200 border-t-primary" />
+        <div className="absolute inset-0 animate-spin rounded-full border-4 border-white/[0.06] border-t-[#F59E0B]" />
         <div
-          className="absolute inset-2 animate-spin rounded-full border-4 border-default-200 border-b-warning"
+          className="absolute inset-2 animate-spin rounded-full border-4 border-white/[0.06] border-b-[#F59E0B]"
           style={{ animationDirection: 'reverse', animationDuration: '1.4s' }}
         />
       </div>
-      <p className="text-center text-default-500 transition-all duration-500">
+      <p className="text-center text-[#4B5563] transition-all duration-500">
         {messages ? messages[msgIdx] : 'Loading...'}
       </p>
     </div>
@@ -61,8 +61,8 @@ export const ErrorAlert = ({ message }: { message: string }): React.ReactNode =>
     <AlertRoot status="danger">
       <AlertDescription>{message}</AlertDescription>
     </AlertRoot>
-    <Link className="text-primary underline" href="/">
-      Go back home
+    <Link className="text-[#F59E0B] underline" href="/">
+      Go home
     </Link>
   </div>
 )
@@ -72,7 +72,7 @@ export const TimeoutAlert = (): React.ReactNode => (
     <AlertRoot status="warning">
       <AlertDescription>Session setup timed out. Please try again.</AlertDescription>
     </AlertRoot>
-    <Link className="text-primary underline" href="/">
+    <Link className="text-[#F59E0B] underline" href="/">
       Try again
     </Link>
   </div>

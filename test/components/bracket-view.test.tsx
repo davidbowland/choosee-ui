@@ -54,7 +54,7 @@ describe('BracketView', () => {
 
   it('should render when open is true', () => {
     render(<BracketView choices={choices} onClose={onClose} open={true} session={baseSession} />)
-    expect(screen.getByText('Tournament Bracket')).toBeInTheDocument()
+    expect(screen.getByText('The Bracket')).toBeInTheDocument()
   })
 
   it('should render round headers', () => {
@@ -109,7 +109,7 @@ describe('BracketView', () => {
   it('should not crash when winner is set on final round', () => {
     const sessionWithWinner = { ...baseSession, currentRound: 2, winner: 'a' }
     render(<BracketView choices={choices} onClose={onClose} open={true} session={sessionWithWinner} />)
-    expect(screen.getByText('Tournament Bracket')).toBeInTheDocument()
+    expect(screen.getByText('The Bracket')).toBeInTheDocument()
   })
 
   it('should not block interaction with the page after closing', async () => {
@@ -119,7 +119,7 @@ describe('BracketView', () => {
         <BracketView choices={choices} onClose={onClose} open={true} session={baseSession} />
       </div>,
     )
-    expect(screen.getByText('Tournament Bracket')).toBeInTheDocument()
+    expect(screen.getByText('The Bracket')).toBeInTheDocument()
 
     // Simulate parent setting open=false after onClose fires
     rerender(
@@ -140,6 +140,6 @@ describe('BracketView', () => {
       bracket: [[['a', 'b'] as [string, string], ['c', 'd'] as [string, string]], [['b', 'd'] as [string, string]]],
     }
     render(<BracketView choices={choices} onClose={onClose} open={true} session={sessionWithBWinner} />)
-    expect(screen.getByText('Tournament Bracket')).toBeInTheDocument()
+    expect(screen.getByText('The Bracket')).toBeInTheDocument()
   })
 })

@@ -8,9 +8,12 @@ import { GoogleLogo } from '@components/google-logo'
 export const ShareModal = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <Modal>
     <Modal.Trigger>
-      <Button variant="outline">
+      <Button
+        className="rounded-full border-white/[0.15] bg-white/[0.07] text-[#E5E7EB] hover:bg-white/[0.12]"
+        variant="outline"
+      >
         <Share2 className="h-4 w-4" />
-        Share
+        Invite
       </Button>
     </Modal.Trigger>
     <Modal.Backdrop variant="blur">
@@ -18,7 +21,7 @@ export const ShareModal = ({ children }: { children: React.ReactNode }): React.R
         <Modal.Dialog>
           <Modal.CloseTrigger />
           <Modal.Header>
-            <Modal.Heading>Share session</Modal.Heading>
+            <Modal.Heading>Invite friends</Modal.Heading>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-4 p-0.5">{children}</div>
@@ -78,7 +81,7 @@ export const SmsForm = ({
 
 export const SmsAuthGate = ({ onSignIn }: { onSignIn: () => void }): React.ReactNode => (
   <div className="flex flex-col items-center gap-3 rounded-xl border border-divider bg-surface p-4">
-    <p className="text-center text-sm text-default-500">Sign in with Google to send SMS invites</p>
+    <p className="text-center text-sm text-default-500">Sign in with Google to invite people by text</p>
     <Button onPress={onSignIn} size="sm" variant="outline">
       <GoogleLogo />
       Sign in with Google

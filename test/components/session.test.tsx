@@ -131,7 +131,7 @@ describe('Session', () => {
         'Not enough restaurants are open right now (or staying open long enough). Try again later or disable the closing-soon filter.',
     })
     renderWithClient(<Session sessionId="test-session" />)
-    await waitFor(() => expect(screen.getByText(/Not enough open restaurants nearby/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Not enough restaurants are open near you/i)).toBeInTheDocument())
     expect(screen.getByText(/Try again/i)).toHaveAttribute('href', '/')
   })
 

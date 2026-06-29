@@ -9,7 +9,7 @@ export const ErrorContainer = ({ children }: { children: React.ReactNode }): Rea
 export const ErrorAlert = (): React.ReactNode => (
   <AlertRoot status="danger">
     <AlertDescription>
-      Something went wrong. <Link href="/">Go back to the home page</Link>
+      Something went wrong — <Link href="/">go back to the home page</Link>.
     </AlertDescription>
   </AlertRoot>
 )

@@ -19,7 +19,7 @@ describe('403 error page', () => {
 
   it('should render heading', () => {
     render(<Forbidden />)
-    expect(screen.getByRole('heading', { name: /403: forbidden/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /you don't have access/i })).toBeInTheDocument()
   })
 
   it('should render error message', () => {

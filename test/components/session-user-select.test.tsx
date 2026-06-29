@@ -41,9 +41,9 @@ describe('UserSelectPhase', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument()
   })
 
-  it('should show "New voter" option', () => {
+  it("should show 'I'm new' option", () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
-    expect(screen.getByText('New voter')).toBeInTheDocument()
+    expect(screen.getByText("I'm new")).toBeInTheDocument()
   })
 
   it('should call onUserSelected when selecting existing user and confirming', async () => {
@@ -112,7 +112,7 @@ describe('UserSelectPhase', () => {
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
 
-    await user.click(screen.getByText('New voter'))
+    await user.click(screen.getByText("I'm new"))
     await user.click(screen.getByText(/Let's go/i))
 
     expect(await screen.findByText(/Max players reached/i)).toBeInTheDocument()
@@ -120,7 +120,7 @@ describe('UserSelectPhase', () => {
 
   it('should show invite section with copy link and QR code', () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
-    expect(screen.getByText(/Invite a new voter/i)).toBeInTheDocument()
+    expect(screen.getByText(/Invite someone/i)).toBeInTheDocument()
     expect(screen.getByText(/Copy invite link/i)).toBeInTheDocument()
   })
 
@@ -146,10 +146,10 @@ describe('UserSelectPhase', () => {
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
 
-    await user.click(screen.getByText('New voter'))
+    await user.click(screen.getByText("I'm new"))
     await user.click(screen.getByText(/Let's go/i))
 
-    expect(await screen.findByText(/Failed to join/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Couldn't join/i)).toBeInTheDocument()
   })
 
   it('should handle clipboard failure gracefully', async () => {
@@ -158,7 +158,7 @@ describe('UserSelectPhase', () => {
     jest.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('Permission denied'))
     await user.click(screen.getByText(/Copy invite link/i))
     // Should not crash
-    expect(screen.getByText(/Invite a new voter/i)).toBeInTheDocument()
+    expect(screen.getByText(/Invite someone/i)).toBeInTheDocument()
   })
 
   it('should not auto-create user while auth is still loading', () => {
@@ -172,7 +172,7 @@ describe('UserSelectPhase', () => {
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
 
-    await user.click(screen.getByText('New voter'))
+    await user.click(screen.getByText("I'm new"))
     await user.click(screen.getByRole('button', { name: /Joining/i }))
 
     expect(api.createUser).not.toHaveBeenCalled()

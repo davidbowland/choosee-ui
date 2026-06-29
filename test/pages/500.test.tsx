@@ -19,12 +19,12 @@ describe('500 error page', () => {
 
   it('should render heading', () => {
     render(<InternalServerError />)
-    expect(screen.getByRole('heading', { name: /500: internal server error/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /something went wrong on our end/i })).toBeInTheDocument()
   })
 
   it('should render error message', () => {
     render(<InternalServerError />)
-    expect(screen.getByText(/internal server error has occurred/i)).toBeInTheDocument()
+    expect(screen.getByText(/hit an error/i)).toBeInTheDocument()
   })
 
   it('should render a link to home', () => {

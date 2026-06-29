@@ -26,9 +26,7 @@ const renderWithClient = (ui: React.ReactElement) => {
 
 describe('SessionCreate component', () => {
   const address = '90210'
-  const coords = { latitude: 38.897957, longitude: -77.03656 }
 
-  const getCurrentPosition = jest.fn()
   const grecaptchaExecute = jest.fn()
   const grecaptchaReady = jest.fn((cb: () => void) => cb())
   const originalRandom = Math.random
@@ -41,15 +39,6 @@ describe('SessionCreate component', () => {
     jest.mocked(useRouter).mockReturnValue({ push: mockPush, replace: jest.fn() } as any)
 
     console.error = jest.fn()
-    Object.defineProperty(navigator, 'geolocation', {
-      configurable: true,
-      value: {
-        getCurrentPosition: (success: any) => {
-          const result = getCurrentPosition()
-          if (result) success(result)
-        },
-      },
-    })
     Object.defineProperty(window, 'grecaptcha', {
       configurable: true,
       value: { execute: grecaptchaExecute, ready: grecaptchaReady },
@@ -61,61 +50,12 @@ describe('SessionCreate component', () => {
     Math.random = originalRandom
   })
 
-  describe('address auto-population', () => {
-    it('should populate address from geolocation reverse geocode', async () => {
-      getCurrentPosition.mockReturnValueOnce({ coords })
-      renderWithClient(<SessionCreate />)
-      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-
-      await waitFor(() => expect(addressInput.value).toEqual(address))
-      expect(grecaptchaReady).toHaveBeenCalled()
-      expect(grecaptchaExecute).toHaveBeenCalledWith(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
-      expect(api.fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude, recaptchaToken)
-    })
-
-    it('should leave address empty when reverse geocode fails', async () => {
-      getCurrentPosition.mockReturnValueOnce({ coords })
-      jest.mocked(api).fetchAddress.mockRejectedValueOnce({ response: { status: 404 } })
-      renderWithClient(<SessionCreate />)
-      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-
-      await waitFor(() =>
-        expect(api.fetchAddress).toHaveBeenCalledWith(coords.latitude, coords.longitude, recaptchaToken),
-      )
-      expect(addressInput.value).toEqual('')
-    })
-
-    it('should not overwrite address if user has already typed', async () => {
-      getCurrentPosition.mockImplementationOnce(() => undefined)
-      renderWithClient(<SessionCreate />)
-
-      const user = userEvent.setup()
-      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      await act(async () => {
-        await user.type(addressInput, 'my custom address')
-      })
-
-      // Simulate late geolocation callback — getCurrentPosition was a no-op above,
-      // so fetchAddress was never called. The user's typed value should remain.
-      expect(addressInput.value).toEqual('my custom address')
-    }, 15000)
-
-    it('should handle missing geolocation API', async () => {
-      const savedGeo = navigator.geolocation
-      Object.defineProperty(navigator, 'geolocation', { configurable: true, value: undefined })
-      renderWithClient(<SessionCreate />)
-      const addressInput = (await screen.findByLabelText(/Your address/i)) as HTMLInputElement
-      expect(addressInput.value).toEqual('')
-      Object.defineProperty(navigator, 'geolocation', { configurable: true, value: savedGeo })
-    })
-  })
-
   describe('form validation', () => {
     it('should show error when no address entered', async () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -131,13 +71,13 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const addressInput = await screen.findByLabelText(/Your address/i)
+      const addressInput = await screen.findByLabelText(/Your location/i)
       await act(async () => {
         await user.clear(addressInput)
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -151,7 +91,7 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const addressInput = await screen.findByLabelText(/Your address/i)
+      const addressInput = await screen.findByLabelText(/Your location/i)
       await act(async () => {
         await user.clear(addressInput)
         await user.type(addressInput, address)
@@ -160,7 +100,7 @@ describe('SessionCreate component', () => {
       const milesSliderInput = await screen.findByRole('slider', { name: /Maximum distance/i })
       fireEvent.change(milesSliderInput, { target: { value: 1 } })
 
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -174,6 +114,7 @@ describe('SessionCreate component', () => {
           address: '90210',
           exclude: ['fast_food_restaurant'],
           filterClosingSoon: false,
+          maxChoices: 20,
           radiusMiles: 1,
           rankBy: 'POPULARITY',
           type: ['restaurant'],
@@ -196,13 +137,13 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const addressInput = await screen.findByLabelText(/Your address/i)
+      const addressInput = await screen.findByLabelText(/Your location/i)
       await act(async () => {
         await user.clear(addressInput)
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -215,18 +156,18 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const addressInput = await screen.findByLabelText(/Your address/i)
+      const addressInput = await screen.findByLabelText(/Your location/i)
       await act(async () => {
         await user.clear(addressInput)
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
 
-      expect(await screen.findByText(/Error generating voting session/i)).toBeInTheDocument()
+      expect(await screen.findByText(/Something went wrong setting up your restaurants/i)).toBeInTheDocument()
     })
   })
 
@@ -317,7 +258,7 @@ describe('SessionCreate component', () => {
       const trigger = await screen.findByLabelText(/Excluded types/i, { selector: 'button' })
 
       // Wait for defaults to apply
-      await screen.findByText(/Choose restaurants/i)
+      await screen.findByText(/Find restaurants/i)
 
       await act(async () => {
         await user.click(trigger)
@@ -336,7 +277,7 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       // Wait for defaults to apply - "Any restaurant" should be a tag in the Restaurant type field
-      await screen.findByText(/Choose restaurants/i)
+      await screen.findByText(/Find restaurants/i)
 
       const user = userEvent.setup()
       // Find the remove button on the "Any restaurant" tag
@@ -347,7 +288,7 @@ describe('SessionCreate component', () => {
         await user.click(removeButtons[0])
       })
 
-      expect(screen.getByText(/Choose restaurants/i)).toBeInTheDocument()
+      expect(screen.getByText(/Find restaurants/i)).toBeInTheDocument()
     })
   })
 
@@ -385,10 +326,114 @@ describe('SessionCreate component', () => {
     })
   })
 
+  describe('max choices slider', () => {
+    it('should render with the default maxChoices from the first sort option', async () => {
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByText(/Find restaurants/i)
+      const slider = screen.getByRole('slider', { name: /Maximum restaurants/i }) as HTMLInputElement
+      expect(Number(slider.value)).toBe(20)
+    })
+
+    it('should update the vote count hint when slider value changes', async () => {
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByText(/Find restaurants/i)
+      const slider = screen.getByRole('slider', { name: /Maximum restaurants/i })
+      fireEvent.change(slider, { target: { value: 10 } })
+
+      // The hint shows votes per person (maxChoices - 1 = 9), which only appears in the hint
+      expect(await screen.findByText(/Up to/i)).toBeInTheDocument()
+      expect(screen.getByText('9')).toBeInTheDocument()
+    })
+
+    it('should jump to new max when switching sort option from its max value', async () => {
+      renderWithClient(<SessionCreate />)
+
+      // Default: POPULARITY (max 20), maxChoices defaults to 20 (the max)
+      await screen.findByText(/Find restaurants/i)
+
+      const user = userEvent.setup()
+      const bothRadio = await screen.findByRole('radio', { name: /Both/i })
+      await act(async () => {
+        await user.click(bothRadio)
+      })
+
+      // Was at max (20/20), switching to Both (max 40) → should become 40
+      const slider = screen.getByRole('slider', { name: /Maximum restaurants/i }) as HTMLInputElement
+      expect(Number(slider.value)).toBe(40)
+    })
+
+    it('should keep value when switching to a higher-ceiling sort option below old max', async () => {
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByText(/Find restaurants/i)
+      const slider = screen.getByRole('slider', { name: /Maximum restaurants/i })
+      fireEvent.change(slider, { target: { value: 15 } })
+
+      const user = userEvent.setup()
+      const bothRadio = await screen.findByRole('radio', { name: /Both/i })
+      await act(async () => {
+        await user.click(bothRadio)
+      })
+
+      // Was at 15/20, switching to Both (max 40) → stays 15
+      expect(Number((screen.getByRole('slider', { name: /Maximum restaurants/i }) as HTMLInputElement).value)).toBe(15)
+    })
+
+    it('should clamp to new max when switching to a lower-ceiling sort option', async () => {
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByText(/Find restaurants/i)
+
+      // Start on Both (max 40)
+      const user = userEvent.setup()
+      const bothRadio = await screen.findByRole('radio', { name: /Both/i })
+      await act(async () => {
+        await user.click(bothRadio)
+      })
+
+      // Set slider to 30
+      const slider = screen.getByRole('slider', { name: /Maximum restaurants/i })
+      fireEvent.change(slider, { target: { value: 30 } })
+
+      // Switch to POPULARITY (max 20) → should clamp to 20
+      const popularRadio = await screen.findByRole('radio', { name: /Most popular/i })
+      await act(async () => {
+        await user.click(popularRadio)
+      })
+
+      expect(Number((screen.getByRole('slider', { name: /Maximum restaurants/i }) as HTMLInputElement).value)).toBe(20)
+    })
+
+    it('should include maxChoices in the createSession payload', async () => {
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByText(/Find restaurants/i)
+      const slider = screen.getByRole('slider', { name: /Maximum restaurants/i })
+      fireEvent.change(slider, { target: { value: 12 } })
+
+      const user = userEvent.setup()
+      const addressInput = await screen.findByLabelText(/Your location/i)
+      await act(async () => {
+        await user.clear(addressInput)
+        await user.type(addressInput, address)
+      })
+
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      await act(async () => {
+        await user.click(chooseButton)
+      })
+
+      await waitFor(() => expect(api.createSession).toHaveBeenCalled())
+      expect(api.createSession).toHaveBeenCalledWith(expect.objectContaining({ maxChoices: 12 }), recaptchaToken)
+    })
+  })
+
   describe('filter closing soon toggle', () => {
     it('should render the toggle defaulting to off', async () => {
       renderWithClient(<SessionCreate />)
-      const toggle = await screen.findByRole('switch', { name: /Hide closing soon/i })
+      const toggle = await screen.findByRole('switch', { name: /Skip closed & closing places/i })
       expect(toggle).toBeInTheDocument()
       expect(toggle).not.toBeChecked()
     })
@@ -397,19 +442,19 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const toggle = await screen.findByRole('switch', { name: /Hide closing soon/i })
+      const toggle = await screen.findByRole('switch', { name: /Skip closed & closing places/i })
       await act(async () => {
         await user.click(toggle)
       })
       expect(toggle).toBeChecked()
 
-      const addressInput = await screen.findByLabelText(/Your address/i)
+      const addressInput = await screen.findByLabelText(/Your location/i)
       await act(async () => {
         await user.clear(addressInput)
         await user.type(addressInput, '90210')
       })
 
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -427,13 +472,13 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const addressInput = await screen.findByLabelText(/Your address/i)
+      const addressInput = await screen.findByLabelText(/Your location/i)
       await act(async () => {
         await user.clear(addressInput)
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Choose restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -448,7 +493,7 @@ describe('SessionCreate component', () => {
     it('should display the defaultMiles value in the distance label', async () => {
       renderWithClient(<SessionCreate />)
 
-      await screen.findByText(/Choose restaurants/i)
+      await screen.findByText(/Find restaurants/i)
       expect(screen.getByText(`${sessionConfigResult.radius.defaultMiles} miles`)).toBeInTheDocument()
     })
 
@@ -459,7 +504,7 @@ describe('SessionCreate component', () => {
       })
       renderWithClient(<SessionCreate />)
 
-      await screen.findByText(/Choose restaurants/i)
+      await screen.findByText(/Find restaurants/i)
       expect(screen.getByText('5 miles')).toBeInTheDocument()
     })
   })
@@ -470,15 +515,15 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       expect(screen.getByText(/Scouting the competition/i)).toBeInTheDocument()
-      expect(screen.queryByText(/Choose restaurants/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Find restaurants/i)).not.toBeInTheDocument()
     })
 
     it('should show error message when config fetch fails', async () => {
       jest.mocked(api).fetchSessionConfig.mockRejectedValueOnce(new Error('Network error'))
       renderWithClient(<SessionCreate />)
 
-      expect(await screen.findByText(/Failed to load session options/i)).toBeInTheDocument()
-      expect(screen.queryByText(/Choose restaurants/i)).not.toBeInTheDocument()
+      expect(await screen.findByText(/We couldn't load your options/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Find restaurants/i)).not.toBeInTheDocument()
     })
 
     it('should call reload when Refresh button is clicked on error state', async () => {

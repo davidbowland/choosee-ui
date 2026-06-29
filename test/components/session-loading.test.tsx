@@ -57,7 +57,7 @@ describe('LoadingPhase', () => {
   it('should render error message with link home when errorMessage is set', () => {
     render(<LoadingPhase session={{ ...baseSession, errorMessage: 'Server exploded' }} />)
     expect(screen.getByText(/Server exploded/i)).toBeInTheDocument()
-    expect(screen.getByText(/Go back home/i)).toHaveAttribute('href', '/')
+    expect(screen.getByText(/Go home/i)).toHaveAttribute('href', '/')
   })
 
   it('should render timeout message when timeoutAt is in the past', () => {

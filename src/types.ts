@@ -36,8 +36,11 @@ export interface ChoiceDetail {
   ratingsTotal?: number
   photos: string[]
   openHours?: string[]
+  openNow?: boolean
+  isClosingSoon?: boolean
   placeTypes?: string[]
   website?: string
+  distanceMiles?: number
 }
 
 export type ChoicesMap = Record<string, ChoiceDetail>
@@ -77,6 +80,7 @@ export interface SortOption {
   value: string
   label: string
   description: string
+  maxChoices: number
 }
 
 export interface RadiusConfig {
@@ -98,6 +102,7 @@ export interface NewSessionRequest {
   radiusMiles: number
   rankBy: string
   filterClosingSoon?: boolean
+  maxChoices?: number
   latitude?: number
   longitude?: number
 }

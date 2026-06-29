@@ -11,7 +11,7 @@ const PrivacyPage = (): React.ReactNode => {
         <title>Privacy Policy | dbowland.com</title>
       </Head>
       <AppBar />
-      <div className="mx-auto max-w-[900px] shadow-md">
+      <div className="mx-auto max-w-2xl">
         <PrivacyPolicy />
       </div>
     </>

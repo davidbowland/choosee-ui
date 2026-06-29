@@ -8,9 +8,9 @@ export const sessionConfigResult: SessionConfig = {
     { display: 'Bar', value: 'bar', canBeExcluded: false },
   ],
   sortOptions: [
-    { value: 'POPULARITY', label: 'Most popular', description: 'Highest rated first' },
-    { value: 'DISTANCE', label: 'Closest', description: 'Nearest to you' },
-    { value: 'ALL', label: 'Both', description: 'Popular & nearby' },
+    { value: 'POPULARITY', label: 'Most popular', description: 'Highest rated first', maxChoices: 20 },
+    { value: 'DISTANCE', label: 'Closest', description: 'Nearest to you', maxChoices: 20 },
+    { value: 'ALL', label: 'Both', description: 'Popular & nearby', maxChoices: 40 },
   ],
   radius: { defaultMiles: 10, minMiles: 1, maxMiles: 30 },
 }

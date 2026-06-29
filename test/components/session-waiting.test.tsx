@@ -90,41 +90,41 @@ describe('WaitingPhase', () => {
 
   it('should display voting progress', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    expect(screen.getByText(/Voters finished/i)).toBeInTheDocument()
+    expect(screen.getByText(/Voted/i)).toBeInTheDocument()
     expect(screen.getByText(/1/)).toBeInTheDocument()
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
   })
 
-  it('should display Force next round button', () => {
+  it('should display Skip to next round button', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    expect(screen.getByText(/Force next round/i)).toBeInTheDocument()
+    expect(screen.getByText(/Skip to next round/i)).toBeInTheDocument()
   })
 
-  it('should show confirmation dialog when Force next round is clicked', async () => {
+  it('should show confirmation dialog when Skip to next round is clicked', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Force next round/i))
-    expect(screen.getByText(/Some voters haven't finished voting/i)).toBeInTheDocument()
+    await user.click(screen.getByText(/Skip to next round/i))
+    expect(screen.getByText(/Not everyone has voted yet/i)).toBeInTheDocument()
   })
 
   it('should close confirmation dialog on Cancel', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Force next round/i))
-    expect(screen.getByText(/Some voters haven't finished voting/i)).toBeInTheDocument()
+    await user.click(screen.getByText(/Skip to next round/i))
+    expect(screen.getByText(/Not everyone has voted yet/i)).toBeInTheDocument()
 
     await user.click(screen.getByText('Cancel'))
-    expect(screen.queryByText(/Some voters haven't finished voting/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Not everyone has voted yet/i)).not.toBeInTheDocument()
   })
 
   it('should close confirmation dialog on Escape key', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Force next round/i))
-    expect(screen.getByText(/Some voters haven't finished voting/i)).toBeInTheDocument()
+    await user.click(screen.getByText(/Skip to next round/i))
+    expect(screen.getByText(/Not everyone has voted yet/i)).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
-    expect(screen.queryByText(/Some voters haven't finished voting/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Not everyone has voted yet/i)).not.toBeInTheDocument()
   })
 
   it('should call closeRound when Confirm is clicked and update session cache', async () => {
@@ -134,7 +134,7 @@ describe('WaitingPhase', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     const spy = jest.spyOn(queryClient, 'setQueryData')
 
-    await user.click(screen.getByText(/Force next round/i))
+    await user.click(screen.getByText(/Skip to next round/i))
     await user.click(screen.getByText('Confirm'))
 
     await waitFor(() => {
@@ -146,13 +146,13 @@ describe('WaitingPhase', () => {
 
   it('should display notification checkbox', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    expect(screen.getByText(/Text me when the next round starts/i)).toBeInTheDocument()
+    expect(screen.getByText(/Text me when voting opens/i)).toBeInTheDocument()
   })
 
   it('should show phone input when notify checked and user has no phone', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
     expect(screen.getByPlaceholderText('+1 (555) 123-4567')).toBeInTheDocument()
   })
 
@@ -162,7 +162,7 @@ describe('WaitingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} currentUser={userWithPhone} />)
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
 
     await waitFor(() => {
       expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true)
@@ -175,7 +175,7 @@ describe('WaitingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
 
     const phoneInput = screen.getByPlaceholderText('+1 (555) 123-4567')
     await user.type(phoneInput, '5559999999')
@@ -202,7 +202,7 @@ describe('WaitingPhase', () => {
   it('should render dialog with aria-modal attribute', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Force next round/i))
+    await user.click(screen.getByText(/Skip to next round/i))
     const dialog = screen.getByRole('alertdialog')
     expect(dialog).toBeInTheDocument()
   })
@@ -211,10 +211,10 @@ describe('WaitingPhase', () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
     // Check it
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
     expect(screen.getByPlaceholderText('+1 (555) 123-4567')).toBeInTheDocument()
     // Uncheck it
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
     expect(screen.queryByPlaceholderText('+1 (555) 123-4567')).not.toBeInTheDocument()
   })
 
@@ -224,10 +224,10 @@ describe('WaitingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} currentUser={userWithPhone} />)
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
 
     await waitFor(() => {
-      expect(screen.getByText(/Text me when the next round starts/i)).toBeInTheDocument()
+      expect(screen.getByText(/Text me when voting opens/i)).toBeInTheDocument()
     })
   })
 
@@ -243,7 +243,7 @@ describe('WaitingPhase', () => {
   it('should not submit empty phone', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Text me when the next round starts/i))
+    await user.click(screen.getByText(/Text me when voting opens/i))
     // Save button should be disabled with empty phone
     const saveBtn = screen.getByText('Save')
     expect(saveBtn).toBeDisabled()
@@ -259,7 +259,7 @@ describe('WaitingPhase', () => {
   it('should handle session with no bracket for current round', () => {
     const sessionNoBracket = { ...mockSession, bracket: [] as [string, string][][] }
     renderWithClient(<WaitingPhase {...defaultProps} session={sessionNoBracket} />)
-    expect(screen.getByText(/Voters finished/i)).toBeInTheDocument()
+    expect(screen.getByText(/Voted/i)).toBeInTheDocument()
   })
 
   it('should show info toast and refresh session on ROUND_NOT_CURRENT close error', async () => {
@@ -270,7 +270,7 @@ describe('WaitingPhase', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     const spy = jest.spyOn(queryClient, 'invalidateQueries')
 
-    await user.click(screen.getByText(/Force next round/i))
+    await user.click(screen.getByText(/Skip to next round/i))
     await user.click(screen.getByText('Confirm'))
 
     await waitFor(() => {
@@ -278,7 +278,7 @@ describe('WaitingPhase', () => {
     })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['session', 'test-session'] })
     // Confirm dialog should be closed
-    expect(screen.queryByText(/Some voters haven't finished voting/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Not everyone has voted yet/i)).not.toBeInTheDocument()
 
     spy.mockRestore()
   })
@@ -290,7 +290,7 @@ describe('WaitingPhase', () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
 
-    await user.click(screen.getByText(/Force next round/i))
+    await user.click(screen.getByText(/Skip to next round/i))
     await user.click(screen.getByText('Confirm'))
 
     await waitFor(() => {
@@ -298,24 +298,24 @@ describe('WaitingPhase', () => {
     })
   })
 
-  it('should show solo voter hint and "Waiting for round to end" when voterCount <= 1 on first round', () => {
+  it('should show solo voter hint and "Wrapping up this round" when voterCount <= 1 on first round', () => {
     const soloSession = { ...mockSession, voterCount: 1, votersSubmitted: 1 }
     renderWithClient(<WaitingPhase {...defaultProps} session={soloSession} />)
-    expect(screen.getByText(/You're the only voter/i)).toBeInTheDocument()
-    expect(screen.getByText(/Waiting for round to end/i)).toBeInTheDocument()
+    expect(screen.getByText(/You're the only one here/i)).toBeInTheDocument()
+    expect(screen.getByText(/Wrapping up this round/i)).toBeInTheDocument()
     expect(screen.queryByText(/Waiting for others to finish voting/i)).not.toBeInTheDocument()
   })
 
   it('should show "Waiting for others" when voterCount > 1', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Waiting for round to end/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Wrapping up this round/i)).not.toBeInTheDocument()
   })
 
   it('should not show solo voter hint after first round', () => {
     const laterSession = { ...mockSession, voterCount: 1, currentRound: 1 }
     renderWithClient(<WaitingPhase {...defaultProps} session={laterSession} />)
-    expect(screen.queryByText(/You're the only voter/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/You're the only one here/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
   })
 
@@ -326,8 +326,8 @@ describe('WaitingPhase', () => {
 
     it('should show auth gate instead of notify checkbox', () => {
       renderWithClient(<WaitingPhase {...defaultProps} />)
-      expect(screen.getByText('Sign in with Google to get SMS notifications')).toBeInTheDocument()
-      expect(screen.queryByText(/Text me when the next round starts/i)).not.toBeInTheDocument()
+      expect(screen.getByText('Sign in with Google for text reminders')).toBeInTheDocument()
+      expect(screen.queryByText(/Text me when voting opens/i)).not.toBeInTheDocument()
     })
 
     it('should not show phone input', () => {

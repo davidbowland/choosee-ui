@@ -45,19 +45,19 @@ const Share = ({ sessionId, userId }: ShareProps): React.ReactNode => {
       if (err instanceof ApiError && err.response) {
         const { statusCode, body } = err.response
         if (statusCode === 401) {
-          setErrorMsg('You must be signed in to send SMS invites.')
+          setErrorMsg('Sign in to invite people by text.')
           return
         }
         if (statusCode === 403) {
-          setErrorMsg(parseApiMessage(body, 'Phone number mismatch with your Google account.'))
+          setErrorMsg(parseApiMessage(body, 'That phone number is linked to a different account.'))
           return
         }
         if (statusCode === 429) {
-          setErrorMsg('Rate limit reached. Please try again later.')
+          setErrorMsg("You're going a bit fast — try again in a minute.")
           return
         }
         if (statusCode === 400) {
-          setErrorMsg(parseApiMessage(body, 'Bad request. Please try again.'))
+          setErrorMsg(parseApiMessage(body, "That didn't work. Try again."))
           return
         }
       }

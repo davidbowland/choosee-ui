@@ -64,10 +64,10 @@ describe('WinnerPhase', () => {
     expect(screen.getByText('WINNER')).toBeInTheDocument()
   })
 
-  it('should display Start new session button linking to /', async () => {
+  it('should display Start over button linking to /', async () => {
     const user = userEvent.setup()
     render(<WinnerPhase choices={mockChoices} session={mockSession} />)
-    await user.click(screen.getByText(/Start new session/i))
+    await user.click(screen.getByText(/Start over/i))
     expect(mockPush).toHaveBeenCalledWith('/')
   })
 
@@ -99,11 +99,11 @@ describe('WinnerPhase', () => {
 
   it('should show filter badge when filterClosingSoon is true', () => {
     render(<WinnerPhase choices={mockChoices} session={{ ...mockSession, filterClosingSoon: true }} />)
-    expect(screen.getByText(/Open restaurants only/i)).toBeInTheDocument()
+    expect(screen.getByText(/Closing soon hidden/i)).toBeInTheDocument()
   })
 
   it('should not show filter badge when filterClosingSoon is false', () => {
     render(<WinnerPhase choices={mockChoices} session={mockSession} />)
-    expect(screen.queryByText(/Open restaurants only/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Closing soon hidden/i)).not.toBeInTheDocument()
   })
 })

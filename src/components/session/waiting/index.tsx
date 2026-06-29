@@ -36,6 +36,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [notifyChecked, setNotifyChecked] = useState(false)
+  const [hasShared, setHasShared] = useState(false)
   const phoneInput = usePhoneInput()
   const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'subscribed'>('idle')
 
@@ -98,12 +99,12 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
 
   return (
     <WaitingContainer>
-      {solo && <SoloVoterHint />}
+      {solo && !hasShared && <SoloVoterHint />}
       {session.filterClosingSoon && <FilterClosingSoonBadge />}
 
       <ProgressText
         finished={session.votersSubmitted}
-        subtitle={solo ? 'Waiting for round to end...' : 'Waiting for others to finish voting...'}
+        subtitle={solo ? 'Wrapping up this round...' : 'Waiting for others to finish voting...'}
         total={session.voterCount}
       />
 
@@ -136,7 +137,9 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       {/* Action buttons in a compact row */}
       <ActionRow>
         <BracketButton onPress={() => setBracketOpen(true)} />
-        <Share sessionId={sessionId} userId={currentUser.userId} />
+        <div onClick={() => setHasShared(true)}>
+          <Share sessionId={sessionId} userId={currentUser.userId} />
+        </div>
         <ForceRoundButton isLoading={closeMutation.isPending} onPress={() => setConfirmOpen(true)} />
       </ActionRow>
 

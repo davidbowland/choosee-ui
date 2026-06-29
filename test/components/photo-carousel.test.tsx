@@ -115,7 +115,8 @@ describe('PhotoCarousel', () => {
 
   it('should render dot indicators when showThumbnails is false', () => {
     render(<PhotoCarousel images={images} showThumbnails={false} />)
-    const dots = screen.getAllByRole('button')
+    const allButtons = screen.getAllByRole('button')
+    const dots = allButtons.filter((btn) => btn.getAttribute('aria-label')?.startsWith('Photo'))
     expect(dots).toHaveLength(3)
     expect(dots[0]).toHaveAttribute('aria-label', 'Photo 1')
   })
@@ -133,7 +134,8 @@ describe('PhotoCarousel', () => {
   it('should scroll to dot index when clicked', async () => {
     const user = userEvent.setup()
     render(<PhotoCarousel images={images} showThumbnails={false} />)
-    const dots = screen.getAllByRole('button')
+    const allButtons = screen.getAllByRole('button')
+    const dots = allButtons.filter((btn) => btn.getAttribute('aria-label')?.startsWith('Photo'))
     await user.click(dots[2])
     expect(mockMainApi.scrollTo).toHaveBeenCalledWith(2)
   })

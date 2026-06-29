@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import {
   AddressField,
@@ -9,9 +9,12 @@ import {
   DistanceSlider,
   FilterClosingSoonToggle,
   LoadingCard,
+  MaxChoicesSlider,
   MultiSelect,
   SortByFieldset,
   SubmitButton,
+  UseMyLocationButton,
+  VoteCountHint,
 } from './elements'
 import FeedbackMessage from '@components/feedback-message'
 import { createSession, fetchAddress, fetchSessionConfig } from '@services/api'
@@ -45,11 +48,13 @@ const SessionCreate = (): React.ReactNode => {
   const [choiceTypes, setChoiceTypes] = useState<PlaceTypeDisplay[]>([])
   const [excludedTypes, setExcludedTypes] = useState<PlaceTypeDisplay[]>([])
   const [errorMessage, setErrorMessage] = useState<string | undefined>()
+  const [maxChoices, setMaxChoices] = useState<number | undefined>()
   const [radiusMiles, setRadiusMiles] = useState<number | undefined>()
   const [rankBy, setRankBy] = useState<string | undefined>()
   const [filterClosingSoon, setFilterClosingSoon] = useState(false)
-  const addressTouchedRef = useRef(false)
   const [defaultsApplied, setDefaultsApplied] = useState(false)
+  const [locationError, setLocationError] = useState<string | undefined>()
+  const [isLocating, setIsLocating] = useState(false)
 
   const clearError = useCallback(() => setErrorMessage(undefined), [])
   const [isNavigating, setIsNavigating] = useState(false)
@@ -78,7 +83,7 @@ const SessionCreate = (): React.ReactNode => {
       if (error instanceof ApiError && error.response?.statusCode === 403) {
         setErrorMessage('Unusual traffic detected. Please try again later.')
       } else {
-        setErrorMessage('Error generating voting session. Please try again later.')
+        setErrorMessage('Something went wrong setting up your restaurants. Try again.')
       }
     },
   })
@@ -89,6 +94,7 @@ const SessionCreate = (): React.ReactNode => {
     setExcludedTypes(config.placeTypes.filter((t) => t.defaultExclude))
     setRankBy(config.sortOptions[0]?.value)
     setRadiusMiles(config.radius.defaultMiles)
+    setMaxChoices(config.sortOptions[0]?.maxChoices)
     setDefaultsApplied(true)
   }, [config, defaultsApplied])
 
@@ -102,25 +108,54 @@ const SessionCreate = (): React.ReactNode => {
     }
   }, [])
 
-  useEffect(() => {
-    if (!navigator.geolocation) return
+  const handleUseMyLocation = (): void => {
+    if (!navigator.geolocation) {
+      setLocationError("Location services aren't supported by your browser. Please enter your address manually.")
+      return
+    }
+    setIsLocating(true)
+    setLocationError(undefined)
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
           await waitForRecaptcha()
           const token = await grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
           const result = await fetchAddress(pos.coords.latitude, pos.coords.longitude, token)
-          if (!addressTouchedRef.current) {
-            setAddress(result.address)
-          }
+          setAddress(result.address)
         } catch {
-          // Silently ignore — reverse geocode 404 or reCAPTCHA failure just leaves the field empty for manual entry
+          setLocationError("Couldn't look up your address. Please enter it manually.")
+        } finally {
+          setIsLocating(false)
         }
       },
-      undefined,
+      (err) => {
+        setIsLocating(false)
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError('Location access was denied. Please enter your address manually.')
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setLocationError('Your location could not be determined. Please enter your address manually.')
+        } else if (err.code === err.TIMEOUT) {
+          setLocationError('Location request timed out. Please enter your address manually.')
+        } else {
+          setLocationError('Location is unavailable. Please enter your address manually.')
+        }
+      },
       { enableHighAccuracy: true },
     )
-  }, [])
+  }
+
+  const handleRankByChange = (value: string): void => {
+    if (!config) return
+    const newOption = config.sortOptions.find((o) => o.value === value)
+    const oldOption = config.sortOptions.find((o) => o.value === rankBy)
+    if (!newOption) return
+    setRankBy(value)
+    if (maxChoices !== undefined) {
+      const oldMax = oldOption?.maxChoices ?? maxChoices
+      setMaxChoices(maxChoices >= oldMax ? newOption.maxChoices : Math.min(maxChoices, newOption.maxChoices))
+    }
+  }
 
   const handleChoiceTypeChange = (value: string): void => {
     if (!config) return
@@ -151,7 +186,7 @@ const SessionCreate = (): React.ReactNode => {
   }
 
   const handleSubmit = (): void => {
-    if (radiusMiles === undefined || rankBy === undefined) return
+    if (radiusMiles === undefined || rankBy === undefined || maxChoices === undefined) return
 
     if (!address) {
       setAddressError('Please enter your address to begin')
@@ -171,6 +206,7 @@ const SessionCreate = (): React.ReactNode => {
       radiusMiles,
       rankBy,
       filterClosingSoon,
+      maxChoices,
     })
   }
 
@@ -179,23 +215,18 @@ const SessionCreate = (): React.ReactNode => {
   }
 
   if (isConfigError || !config) {
-    return <LoadingCard error="Failed to load session options. Please refresh or try again later." />
+    return <LoadingCard error="We couldn't load your options. Refresh and try again." />
   }
 
   const isLoading = sessionMutation.isPending || isNavigating
 
+  const selectedSortOption = config.sortOptions.find((o) => o.value === (rankBy ?? config.sortOptions[0]?.value))
+
   return (
     <>
       <CreateCard>
-        <AddressField
-          disabled={isLoading}
-          error={addressError}
-          onChange={(v) => {
-            addressTouchedRef.current = true
-            setAddress(v)
-          }}
-          value={address}
-        />
+        <AddressField disabled={isLoading} error={addressError} onChange={(v) => setAddress(v)} value={address} />
+        <UseMyLocationButton error={locationError} isLoading={isLocating} onPress={handleUseMyLocation} />
         <MultiSelect
           disabled={isLoading}
           items={config.placeTypes.map((t) => ({ id: t.value, name: t.display }))}
@@ -214,10 +245,20 @@ const SessionCreate = (): React.ReactNode => {
         />
         <SortByFieldset
           isLoading={isLoading}
-          onChange={setRankBy}
+          onChange={handleRankByChange}
           options={config.sortOptions}
           rankBy={rankBy ?? config.sortOptions[0]?.value}
         />
+        {maxChoices !== undefined && selectedSortOption && (
+          <MaxChoicesSlider
+            disabled={isLoading}
+            max={selectedSortOption.maxChoices}
+            min={2}
+            onChange={setMaxChoices}
+            value={maxChoices}
+          />
+        )}
+        {maxChoices !== undefined && <VoteCountHint maxChoices={maxChoices} />}
         <DistanceSlider
           disabled={isLoading}
           max={config.radius.maxMiles}
@@ -226,7 +267,7 @@ const SessionCreate = (): React.ReactNode => {
           value={radiusMiles ?? config.radius.defaultMiles}
         />
         <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
-        <p className="text-center text-xs">Voting sessions automatically expire after 24 hours</p>
+        <p className="text-center text-xs">Sessions usually expire within 24 hours</p>
         <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
       </CreateCard>
       <FeedbackMessage autoHideDuration={15_000} message={errorMessage} onClose={clearError} severity="error" />

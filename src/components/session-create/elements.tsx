@@ -6,9 +6,6 @@ import {
   AutocompleteTrigger,
   AutocompleteValue,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Description,
   EmptyState,
   Label,
@@ -28,39 +25,39 @@ import {
   useFilter,
 } from '@heroui/react'
 import type { Key } from '@heroui/react'
-import { Clock } from 'lucide-react'
+import { Clock, LocateFixed } from 'lucide-react'
 import React from 'react'
 
 import { LoadingSpinner } from '@components/session/loading'
 import type { SortOption } from '@types'
 
 export const LoadingCard = ({ error }: { error?: string }): React.ReactNode => (
-  <Card className="mx-auto w-full max-w-[600px] p-4">
-    <CardContent>
+  <div className="arena-glass-outer">
+    <div className="arena-glass-inner p-6">
       {error ? (
         <div className="flex flex-col items-center gap-4 py-12">
-          <p className="text-center text-sm text-danger">{error}</p>
-          <Button onPress={() => window.location.reload()} variant="secondary">
+          <p className="text-center text-sm text-red-400">{error}</p>
+          <Button
+            className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#D4D4D4]"
+            onPress={() => window.location.reload()}
+            variant="secondary"
+          >
             Refresh
           </Button>
         </div>
       ) : (
         <LoadingSpinner />
       )}
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 )
 
 export const CreateCard = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <Card className="mx-auto w-full max-w-[600px] p-4">
-    <CardHeader className="flex-col items-start gap-1 pb-2">
-      <h3 className="choosee-brand text-3xl text-foreground">What are we eating?</h3>
-      <p className="text-sm text-default-500">Set up a bracket to find the winner</p>
-    </CardHeader>
-    <CardContent>
-      <div className="flex flex-col gap-5">{children}</div>
-    </CardContent>
-  </Card>
+  <div className="arena-glass-outer">
+    <div className="arena-glass-inner p-6">
+      <div className="flex flex-col gap-[18px]">{children}</div>
+    </div>
+  </div>
 )
 
 export const AddressField = ({
@@ -75,27 +72,50 @@ export const AddressField = ({
   onChange: (value: string) => void
 }): React.ReactNode => (
   <div className="w-full">
-    <Label>Your address</Label>
+    <div className="mb-[5px] text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Your location</div>
     <Input
-      aria-label="Your address"
+      aria-label="Your location"
       autoComplete="postal-code"
       className="w-full"
       disabled={disabled}
       name="address"
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-      placeholder="Enter your address"
+      placeholder="Address or ZIP code"
       type="text"
       value={value}
     />
-    {error && <span className="text-sm text-red-500">{error}</span>}
+    {error && <span className="mt-1 block text-sm text-red-400">{error}</span>}
+  </div>
+)
+
+export const UseMyLocationButton = ({
+  error,
+  isLoading,
+  onPress,
+}: {
+  error?: string
+  isLoading: boolean
+  onPress: () => void
+}): React.ReactNode => (
+  <div className="flex flex-col gap-1">
+    <button
+      className="flex items-center gap-1.5 self-start text-xs text-[#F59E0B] hover:text-[#FBBF24] hover:underline disabled:opacity-40"
+      disabled={isLoading}
+      onClick={onPress}
+      type="button"
+    >
+      {isLoading ? <Spinner className="h-3 w-3" size="sm" /> : <LocateFixed className="h-3 w-3" />}
+      {isLoading ? 'Detecting location…' : 'Use my location'}
+    </button>
+    {error && <span className="text-xs text-red-400">{error}</span>}
   </div>
 )
 
 const radioBaseClass = [
-  'group relative flex-col gap-4 rounded-xl border px-4 py-3 transition-all',
-  'border-default-200 hover:border-default-300 hover:bg-default-50',
-  'data-[selected=true]:border-primary data-[selected=true]:bg-primary/10',
-  'data-[focus-visible=true]:border-primary data-[focus-visible=true]:bg-primary/10',
+  'group relative flex-col gap-1 rounded-[10px] border px-3 py-2.5 text-[11px] font-medium transition-all',
+  'border-white/[0.06] bg-white/[0.02] text-[#4B5563]',
+  'data-[selected=true]:border-[rgba(245,158,11,0.25)] data-[selected=true]:bg-[rgba(245,158,11,0.08)] data-[selected=true]:text-[#F59E0B]',
+  'data-[focus-visible=true]:border-[rgba(245,158,11,0.25)] data-[focus-visible=true]:bg-[rgba(245,158,11,0.08)]',
 ].join(' ')
 
 export const SortByFieldset = ({
@@ -110,21 +130,66 @@ export const SortByFieldset = ({
   onChange: (value: string) => void
 }): React.ReactNode => (
   <RadioGroup isDisabled={isLoading} onChange={(v) => onChange(v)} value={rankBy} variant="secondary">
-    <Label>Sort by</Label>
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Sort by</Label>
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
       {options.map(({ value, label, description }) => (
         <Radio className={radioBaseClass} key={value} value={value}>
-          <Radio.Control className="absolute top-3 right-3 size-5">
+          <Radio.Control className="absolute top-2.5 right-2.5 size-4">
             <Radio.Indicator />
           </Radio.Control>
-          <Radio.Content className="flex flex-col gap-1">
-            <Label>{label}</Label>
-            <Description>{description}</Description>
+          <Radio.Content className="flex flex-col gap-0.5">
+            <Label className="text-[11px] font-semibold">{label}</Label>
+            <Description className="text-[10px]">{description}</Description>
           </Radio.Content>
         </Radio>
       ))}
     </div>
   </RadioGroup>
+)
+
+export const VoteCountHint = ({ maxChoices }: { maxChoices: number }): React.ReactNode => {
+  const maxVotes = maxChoices - 1
+  return (
+    <p className="text-[11px] text-[#4B5563]">
+      Up to <span className="font-semibold text-[#F59E0B]">{maxChoices}</span> restaurants —{' '}
+      <span className="font-semibold text-[#F59E0B]">{maxVotes}</span> {maxVotes === 1 ? 'vote' : 'votes'} per person
+    </p>
+  )
+}
+
+export const MaxChoicesSlider = ({
+  value,
+  disabled,
+  min,
+  max,
+  onChange,
+}: {
+  value: number
+  disabled: boolean
+  min: number
+  max: number
+  onChange: (v: number) => void
+}): React.ReactNode => (
+  <div className="w-full">
+    <div className="mb-3 flex items-center justify-between text-sm">
+      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Maximum restaurants</span>
+      <span className="font-semibold text-[#F59E0B]">{value}</span>
+    </div>
+    <SliderRoot
+      aria-label="Maximum restaurants"
+      isDisabled={disabled}
+      maxValue={max}
+      minValue={min}
+      onChange={(v: number | number[]) => onChange(Array.isArray(v) ? v[0] : v)}
+      step={1}
+      value={value}
+    >
+      <SliderTrack>
+        <SliderFill />
+        <SliderThumb />
+      </SliderTrack>
+    </SliderRoot>
+  </div>
 )
 
 export const DistanceSlider = ({
@@ -142,8 +207,8 @@ export const DistanceSlider = ({
 }): React.ReactNode => (
   <div className="w-full">
     <div className="mb-3 flex items-center justify-between text-sm">
-      <span className="font-medium">Maximum distance</span>
-      <span className="font-semibold text-primary">
+      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Maximum distance</span>
+      <span className="font-semibold text-[#F59E0B]">
         {value} {value === 1 ? 'mile' : 'miles'}
       </span>
     </div>
@@ -165,9 +230,20 @@ export const DistanceSlider = ({
 )
 
 export const SubmitButton = ({ isLoading, onPress }: { isLoading: boolean; onPress: () => void }): React.ReactNode => (
-  <Button className="w-full" isDisabled={isLoading} onPress={onPress} variant="primary">
-    {isLoading && <Spinner color="current" size="sm" />}
-    {isLoading ? 'Loading...' : 'Choose restaurants'}
+  <Button
+    className="flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] pl-5 pr-[7px] text-[13px] font-bold text-[#0A0A0B] hover:opacity-90"
+    isDisabled={isLoading}
+    onPress={onPress}
+    variant="primary"
+  >
+    {isLoading ? 'Loading...' : 'Find restaurants'}
+    {isLoading ? (
+      <Spinner color="current" size="sm" />
+    ) : (
+      <div aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.18] text-sm">
+        →
+      </div>
+    )}
   </Button>
 )
 
@@ -214,7 +290,7 @@ export const MultiSelect = ({
       selectionMode="multiple"
       value={selectedKeys as Key[]}
     >
-      <Label>{label}</Label>
+      <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">{label}</Label>
       <AutocompleteTrigger>
         <AutocompleteValue>
           {({ defaultChildren, isPlaceholder, state }: any) => {
@@ -274,8 +350,10 @@ export const FilterClosingSoonToggle = ({
   onChange: (checked: boolean) => void
 }): React.ReactNode => (
   <div
-    className={`rounded-xl border p-3.5 transition-all ${
-      checked ? 'border-primary bg-primary/5' : 'border-default-200 hover:border-default-300 hover:bg-default-50'
+    className={`rounded-[10px] border p-3 transition-all ${
+      checked
+        ? 'border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.06)]'
+        : 'border-white/[0.05] bg-white/[0.02] hover:border-white/[0.09]'
     }`}
   >
     <Switch className="w-full" isDisabled={disabled} isSelected={checked} onChange={onChange}>
@@ -283,14 +361,16 @@ export const FilterClosingSoonToggle = ({
         <div className="flex items-center gap-3">
           <div
             className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
-              checked ? 'bg-primary/15 text-primary' : 'bg-default-100 text-default-400'
+              checked ? 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]' : 'bg-white/[0.05] text-[#4B5563]'
             }`}
           >
             <Clock className="h-4 w-4" />
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
-            <Label className="text-sm font-medium text-default-700">Hide closing soon</Label>
-            <Description className="text-xs text-default-400">Skip places closing within an hour</Description>
+            <Label className="text-sm font-medium text-[#D4D4D4]">Skip closed & closing places</Label>
+            <Description className="text-xs text-[#4B5563]">
+              Skip places already closed or closing within an hour
+            </Description>
           </div>
         </div>
       </Switch.Content>

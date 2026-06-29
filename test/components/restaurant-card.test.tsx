@@ -92,7 +92,7 @@ describe('RestaurantCard (default variant)', () => {
 
   it('should apply winner border class when variant is winner', () => {
     const { container } = render(<RestaurantCard choice={baseChoice} variant="winner" />)
-    expect(container.querySelector('.border-success')).toBeInTheDocument()
+    expect(container.querySelector('.border-2')).toBeInTheDocument()
   })
 
   it('should render a Choose button that triggers onClick', async () => {
@@ -185,12 +185,12 @@ describe('RestaurantCard (voting variant)', () => {
 
   it('should show chosen overlay when selected is true', () => {
     const { container } = render(<RestaurantCard choice={baseChoice} selected={true} variant="voting" />)
-    expect(container.querySelector('.bg-success\\/30')).toBeInTheDocument()
+    expect(container.querySelector('[class*="0A0A0B"]')).toBeInTheDocument()
   })
 
   it('should show rejected overlay when selected is false', () => {
     const { container } = render(<RestaurantCard choice={baseChoice} selected={false} variant="voting" />)
-    expect(container.querySelector('.bg-black\\/50')).toBeInTheDocument()
+    expect(container.querySelector('.bg-black\\/60')).toBeInTheDocument()
   })
 
   it('should render carousel when multiple photos in voting variant', () => {
@@ -213,7 +213,7 @@ describe('RestaurantCard (voting variant)', () => {
     const noPhotoChoice = { ...baseChoice, photos: [] }
     const { container } = render(<RestaurantCard choice={noPhotoChoice} variant="voting" />)
     // Should render the UtensilsCrossed placeholder
-    expect(container.querySelector('.bg-default-100')).toBeInTheDocument()
+    expect(container.querySelector('.h-60')).toBeInTheDocument()
   })
 
   it('should not render details section when no address or details', () => {
