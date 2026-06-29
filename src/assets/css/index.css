@@ -107,6 +107,11 @@ html.dark {
   color: #f59e0b;
 }
 
+/* Hide reCAPTCHA floating badge — branding text is shown inline in the form */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}
+
 /* Drawer override — keep right-side width */
 @layer components {
   .drawer__dialog[data-placement='right'] {

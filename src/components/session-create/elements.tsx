@@ -137,7 +137,7 @@ export const SortByFieldset = ({
           <Radio.Control className="absolute top-2.5 right-2.5 size-4">
             <Radio.Indicator />
           </Radio.Control>
-          <Radio.Content className="flex flex-col gap-0.5">
+          <Radio.Content className="flex flex-col items-start gap-0.5">
             <Label className="text-[11px] font-semibold">{label}</Label>
             <Description className="text-[10px]">{description}</Description>
           </Radio.Content>
@@ -356,7 +356,12 @@ export const FilterClosingSoonToggle = ({
         : 'border-white/[0.05] bg-white/[0.02] hover:border-white/[0.09]'
     }`}
   >
-    <Switch className="w-full" isDisabled={disabled} isSelected={checked} onChange={onChange}>
+    <Switch
+      className="flex w-full flex-row items-center"
+      isDisabled={disabled}
+      isSelected={checked}
+      onChange={onChange}
+    >
       <Switch.Content className="flex-1">
         <div className="flex items-center gap-3">
           <div
