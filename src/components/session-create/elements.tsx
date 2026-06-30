@@ -111,8 +111,8 @@ export const UseMyLocationButton = ({
   </div>
 )
 
-const radioBaseClass = [
-  'group relative flex-col gap-1 rounded-[10px] border px-3 py-2.5 text-[11px] font-medium transition-all',
+const radioContentClass = [
+  'group relative flex w-full flex-col items-start gap-0.5 rounded-[10px] border px-3 py-2.5 text-[11px] font-medium transition-all',
   'border-white/[0.06] bg-white/[0.02] text-[#4B5563]',
   'data-[selected=true]:border-[rgba(245,158,11,0.25)] data-[selected=true]:bg-[rgba(245,158,11,0.08)] data-[selected=true]:text-[#F59E0B]',
   'data-[focus-visible=true]:border-[rgba(245,158,11,0.25)] data-[focus-visible=true]:bg-[rgba(245,158,11,0.08)]',
@@ -133,11 +133,11 @@ export const SortByFieldset = ({
     <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Sort by</Label>
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
       {options.map(({ value, label, description }) => (
-        <Radio className={radioBaseClass} key={value} value={value}>
-          <Radio.Control className="absolute top-2.5 right-2.5 size-4">
-            <Radio.Indicator />
-          </Radio.Control>
-          <Radio.Content className="flex flex-col items-start gap-0.5">
+        <Radio key={value} value={value}>
+          <Radio.Content className={radioContentClass}>
+            <Radio.Control className="absolute top-2.5 right-2.5 size-4">
+              <Radio.Indicator />
+            </Radio.Control>
             <Label className="text-[11px] font-semibold">{label}</Label>
             <Description className="text-[10px]">{description}</Description>
           </Radio.Content>
@@ -349,39 +349,32 @@ export const FilterClosingSoonToggle = ({
   disabled: boolean
   onChange: (checked: boolean) => void
 }): React.ReactNode => (
-  <div
-    className={`rounded-[10px] border p-3 transition-all ${
-      checked
-        ? 'border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.06)]'
-        : 'border-white/[0.05] bg-white/[0.02] hover:border-white/[0.09]'
-    }`}
-  >
-    <Switch
-      className="flex w-full flex-row items-center"
-      isDisabled={disabled}
-      isSelected={checked}
-      onChange={onChange}
+  <Switch isDisabled={disabled} isSelected={checked} onChange={onChange}>
+    <Switch.Content
+      className={`flex w-full items-center justify-between gap-3 rounded-[10px] border p-3 transition-all ${
+        checked
+          ? 'border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.06)]'
+          : 'border-white/[0.05] bg-white/[0.02] hover:border-white/[0.09]'
+      }`}
     >
-      <Switch.Content className="flex-1">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
-              checked ? 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]' : 'bg-white/[0.05] text-[#4B5563]'
-            }`}
-          >
-            <Clock className="h-4 w-4" />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Label className="text-sm font-medium text-[#D4D4D4]">Skip closed & closing places</Label>
-            <Description className="text-xs text-[#4B5563]">
-              Skip places already closed or closing within an hour
-            </Description>
-          </div>
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
+            checked ? 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]' : 'bg-white/[0.05] text-[#4B5563]'
+          }`}
+        >
+          <Clock className="h-4 w-4" />
         </div>
-      </Switch.Content>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Label className="text-sm font-medium text-[#D4D4D4]">Skip closed & closing places</Label>
+          <Description className="cursor-[inherit]! text-xs text-[#4B5563]">
+            Skip places already closed or closing within an hour
+          </Description>
+        </div>
+      </div>
       <Switch.Control>
         <Switch.Thumb />
       </Switch.Control>
-    </Switch>
-  </div>
+    </Switch.Content>
+  </Switch>
 )
