@@ -55,7 +55,7 @@ describe('SessionCreate component', () => {
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -77,7 +77,7 @@ describe('SessionCreate component', () => {
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -100,7 +100,7 @@ describe('SessionCreate component', () => {
       const milesSliderInput = await screen.findByRole('slider', { name: /Maximum distance/i })
       fireEvent.change(milesSliderInput, { target: { value: 1 } })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -143,7 +143,7 @@ describe('SessionCreate component', () => {
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -162,7 +162,7 @@ describe('SessionCreate component', () => {
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -420,7 +420,7 @@ describe('SessionCreate component', () => {
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -454,7 +454,7 @@ describe('SessionCreate component', () => {
         await user.type(addressInput, '90210')
       })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })
@@ -478,7 +478,7 @@ describe('SessionCreate component', () => {
         await user.type(addressInput, address)
       })
 
-      const chooseButton = await screen.findByText(/Find restaurants/i, { selector: 'button' })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
       await act(async () => {
         await user.click(chooseButton)
       })

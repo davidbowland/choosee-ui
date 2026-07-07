@@ -1,7 +1,9 @@
-import { Button, Spinner } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { UserPlus } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import React, { useEffect, useRef, useState } from 'react'
+
+import { PillArrowButton } from '@components/pill-arrow-button'
 
 export const SectionContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mx-auto flex w-full max-w-md flex-col gap-4 p-4">{children}</div>
@@ -55,21 +57,13 @@ export const ConfirmButton = ({
   isLoading: boolean
   onPress: () => void
 }): React.ReactNode => (
-  <Button
-    className="flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] pl-5 pr-[7px] text-[13px] font-bold text-[#0A0A0B] hover:opacity-90 disabled:opacity-40"
-    isDisabled={isDisabled || isLoading}
+  <PillArrowButton
+    isDisabled={isDisabled}
+    isLoading={isLoading}
+    label="Let's go"
+    loadingLabel="Joining…"
     onPress={onPress}
-    variant="primary"
-  >
-    <span>{isLoading ? 'Joining…' : "Let's go"}</span>
-    {isLoading ? (
-      <Spinner color="current" size="sm" />
-    ) : (
-      <div aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.18] text-sm">
-        →
-      </div>
-    )}
-  </Button>
+  />
 )
 
 export const ErrorMessage = ({ message }: { message: string }): React.ReactNode => (

@@ -28,6 +28,7 @@ import type { Key } from '@heroui/react'
 import { Clock, LocateFixed } from 'lucide-react'
 import React from 'react'
 
+import { PillArrowButton } from '@components/pill-arrow-button'
 import { LoadingSpinner } from '@components/session/loading'
 import type { SortOption } from '@types'
 
@@ -230,21 +231,7 @@ export const DistanceSlider = ({
 )
 
 export const SubmitButton = ({ isLoading, onPress }: { isLoading: boolean; onPress: () => void }): React.ReactNode => (
-  <Button
-    className="flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] pl-5 pr-[7px] text-[13px] font-bold text-[#0A0A0B] hover:opacity-90"
-    isDisabled={isLoading}
-    onPress={onPress}
-    variant="primary"
-  >
-    {isLoading ? 'Loading...' : 'Find restaurants'}
-    {isLoading ? (
-      <Spinner color="current" size="sm" />
-    ) : (
-      <div aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.18] text-sm">
-        →
-      </div>
-    )}
-  </Button>
+  <PillArrowButton isLoading={isLoading} label="Find restaurants" loadingLabel="Loading..." onPress={onPress} />
 )
 
 export interface MultiSelectItem {

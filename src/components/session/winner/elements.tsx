@@ -2,6 +2,8 @@ import { Button } from '@heroui/react'
 import { Eye, Trophy } from 'lucide-react'
 import React from 'react'
 
+import { PillArrowButton } from '@components/pill-arrow-button'
+
 export const WinnerContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 p-4">{children}</div>
 )
@@ -30,16 +32,7 @@ export const WinnerTitle = (): React.ReactNode => (
 )
 
 export const NewSessionButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button
-    className="flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] pl-5 pr-[7px] text-[13px] font-bold text-[#0A0A0B] hover:opacity-90"
-    onPress={onPress}
-    variant="primary"
-  >
-    <span>Start over</span>
-    <div aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.18] text-sm">
-      →
-    </div>
-  </Button>
+  <PillArrowButton label="Start over" onPress={onPress} />
 )
 
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
