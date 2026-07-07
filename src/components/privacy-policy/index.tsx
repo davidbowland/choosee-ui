@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -102,8 +103,9 @@ const PrivacyPolicy = (): React.ReactNode => {
       </Section>
 
       <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.06)] pt-6 text-sm text-[#4B5563]">
-        <Link className="hover:text-[#D4D4D4]" href="/">
-          ← Back to Choosee
+        <Link className="flex items-center gap-1 hover:text-[#D4D4D4]" href="/">
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
+          Back to Choosee
         </Link>
         <span>Last updated June 2026</span>
       </div>
