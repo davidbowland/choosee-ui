@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
-import { BrandLink, GoogleSignInButton, NavContainer, UserMenu } from './elements'
+import { Brand, GoogleSignInButton, NavContainer, UserMenu } from './elements'
 import { useAuthContext } from '@components/auth-context'
 
 const AppBar = (): React.ReactNode => {
@@ -10,7 +10,7 @@ const AppBar = (): React.ReactNode => {
   return (
     <NavContainer>
       <Link href="/">
-        <BrandLink>Choosee</BrandLink>
+        <Brand>Choosee</Brand>
       </Link>
       {!isLoading && (
         <>
