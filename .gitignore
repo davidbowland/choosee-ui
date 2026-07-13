@@ -7,10 +7,6 @@ coverage/
 out/
 .next/
 
-# Generated artifacts (next-sitemap writes these to public/)
-public/sitemap*.xml
-public/robots.txt
-
 # Compiled Java class files
 *.class
 

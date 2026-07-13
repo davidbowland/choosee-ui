@@ -8,7 +8,7 @@ const Forbidden = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>403: Forbidden | dbowland.com</title>
+        <title>403: Forbidden | Choosee</title>
       </Head>
       <AppBar />
       <div className="mx-auto mt-8 max-w-md px-4 text-center">

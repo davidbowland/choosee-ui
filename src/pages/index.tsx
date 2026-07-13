@@ -9,7 +9,7 @@ import SessionCreate from '@components/session-create'
 const Index = (): React.ReactNode => (
   <>
     <Head>
-      <title>Choosee | dbowland.com</title>
+      <title>Choosee</title>
     </Head>
     <AppBar />
     <main className="mx-auto max-w-[1060px] px-5 pt-10 pb-12">

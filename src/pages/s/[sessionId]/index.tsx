@@ -22,7 +22,7 @@ const SessionPage = (): React.ReactNode => {
   return (
     <>
       <Head>
-        <title>Choosee | dbowland.com</title>
+        <title>Choosee</title>
       </Head>
       <AppBar />
       <main className="mx-auto flex min-h-[100dvh] max-w-4xl flex-col px-4 py-6">
