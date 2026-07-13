@@ -41,27 +41,29 @@ export const Brand = ({ children }: { children: React.ReactNode }): React.ReactN
 
 export const GoogleSignInButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <Button
-    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#D4D4D4] hover:bg-white/[0.09]"
+    aria-label="Sign in with Google"
+    className="shrink-0 rounded-full border-white/[0.09] bg-white/[0.05] px-3 text-[#D4D4D4] hover:bg-white/[0.09] sm:px-4"
     onPress={onPress}
     size="sm"
     variant="outline"
   >
     <GoogleLogo />
-    Sign in with Google
+    <span className="hidden sm:inline">Sign in with Google</span>
   </Button>
 )
 
 export const UserMenu = ({ name, onSignOut }: { name: string; onSignOut: () => void }): React.ReactNode => (
-  <div className="flex items-center gap-3">
-    <span className="text-sm text-[#6B7280]">{name}</span>
+  <div className="flex min-w-0 items-center gap-3">
+    <span className="hidden max-w-[120px] truncate text-sm text-[#6B7280] sm:inline">{name}</span>
     <Button
-      className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+      aria-label="Sign out"
+      className="shrink-0 rounded-full border-white/[0.09] bg-white/[0.05] px-3 text-[#6B7280] hover:bg-white/[0.09] sm:px-4"
       onPress={onSignOut}
       size="sm"
       variant="outline"
     >
       <LogOut className="h-4 w-4" />
-      Sign out
+      <span className="hidden sm:inline">Sign out</span>
     </Button>
   </div>
 )
