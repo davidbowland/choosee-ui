@@ -28,8 +28,8 @@ const Index = (): React.ReactNode => (
             <span className="text-[#F59E0B]">EATING?</span>
           </h1>
           <p className="max-w-[320px] text-sm leading-[1.7] text-[#4B5563]">
-            Can&apos;t agree on where to eat? We&apos;ll line up restaurants near you, and your group votes until
-            there&apos;s a winner.
+            Can&apos;t agree on where to eat? Start a Choosee &mdash; we&apos;ll line up restaurants near you and
+            everyone votes until there&apos;s a winner.
           </p>
         </div>
         {/* Form right column */}

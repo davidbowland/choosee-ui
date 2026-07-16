@@ -1,7 +1,7 @@
 import { Head, Html, Main, NextScript } from 'next/document'
 import React from 'react'
 
-const description = 'Vote your way to a restaurant with your group.'
+const description = 'Start a Choosee and vote your way to a restaurant.'
 const ogImage = `${process.env.NEXT_PUBLIC_ORIGIN}/og-image.png`
 
 export default function Document() {

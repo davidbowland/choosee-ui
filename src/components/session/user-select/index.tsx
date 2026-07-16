@@ -41,7 +41,7 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
     onError: (err: unknown) => {
       if (err instanceof ApiError && err.response) {
         if (err.response.statusCode === 400) {
-          setError(parseApiMessage(err.response.body, 'This group is full.'))
+          setError(parseApiMessage(err.response.body, 'This Choosee is full.'))
           return
         }
       }

@@ -62,7 +62,7 @@ describe('LoadingPhase', () => {
 
   it('should render timeout message when timeoutAt is in the past', () => {
     render(<LoadingPhase session={{ ...baseSession, timeoutAt: Date.now() - 1000 }} />)
-    expect(screen.getByText(/Session setup timed out/i)).toBeInTheDocument()
+    expect(screen.getByText(/Setup timed out/i)).toBeInTheDocument()
     const link = screen.getByRole('link', { name: /Try again/i })
     expect(link).toHaveAttribute('href', '/')
   })

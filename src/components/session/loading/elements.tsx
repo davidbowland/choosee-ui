@@ -70,7 +70,7 @@ export const ErrorAlert = ({ message }: { message: string }): React.ReactNode =>
 export const TimeoutAlert = (): React.ReactNode => (
   <div className="mx-auto flex max-w-md flex-col items-center gap-4 p-6">
     <AlertRoot status="warning">
-      <AlertDescription>Session setup timed out. Please try again.</AlertDescription>
+      <AlertDescription>Setup timed out. Please try again.</AlertDescription>
     </AlertRoot>
     <Link className="text-[#F59E0B] underline" href="/">
       Try again

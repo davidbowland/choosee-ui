@@ -267,18 +267,9 @@ const SessionCreate = (): React.ReactNode => {
           value={radiusMiles ?? config.radius.defaultMiles}
         />
         <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
-        <p className="text-center text-xs">Sessions usually expire within 24 hours</p>
+        <p className="text-center text-xs">Your Choosee expires in 24 hours</p>
         <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
-        <p className="text-center text-[10px] text-[#4B5563]">
-          Protected by reCAPTCHA &mdash;{' '}
-          <a className="underline" href="https://policies.google.com/privacy" rel="noreferrer" target="_blank">
-            Privacy
-          </a>{' '}
-          &amp;{' '}
-          <a className="underline" href="https://policies.google.com/terms" rel="noreferrer" target="_blank">
-            Terms
-          </a>
-        </p>
+        <p className="text-center text-[10px] text-[#4B5563]">This site is protected by reCAPTCHA</p>
       </CreateCard>
       <FeedbackMessage autoHideDuration={15_000} message={errorMessage} onClose={clearError} severity="error" />
     </>

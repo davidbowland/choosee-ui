@@ -28,11 +28,16 @@ const PrivacyPolicy = (): React.ReactNode => {
         </p>
         <p>
           If you sign in with Google, we receive your name and email address as part of that sign-in flow. We set a
-          session cookie to keep you authenticated.
+          cookie to keep you identified within your Choosee.
         </p>
         <p>
-          If you provide a phone number, we use it only to send restaurant session invites via text message. Your phone
-          number is never used for anything else.
+          If you provide a phone number, we use it only to send Choosee invites via text message. Your phone number is
+          never used for anything else.
+        </p>
+        <p>
+          When you create a Choosee, we use Google reCAPTCHA to verify you&apos;re not a bot. reCAPTCHA collects
+          technical and interaction data from your browser — such as your IP address and device information — and sends
+          it to Google for analysis.
         </p>
       </Section>
 
@@ -53,7 +58,21 @@ const PrivacyPolicy = (): React.ReactNode => {
       <Section title="When We Share Your Data">
         <p>
           We share data only when legally required — for example, in response to a valid court order or law enforcement
-          request. Your Google sign-in is processed by Google; their privacy policy governs that interaction.
+          request. Your Google sign-in is a direct relationship with Google; their privacy policy governs that
+          interaction.
+        </p>
+        <p>
+          For reCAPTCHA, Google acts as our data processor: it handles bot-detection data on our behalf and does not use
+          it for its own purposes. Google&apos;s handling of that data is described at{' '}
+          <Link
+            className="text-[#F59E0B] underline hover:text-amber-400"
+            href="https://policies.google.com/privacy"
+            rel="noreferrer"
+            target="_blank"
+          >
+            policies.google.com/privacy
+          </Link>
+          .
         </p>
       </Section>
 
@@ -70,9 +89,9 @@ const PrivacyPolicy = (): React.ReactNode => {
 
       <Section title="Data Retention">
         <p>
-          Server logs are kept for up to 90 days, then deleted. Restaurant session data is deleted when your session
+          Server logs are kept for up to 90 days, then deleted. Restaurant Choosee data is deleted when your Choosee
           expires — typically 24 hours. If you create an account, your login information is stored until you delete it.
-          Phone numbers are retained only for the duration of the session.
+          Phone numbers are retained only for the duration of the Choosee.
         </p>
       </Section>
 
@@ -107,7 +126,7 @@ const PrivacyPolicy = (): React.ReactNode => {
           <ArrowLeft aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
           Back to Choosee
         </Link>
-        <span>Last updated June 2026</span>
+        <span>Last updated July 2026</span>
       </div>
     </div>
   )
