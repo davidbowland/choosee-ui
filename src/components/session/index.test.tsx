@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import '@testing-library/jest-dom'
-import { act, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 
 import SessionWithErrorBoundary from './index'
 import * as api from '@services/api'
+import '@testing-library/jest-dom'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')

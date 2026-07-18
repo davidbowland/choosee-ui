@@ -1,9 +1,9 @@
-import '@testing-library/jest-dom'
-import { fireEvent, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import RestaurantCard from '@components/restaurant-card'
+import '@testing-library/jest-dom'
+import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ChoiceDetail } from '@types'
 
 // Mock Embla — jsdom lacks matchMedia which Embla requires internally

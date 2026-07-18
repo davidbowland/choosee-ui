@@ -1,11 +1,11 @@
-import SessionPage, { getStaticPaths, getStaticProps } from '@pages/s/[sessionId]/index'
-import '@testing-library/jest-dom'
-import { render } from '@testing-library/react'
 import React from 'react'
 
 import AppBar from '@components/app-bar'
 import PrivacyLink from '@components/privacy-link'
 import Session from '@components/session'
+import SessionPage, { getStaticPaths, getStaticProps } from '@pages/s/[sessionId]/index'
+import '@testing-library/jest-dom'
+import { render } from '@testing-library/react'
 
 jest.mock('@components/app-bar')
 jest.mock('@components/privacy-link')

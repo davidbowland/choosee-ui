@@ -1,13 +1,13 @@
 // Grab reference after mock is set up
 import { toast } from '@heroui/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import '@testing-library/jest-dom'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import VotingPhase from '@components/session/voting'
 import * as api from '@services/api'
+import '@testing-library/jest-dom'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@components/auth-context')
@@ -23,7 +23,6 @@ jest.mock('@heroui/react', () => ({
 jest.mock('@components/restaurant-card', () => ({
   __esModule: true,
   default: ({ choice, onClick }: { choice: { name: string }; onClick?: () => void }) => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
     const R = require('react')
     return R.createElement('button', { 'data-testid': `card-${choice.name}`, onClick, type: 'button' }, choice.name)
   },

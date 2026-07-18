@@ -71,12 +71,12 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
     queryFn: () => fetchSession(sessionId),
     refetchInterval: () => {
       switch (phaseRef.current) {
-      case 'loading':
-        return 2_000
-      case 'waiting':
-        return 5_000
-      default:
-        return false
+        case 'loading':
+          return 2_000
+        case 'waiting':
+          return 5_000
+        default:
+          return false
       }
     },
   })
@@ -145,34 +145,34 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
 
   const renderPhase = (): React.ReactNode => {
     switch (phase) {
-    case 'loading':
-      return <LoadingPhase session={session} />
-    case 'error':
-      return isClosingSoonError(session?.errorMessage) ? (
-        <ClosingSoonErrorAlert />
-      ) : (
-        <ErrorBanner message={session?.errorMessage ?? 'An unexpected error occurred'} />
-      )
-    case 'winner':
-      return <WinnerPhase choices={choices ?? {}} session={session!} />
-    case 'user-select':
-      return <UserSelectPhase onUserSelected={handleUserSelected} sessionId={sessionId} users={users ?? []} />
-    case 'voting':
-      return (
-        <VotingPhase
-          choices={choices ?? {}}
-          currentUser={currentUser!}
-          session={session!}
-          sessionId={sessionId}
-          usersCount={users?.length ?? 1}
-        />
-      )
-    case 'waiting':
-      return (
-        <WaitingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
-      )
-    default:
-      return null
+      case 'loading':
+        return <LoadingPhase session={session} />
+      case 'error':
+        return isClosingSoonError(session?.errorMessage) ? (
+          <ClosingSoonErrorAlert />
+        ) : (
+          <ErrorBanner message={session?.errorMessage ?? 'An unexpected error occurred'} />
+        )
+      case 'winner':
+        return <WinnerPhase choices={choices ?? {}} session={session!} />
+      case 'user-select':
+        return <UserSelectPhase onUserSelected={handleUserSelected} sessionId={sessionId} users={users ?? []} />
+      case 'voting':
+        return (
+          <VotingPhase
+            choices={choices ?? {}}
+            currentUser={currentUser!}
+            session={session!}
+            sessionId={sessionId}
+            usersCount={users?.length ?? 1}
+          />
+        )
+      case 'waiting':
+        return (
+          <WaitingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
+        )
+      default:
+        return null
     }
   }
 

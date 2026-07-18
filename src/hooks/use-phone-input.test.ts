@@ -1,6 +1,5 @@
-import { renderHook, act } from '@testing-library/react'
-
 import { usePhoneInput } from './use-phone-input'
+import { renderHook, act } from '@testing-library/react'
 
 describe('usePhoneInput', () => {
   it('should start with empty value and no error', () => {

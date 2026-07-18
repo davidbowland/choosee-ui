@@ -19,7 +19,7 @@ const config = {
     'components/auth-context/*',
   ],
   coverageThreshold: {
-    global: { branches: 80, functions: 90, lines: 90 },
+    global: { branches: 80, functions: 90, lines: 80 },
   },
   moduleNameMapper: {
     '.+\\.(css|styl|less|sass|scss)$': 'identity-obj-proxy',

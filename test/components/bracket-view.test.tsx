@@ -1,9 +1,9 @@
-import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import BracketView from '@components/bracket-view'
+import '@testing-library/jest-dom'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData } from '@types'
 
 const choices: ChoicesMap = {

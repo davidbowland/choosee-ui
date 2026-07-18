@@ -1,9 +1,9 @@
-import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import { PlaceTypeChips } from './elements'
+import '@testing-library/jest-dom'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 describe('PlaceTypeChips component', () => {
   const fewTypes = ['Italian', 'Pizza', 'Cafe']

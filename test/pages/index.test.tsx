@@ -1,11 +1,11 @@
-import Index from '@pages/index'
-import '@testing-library/jest-dom'
-import { render } from '@testing-library/react'
 import React from 'react'
 
 import AppBar from '@components/app-bar'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
+import Index from '@pages/index'
+import '@testing-library/jest-dom'
+import { render } from '@testing-library/react'
 
 jest.mock('@components/app-bar')
 jest.mock('@components/privacy-link')

@@ -1,9 +1,9 @@
-import '@testing-library/jest-dom'
-import { act, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import PhotoCarousel from '@components/photo-carousel'
+import '@testing-library/jest-dom'
+import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 // Embla mock that exposes select/reInit listeners so we can exercise onSelect + onThumbClick
 let selectCb: (() => void) | null = null
@@ -141,7 +141,6 @@ describe('PhotoCarousel', () => {
   })
 
   describe('with null embla API', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
     const useEmblaCarousel = jest.mocked(require('embla-carousel-react').default)
 
     beforeEach(() => {

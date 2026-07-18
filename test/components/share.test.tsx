@@ -1,12 +1,12 @@
-import '@testing-library/jest-dom'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 // @ts-expect-error — mock-only export from __mocks__/index.tsx
 import { mockSetAuthState } from '@components/auth-context'
 import Share from '@components/share'
 import { shareSession } from '@services/api'
+import '@testing-library/jest-dom'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 jest.mock('@components/auth-context')
 jest.mock('@services/api', () => ({

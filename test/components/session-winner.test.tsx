@@ -1,9 +1,9 @@
-import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 
 import WinnerPhase from '@components/session/winner'
+import '@testing-library/jest-dom'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData } from '@types'
 
 const mockPush = jest.fn()

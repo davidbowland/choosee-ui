@@ -1,14 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { sessionConfigResult, recaptchaToken, sessionId } from '@test/__mocks__'
-import '@testing-library/jest-dom'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
 import React from 'react'
 
 import SessionCreate from './index'
 import * as api from '@services/api'
+import { sessionConfigResult, recaptchaToken, sessionId } from '@test/__mocks__'
+import '@testing-library/jest-dom'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 const mockPush = jest.fn()
 jest.mock('next/router', () => ({
