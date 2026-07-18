@@ -1,6 +1,6 @@
 # choosee-ui
 
-Next.js and Amplify implementation of choosee-session-api and choosee-infrastructure. Example: <https://choosee.dbowland.com/>
+Next.js and Amplify implementation of choosee-api and choosee-infrastructure. Example: <https://choosee.dbowland.com/>
 
 ## Static Site
 
@@ -27,7 +27,7 @@ Then view the server at <http://localhost:3000/>
 
 ### Unit Tests
 
-[Jest](https://jestjs.io/) tests are run automatically on commit and push. If the test coverage threshold is not met, the push will fail. See `jest.config.ts` for coverage threshold.
+[Jest](https://jestjs.io/) tests are run automatically on commit and push. If the test coverage threshold is not met, the push will fail. See `jest.config.mjs` for coverage threshold.
 
 Manually run tests with:
 

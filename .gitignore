@@ -49,7 +49,6 @@ Thumbs.db
 *.wmv
 
 .claude/
-.kiro/specs/
 .superpowers/
 .vscode
 .worktrees/
