@@ -1,186 +1,84 @@
 import React from 'react'
 
-// @ts-expect-error — mock-only export from __mocks__/index.tsx
-import { mockSetAuthState } from '@components/auth-context'
 import Share from '@components/share'
-import { shareSession } from '@services/api'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-jest.mock('@components/auth-context')
-jest.mock('@services/api', () => ({
-  ...jest.requireActual('@services/api'),
-  shareSession: jest.fn(),
-}))
+const sessionId = 'test-session'
+const shareMock = jest.fn()
 
-const mockShareSession = jest.mocked(shareSession)
+function ensureNoShare(): void {
+  if ('share' in navigator) {
+    // @ts-expect-error — remove the feature for the unsupported-path tests
+    delete navigator.share
+  }
+}
 
-const PHONE_PLACEHOLDER = '+1 (555) 123-4567'
+function enableShare(): void {
+  Object.defineProperty(navigator, 'share', { configurable: true, value: shareMock, writable: true })
+  shareMock.mockResolvedValue(undefined)
+}
+
+function setup({ withShare = false }: { withShare?: boolean } = {}): ReturnType<typeof userEvent.setup> {
+  if (withShare) {
+    enableShare()
+  } else {
+    ensureNoShare()
+  }
+  const user = userEvent.setup()
+  render(<Share sessionId={sessionId} />)
+  return user
+}
 
 describe('Share', () => {
-  const sessionId = 'test-session'
-  const userId = 'test-user'
-
-  beforeEach(() => {
-    mockSetAuthState({ isSignedIn: true })
+  it('should render copy and QR buttons and no share button when Web Share is unavailable', async () => {
+    setup()
+    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show QR code' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
   })
 
-  async function renderWithModalOpen() {
-    const user = userEvent.setup()
-    render(<Share sessionId={sessionId} userId={userId} />)
-    await user.click(screen.getByText('Invite'))
-    return user
-  }
-
-  it('should render the copy URL button', async () => {
-    await renderWithModalOpen()
-    expect(screen.getByText('Copy URL')).toBeInTheDocument()
+  it('should render the share button when Web Share is available', async () => {
+    setup({ withShare: true })
+    expect(await screen.findByRole('button', { name: 'Share' })).toBeInTheDocument()
   })
 
-  it('should copy URL to clipboard when copy button is pressed', async () => {
-    const user = userEvent.setup()
-    render(<Share sessionId={sessionId} userId={userId} />)
-    const writeTextSpy = jest.spyOn(navigator.clipboard, 'writeText')
-    await user.click(screen.getByText('Invite'))
-    await user.click(screen.getByText('Copy URL'))
-    expect(writeTextSpy).toHaveBeenCalledWith(expect.stringContaining(`/s/${sessionId}`))
-    writeTextSpy.mockRestore()
+  it('should call navigator.share with the session URL', async () => {
+    const user = setup({ withShare: true })
+    const shareButton = await screen.findByRole('button', { name: 'Share' })
+    await user.click(shareButton)
+    expect(shareMock).toHaveBeenCalledWith(expect.objectContaining({ url: expect.stringContaining(`/s/${sessionId}`) }))
   })
 
-  it('should render a QR code', async () => {
-    const user = userEvent.setup()
-    const { container } = render(<Share sessionId={sessionId} userId={userId} />)
-    await user.click(screen.getByText('Invite'))
-    expect(container.querySelector('svg')).toBeInTheDocument()
+  it('should not surface an error when the share sheet is cancelled', async () => {
+    const user = setup({ withShare: true })
+    shareMock.mockRejectedValueOnce(new Error('AbortError'))
+    const shareButton = await screen.findByRole('button', { name: 'Share' })
+    await user.click(shareButton)
+    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
   })
 
-  it('should render phone input and send button', async () => {
-    await renderWithModalOpen()
-    expect(screen.getByPlaceholderText(PHONE_PLACEHOLDER)).toBeInTheDocument()
-    expect(screen.getByText('Send invite')).toBeInTheDocument()
+  it('should copy the session URL and show the copied state', async () => {
+    const user = setup()
+    const writeText = jest.spyOn(navigator.clipboard, 'writeText')
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining(`/s/${sessionId}`))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Link copied' })).toBeInTheDocument())
   })
 
-  it('should call shareSession on send invite', async () => {
-    mockShareSession.mockResolvedValueOnce({ userId })
-    const user = await renderWithModalOpen()
-
-    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
-    await user.type(input, '2125551234')
-
-    await user.click(screen.getByText('Send invite'))
-
-    expect(mockShareSession).toHaveBeenCalledWith(sessionId, userId, '+12125551234')
-    await waitFor(() => {
-      expect(screen.getByText('Invite sent')).toBeInTheDocument()
-    })
+  it('should open the QR modal without a copy URL option', async () => {
+    const user = setup()
+    await user.click(screen.getByRole('button', { name: 'Show QR code' }))
+    await waitFor(() => expect(screen.getByText('Scan to join')).toBeInTheDocument())
+    expect(screen.getByText(new RegExp(`/s/${sessionId}`))).toBeInTheDocument()
+    expect(screen.queryByText('Copy URL')).not.toBeInTheDocument()
   })
 
-  it('should show rate limit error on 429', async () => {
-    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
-    const error = new ApiError({ message: 'Too Many Requests', name: 'ApiError', recoverySuggestion: '' })
-    Object.defineProperty(error, '_response', {
-      value: { statusCode: 429, headers: {}, body: '{}' },
-    })
-    mockShareSession.mockRejectedValueOnce(error)
-    const user = await renderWithModalOpen()
-
-    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
-    await user.type(input, '2125551234')
-    await user.click(screen.getByText('Send invite'))
-
-    await waitFor(() => {
-      expect(screen.getByText("You're going a bit fast — try again in a minute.")).toBeInTheDocument()
-    })
-  })
-
-  it('should show server message on 400', async () => {
-    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
-    const error = new ApiError({ message: 'Bad Request', name: 'ApiError', recoverySuggestion: '' })
-    Object.defineProperty(error, '_response', {
-      value: {
-        statusCode: 400,
-        headers: {},
-        body: JSON.stringify({ message: 'You must set your phone number before sharing' }),
-      },
-    })
-    mockShareSession.mockRejectedValueOnce(error)
-    const user = await renderWithModalOpen()
-
-    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
-    await user.type(input, '2125551234')
-    await user.click(screen.getByText('Send invite'))
-
-    await waitFor(() => {
-      expect(screen.getByText('You must set your phone number before sharing')).toBeInTheDocument()
-    })
-  })
-
-  it('should show fallback message on 400 with unparseable body', async () => {
-    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
-    const error = new ApiError({ message: 'Bad Request', name: 'ApiError', recoverySuggestion: '' })
-    Object.defineProperty(error, '_response', {
-      value: { statusCode: 400, headers: {}, body: 'not json' },
-    })
-    mockShareSession.mockRejectedValueOnce(error)
-    const user = await renderWithModalOpen()
-
-    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
-    await user.type(input, '2125551234')
-    await user.click(screen.getByText('Send invite'))
-
-    await waitFor(() => {
-      expect(screen.getByText("That didn't work. Try again.")).toBeInTheDocument()
-    })
-  })
-
-  it('should show error when clipboard write fails', async () => {
-    // Override writeText after userEvent.setup() installs its clipboard
-    const user = userEvent.setup()
-    render(<Share sessionId={sessionId} userId={userId} />)
-    await user.click(screen.getByText('Invite'))
+  it('should silently ignore a clipboard failure', async () => {
+    const user = setup()
     jest.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('Permission denied'))
-    await user.click(screen.getByText('Copy URL'))
-    await waitFor(() => {
-      expect(screen.getByText('Failed to copy URL to clipboard.')).toBeInTheDocument()
-    })
-  })
-
-  it('should show generic error on non-429 failure', async () => {
-    mockShareSession.mockRejectedValueOnce(new Error('Network error'))
-    const user = await renderWithModalOpen()
-
-    const input = screen.getByPlaceholderText(PHONE_PLACEHOLDER)
-    await user.type(input, '2125551234')
-    await user.click(screen.getByText('Send invite'))
-
-    await waitFor(() => {
-      expect(screen.getByText('Failed to send invite. Please try again.')).toBeInTheDocument()
-    })
-  })
-
-  it('should not send when phone is empty', async () => {
-    await renderWithModalOpen()
-    // Send invite button should be disabled when phone is empty
-    const sendBtn = screen.getByText('Send invite')
-    expect(sendBtn).toBeDisabled()
-  })
-
-  describe('when not signed in', () => {
-    beforeEach(() => {
-      mockSetAuthState({ isSignedIn: false, handleSignIn: jest.fn() })
-    })
-
-    it('should show auth gate instead of SMS form', async () => {
-      await renderWithModalOpen()
-      expect(screen.getByText('Sign in with Google to invite people by text')).toBeInTheDocument()
-      expect(screen.queryByPlaceholderText(PHONE_PLACEHOLDER)).not.toBeInTheDocument()
-      expect(screen.queryByText('Send invite')).not.toBeInTheDocument()
-    })
-
-    it('should still show copy URL and QR code', async () => {
-      await renderWithModalOpen()
-      expect(screen.getByText('Copy URL')).toBeInTheDocument()
-    })
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
   })
 })

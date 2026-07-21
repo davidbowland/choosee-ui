@@ -138,7 +138,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       <ActionRow>
         <BracketButton onPress={() => setBracketOpen(true)} />
         <div onClick={() => setHasShared(true)}>
-          <Share sessionId={sessionId} userId={currentUser.userId} />
+          <Share sessionId={sessionId} />
         </div>
         <ForceRoundButton isLoading={closeMutation.isPending} onPress={() => setConfirmOpen(true)} />
       </ActionRow>

@@ -193,7 +193,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
 
       <ActionRow>
         <BracketButton onPress={() => setBracketOpen(true)} />
-        <Share sessionId={sessionId} userId={currentUser.userId} />
+        <Share sessionId={sessionId} />
       </ActionRow>
 
       <BracketView choices={choices} onClose={() => setBracketOpen(false)} open={bracketOpen} session={session} />
