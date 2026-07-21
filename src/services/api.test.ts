@@ -12,7 +12,6 @@ import {
   fetchUsers,
   parseApiMessage,
   patchUser,
-  shareSession,
   subscribeToRound,
 } from './api'
 
@@ -335,20 +334,6 @@ describe('API service', () => {
         options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { userId, roundId: 1 } },
       })
       expect(result).toEqual(updatedUser)
-    })
-  })
-
-  describe('shareSession', () => {
-    it('should post share with phone and type (always authenticated)', async () => {
-      const response = { userId: 'clever-fox' }
-      mockPost.mockReturnValue(mockResponse(response))
-      const result = await shareSession(sessionId, userId, '+15559876543')
-      expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/share`,
-        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { phone: '+15559876543', type: 'text' } },
-      })
-      expect(result).toEqual(response)
     })
   })
 

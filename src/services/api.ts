@@ -148,16 +148,6 @@ export const subscribeToRound = (
 ): Promise<User> =>
   apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/subscribe`, authenticated, { userId, roundId })
 
-export interface ShareResult {
-  userId: string
-}
-
-export const shareSession = (sessionId: string, userId: string, phone: string): Promise<ShareResult> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/share`, true, {
-    phone,
-    type: 'text',
-  })
-
 export function parseApiMessage(body: string | undefined, fallback: string): string {
   return parseBodyField(body, 'message') ?? fallback
 }
