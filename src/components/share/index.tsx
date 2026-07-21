@@ -19,6 +19,12 @@ const Share = ({ sessionId }: ShareProps): React.ReactNode => {
     setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
   }, [])
 
+  useEffect(() => {
+    if (!copied) return undefined
+    const timer = setTimeout(() => setCopied(false), COPIED_RESET_MS)
+    return () => clearTimeout(timer)
+  }, [copied])
+
   const sessionUrl = `${typeof window === 'undefined' ? '' : window.location.origin}/s/${sessionId}`
 
   const handleShare = async (): Promise<void> => {
@@ -33,7 +39,6 @@ const Share = ({ sessionId }: ShareProps): React.ReactNode => {
     try {
       await navigator.clipboard.writeText(sessionUrl)
       setCopied(true)
-      setTimeout(() => setCopied(false), COPIED_RESET_MS)
     } catch {
       // Clipboard unavailable; QR remains available.
     }

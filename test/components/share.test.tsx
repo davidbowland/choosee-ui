@@ -9,10 +9,7 @@ const sessionId = 'test-session'
 const shareMock = jest.fn()
 
 function ensureNoShare(): void {
-  if ('share' in navigator) {
-    // @ts-expect-error — remove the feature for the unsupported-path tests
-    delete navigator.share
-  }
+  Reflect.deleteProperty(navigator, 'share')
 }
 
 function enableShare(): void {
@@ -56,6 +53,7 @@ describe('Share', () => {
     shareMock.mockRejectedValueOnce(new Error('AbortError'))
     const shareButton = await screen.findByRole('button', { name: 'Share' })
     await user.click(shareButton)
+    expect(shareMock).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
   })
 
