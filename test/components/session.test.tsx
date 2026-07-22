@@ -1,6 +1,9 @@
+import { toast } from '@heroui/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
+// @ts-expect-error — mock-only export from __mocks__/index.tsx
+import { mockSetAuthState } from '@components/auth-context'
 import Session from '@components/session'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
@@ -10,6 +13,11 @@ import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
 jest.mock('@components/auth-context')
+
+jest.mock('@heroui/react', () => ({
+  ...jest.requireActual('@heroui/react'),
+  toast: Object.assign(jest.fn(), { danger: jest.fn(), info: jest.fn(), success: jest.fn(), warning: jest.fn() }),
+}))
 
 // Mock child phases to keep tests focused on Session orchestration
 jest.mock('@components/session/loading', () => ({
@@ -232,5 +240,65 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
     await user.click(screen.getByText('Select user'))
     expect(mockSetUserId).toHaveBeenCalledWith('user-1')
+  })
+
+  describe('phone verification via ?pin=', () => {
+    // This jsdom setup redefines window.location instead of honoring replaceState
+    // (see the ?id= test above), so set the URL the same way here.
+    const setUrl = (search: string): void => {
+      Object.defineProperty(window, 'location', {
+        value: { ...window.location, search, pathname: '/s/test-session' },
+        writable: true,
+      })
+    }
+    const restoreUrl = (): void => setUrl('')
+
+    it('verifies the pin and shows a success toast when signed in', async () => {
+      sessionStorage.clear()
+      setUrl('?pin=123456')
+      const replaceStateSpy = jest.spyOn(window.history, 'replaceState')
+      mockSetAuthState({ isSignedIn: true })
+      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+      jest.mocked(api.verifyPhone).mockResolvedValue({ verified: true, locked: false })
+
+      renderWithClient(<Session sessionId="test-session" />)
+
+      await waitFor(() => expect(api.verifyPhone).toHaveBeenCalledWith('123456'))
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith('Your number is verified — you can now turn on round reminders.'),
+      )
+      expect(replaceStateSpy).toHaveBeenCalled() // pin stripped from the URL
+      replaceStateSpy.mockRestore()
+      restoreUrl()
+    })
+
+    it('stashes the pin and triggers sign-in when signed out', async () => {
+      sessionStorage.clear()
+      setUrl('?pin=654321')
+      const handleSignIn = jest.fn()
+      mockSetAuthState({ isSignedIn: false, handleSignIn })
+      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+
+      renderWithClient(<Session sessionId="test-session" />)
+
+      await waitFor(() => expect(handleSignIn).toHaveBeenCalled())
+      expect(sessionStorage.getItem('choosee_pending_pin')).toBe('654321')
+      expect(api.verifyPhone).not.toHaveBeenCalled()
+      restoreUrl()
+    })
+
+    it('verifies a stashed pin after returning signed in', async () => {
+      restoreUrl()
+      sessionStorage.setItem('choosee_pending_pin', '111222')
+      mockSetAuthState({ isSignedIn: true })
+      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+      jest.mocked(api.verifyPhone).mockResolvedValue({ verified: false, locked: false, attemptsRemaining: 5 })
+
+      renderWithClient(<Session sessionId="test-session" />)
+
+      await waitFor(() => expect(api.verifyPhone).toHaveBeenCalledWith('111222'))
+      await waitFor(() => expect(toast.warning).toHaveBeenCalledWith("That code didn't match. 5 tries left."))
+      expect(sessionStorage.getItem('choosee_pending_pin')).toBeNull()
+    })
   })
 })

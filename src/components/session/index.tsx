@@ -1,8 +1,9 @@
+import { toast } from '@heroui/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useMemo, useRef } from 'react'
 
 import { ClosingSoonErrorAlert, ErrorBanner } from './elements'
-import { firstUnvotedIndex } from './helpers'
+import { firstUnvotedIndex, pinResultToast } from './helpers'
 import LoadingPhase from './loading'
 import UserSelectPhase from './user-select'
 import VotingPhase from './voting'
@@ -11,9 +12,24 @@ import WinnerPhase from './winner'
 import { useAuthContext } from '@components/auth-context'
 import ErrorBoundary from '@components/error-boundary'
 import { useSessionCookie } from '@hooks/useSessionCookie'
-import { fetchChoices, fetchSession, fetchUsers, patchUser } from '@services/api'
+import { fetchChoices, fetchSession, fetchUsers, patchUser, verifyPhone } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 import { isClosingSoonError } from '@utils/session'
+
+const PENDING_PIN_KEY = 'choosee_pending_pin'
+
+// Read and strip the ?pin= verification code from the URL once, mirroring consumeQueryParamId.
+function consumeUrlPin(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  const params = new URLSearchParams(window.location.search)
+  const pin = params.get('pin') ?? undefined
+  if (pin) {
+    params.delete('pin')
+    const qs = params.toString()
+    window.history.replaceState(null, '', window.location.pathname + (qs ? `?${qs}` : ''))
+  }
+  return pin
+}
 
 type Phase = 'loading' | 'error' | 'winner' | 'user-select' | 'voting' | 'waiting'
 
@@ -56,11 +72,38 @@ export interface SessionProps {
 
 const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { isSignedIn } = useAuthContext()
+  const { isSignedIn, handleSignIn } = useAuthContext()
   const { userId, setUserId } = useSessionCookie(sessionId)
 
   // Read and strip ?id= from URL once on mount so the URL stays clean
   const queryParamId = useMemo(() => consumeQueryParamId(), [])
+
+  // Read and strip ?pin= once on mount; the verify effect below consumes it.
+  const urlPin = useMemo(() => consumeUrlPin(), [])
+  const verifyFired = useRef(false)
+  useEffect(() => {
+    // useEffect only runs client-side, so sessionStorage is always available here.
+    const stashed = sessionStorage.getItem(PENDING_PIN_KEY) ?? undefined
+    const pin = urlPin ?? stashed
+    if (!pin || verifyFired.current) return
+    if (isSignedIn) {
+      verifyFired.current = true
+      sessionStorage.removeItem(PENDING_PIN_KEY)
+      verifyPhone(pin)
+        .then((result) => {
+          const { severity, message } = pinResultToast(result)
+          toast[severity](message)
+          if (result.verified) void queryClient.invalidateQueries({ queryKey: ['profile'] })
+        })
+        .catch(() => {
+          verifyFired.current = false
+        })
+    } else if (urlPin) {
+      // Verifying needs a Cognito JWT — stash the pin and send them through sign-in first.
+      sessionStorage.setItem(PENDING_PIN_KEY, urlPin)
+      handleSignIn()
+    }
+  }, [isSignedIn, urlPin, handleSignIn, queryClient])
 
   // Expose derived phase to refetchInterval via ref so the callback sees the latest phase
   // without duplicating phase logic or needing access to users state.
