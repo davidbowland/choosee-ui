@@ -1,17 +1,18 @@
 import { toast } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 
-import { CopyButton, QrButton, QrModal, ShareButton, ShareGroup } from './elements'
+import { CopyButton, QrButton, QrModal, ShareBareGroup, ShareButton, ShareGroup } from './elements'
 
 export interface ShareProps {
   sessionId: string
+  variant?: 'group' | 'bare'
 }
 
 const SHARE_TITLE = 'Choosee'
 const SHARE_TEXT = 'Help me pick a place to eat'
 const COPIED_RESET_MS = 2000
 
-const Share = ({ sessionId }: ShareProps): React.ReactNode => {
+const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode => {
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
@@ -45,13 +46,15 @@ const Share = ({ sessionId }: ShareProps): React.ReactNode => {
     }
   }
 
+  const Group = variant === 'bare' ? ShareBareGroup : ShareGroup
+
   return (
     <>
-      <ShareGroup>
+      <Group>
         {canShare && <ShareButton onPress={handleShare} />}
         <CopyButton copied={copied} onPress={handleCopy} />
         <QrButton onPress={() => setQrOpen(true)} />
-      </ShareGroup>
+      </Group>
       <QrModal isOpen={qrOpen} onClose={() => setQrOpen(false)} url={sessionUrl} />
     </>
   )

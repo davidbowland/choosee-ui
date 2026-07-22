@@ -4,12 +4,16 @@ import { QRCodeSVG } from 'qrcode.react'
 import React from 'react'
 
 const iconButtonClass =
-  'flex h-8 w-8 items-center justify-center rounded-full text-[#6B7280] transition-colors hover:bg-white/[0.09] focus:outline-none'
+  'flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-white/[0.09] hover:text-[#E5E7EB] focus:outline-none'
 
 export const ShareGroup = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="inline-flex items-center gap-1 rounded-full border border-white/[0.09] bg-white/[0.05] p-1">
+  <div className="inline-flex items-center gap-1 rounded-full border border-white/[0.09] bg-white/[0.05] p-1 text-[#6B7280]">
     {children}
   </div>
+)
+
+export const ShareBareGroup = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <div className="inline-flex items-center gap-1 text-[#9CA3AF]">{children}</div>
 )
 
 export const ShareButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (

@@ -7,6 +7,8 @@ import {
   ActionRow,
   BracketButton,
   MatchupContainer,
+  SegmentDivider,
+  SegmentedActions,
   TournamentHeader,
   VoteCallToAction,
   VotingContainer,
@@ -192,8 +194,11 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
       </MatchupContainer>
 
       <ActionRow>
-        <BracketButton onPress={() => setBracketOpen(true)} />
-        <Share sessionId={sessionId} />
+        <SegmentedActions>
+          <BracketButton onPress={() => setBracketOpen(true)} />
+          <SegmentDivider />
+          <Share sessionId={sessionId} variant="bare" />
+        </SegmentedActions>
       </ActionRow>
 
       <BracketView choices={choices} onClose={() => setBracketOpen(false)} open={bracketOpen} session={session} />

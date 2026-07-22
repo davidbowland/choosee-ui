@@ -42,6 +42,13 @@ describe('Share', () => {
     expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
   })
 
+  it('should render the copy and QR buttons in the bare variant', async () => {
+    ensureNoShare()
+    render(<Share sessionId={sessionId} variant="bare" />)
+    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show QR code' })).toBeInTheDocument()
+  })
+
   it('should render the share button when Web Share is available', async () => {
     setup({ withShare: true })
     expect(await screen.findByRole('button', { name: 'Share' })).toBeInTheDocument()

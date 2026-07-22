@@ -1,4 +1,4 @@
-import { Button, Skeleton } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import { Eye, MousePointerClick, Pencil } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
@@ -122,15 +122,21 @@ export const ActionRow = ({ children }: { children: React.ReactNode }): React.Re
   <div className="flex items-center justify-center gap-3">{children}</div>
 )
 
+export const SegmentedActions = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <div className="inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.06] p-1">{children}</div>
+)
+
+export const SegmentDivider = (): React.ReactNode => <div className="mx-1 h-5 w-px bg-white/[0.08]" />
+
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button
-    className="rounded-full border-white/[0.15] bg-white/[0.07] text-[#E5E7EB] hover:bg-white/[0.12]"
-    onPress={onPress}
-    variant="outline"
+  <button
+    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-[#E5E7EB] transition-colors hover:bg-white/[0.08] focus:outline-none"
+    onClick={onPress}
+    type="button"
   >
     <Eye className="h-4 w-4" />
     View bracket
-  </Button>
+  </button>
 )
 
 export const InlineNameEditor = ({
