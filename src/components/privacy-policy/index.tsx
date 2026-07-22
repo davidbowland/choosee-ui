@@ -31,8 +31,9 @@ const PrivacyPolicy = (): React.ReactNode => {
           cookie to keep you identified within your Choosee.
         </p>
         <p>
-          If you provide a phone number, we use it only to send Choosee invites via text message. Your phone number is
-          never used for anything else.
+          If you sign in with Google and register a phone number, we use it only to text you about rounds in Choosee
+          polls you join. We record your consent — and the IP address it was given from — as proof of agreement. Your
+          number is tied to your Google account, is never sold or shared, and is never used for marketing.
         </p>
         <p>
           When you create a Choosee, we use Google reCAPTCHA to verify you&apos;re not a bot. reCAPTCHA collects
@@ -53,6 +54,7 @@ const PrivacyPolicy = (): React.ReactNode => {
           We don&apos;t sell your data. We don&apos;t share it with advertisers. We don&apos;t build profiles. We
           don&apos;t use your phone number or email for marketing.
         </p>
+        <p>You can stop Choosee texts anytime by replying STOP or by turning off reminders.</p>
       </Section>
 
       <Section title="When We Share Your Data">
@@ -91,7 +93,8 @@ const PrivacyPolicy = (): React.ReactNode => {
         <p>
           Server logs are kept for up to 90 days, then deleted. Restaurant Choosee data is deleted when your Choosee
           expires — typically 24 hours. If you create an account, your login information is stored until you delete it.
-          Phone numbers are retained only for the duration of the Choosee.
+          Phone numbers you register are automatically deleted 180 days after you provide them; using or verifying a
+          number does not extend this.
         </p>
       </Section>
 
