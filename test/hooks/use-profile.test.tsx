@@ -44,4 +44,21 @@ describe('useProfile', () => {
     result.current.setProfile({ verified: false, phoneLast4: '9999', consent: true })
     await waitFor(() => expect(result.current.profile).toEqual({ verified: false, phoneLast4: '9999', consent: true }))
   })
+
+  it('exposes isError when the fetch fails', async () => {
+    mockSetAuthState({ isSignedIn: true })
+    jest.mocked(api.fetchProfile).mockRejectedValueOnce(new Error('boom'))
+    const { result } = renderHook(() => useProfile(), { wrapper: wrapper(newClient()) })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.profile).toBeUndefined()
+  })
+
+  it('refetch triggers fetchProfile again', async () => {
+    mockSetAuthState({ isSignedIn: true })
+    const { result } = renderHook(() => useProfile(), { wrapper: wrapper(newClient()) })
+    await waitFor(() => expect(result.current.profile).toBeDefined())
+    const callsBefore = jest.mocked(api.fetchProfile).mock.calls.length
+    result.current.refetch()
+    await waitFor(() => expect(jest.mocked(api.fetchProfile).mock.calls.length).toBeGreaterThan(callsBefore))
+  })
 })

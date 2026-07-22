@@ -38,7 +38,13 @@ export interface WaitingPhaseProps {
 const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
   const { isSignedIn, handleSignIn } = useAuthContext()
-  const { profile, isLoading: profileLoading, setProfile } = useProfile()
+  const {
+    profile,
+    isLoading: profileLoading,
+    isError: profileError,
+    setProfile,
+    refetch: refetchProfile,
+  } = useProfile()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [notifyChecked, setNotifyChecked] = useState(false)
@@ -90,7 +96,15 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
     }
     // Don't act until we know the profile — otherwise a user with an existing number
     // would be shown the (write-once) registration form and hit a 409 on submit.
-    if (!profile) return
+    if (!profile) {
+      // If the profile failed to load, tell the user and retry so a later tap can work,
+      // rather than silently doing nothing.
+      if (profileError) {
+        toast.danger("Couldn't load your reminder settings. Please try again.")
+        refetchProfile()
+      }
+      return
+    }
     setNotifyChecked(true)
     if (hasPhone) {
       await savePhoneAndSubscribe()

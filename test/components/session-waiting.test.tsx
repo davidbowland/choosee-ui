@@ -17,8 +17,11 @@ jest.mock('@services/api')
 jest.mock('@hooks/useProfile')
 
 const setProfile = jest.fn()
+const refetchProfile = jest.fn()
 const mockProfile = (profile: Profile) =>
-  jest.mocked(useProfile).mockReturnValue({ profile, isLoading: false, setProfile })
+  jest
+    .mocked(useProfile)
+    .mockReturnValue({ profile, isLoading: false, isError: false, setProfile, refetch: refetchProfile })
 const setupSignedIn = (profile: Profile): void => {
   mockSetAuthState({ isSignedIn: true })
   mockProfile(profile)
@@ -204,10 +207,34 @@ describe('WaitingPhase', () => {
 
   it('does not reveal the registration form while the profile is still loading', async () => {
     mockSetAuthState({ isSignedIn: true })
-    jest.mocked(useProfile).mockReturnValue({ profile: undefined, isLoading: true, setProfile })
+    jest.mocked(useProfile).mockReturnValue({
+      profile: undefined,
+      isLoading: true,
+      isError: false,
+      setProfile,
+      refetch: refetchProfile,
+    })
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
     await user.click(screen.getByText(/Text me when voting opens/i))
+    expect(screen.queryByPlaceholderText('+1 (555) 123-4567')).not.toBeInTheDocument()
+    expect(api.subscribeToRound).not.toHaveBeenCalled()
+  })
+
+  it('warns and retries when the profile failed to load', async () => {
+    mockSetAuthState({ isSignedIn: true })
+    jest.mocked(useProfile).mockReturnValue({
+      profile: undefined,
+      isLoading: false,
+      isError: true,
+      setProfile,
+      refetch: refetchProfile,
+    })
+    const user = userEvent.setup()
+    renderWithClient(<WaitingPhase {...defaultProps} />)
+    await user.click(screen.getByText(/Text me when voting opens/i))
+    expect(toast.danger).toHaveBeenCalledWith("Couldn't load your reminder settings. Please try again.")
+    expect(refetchProfile).toHaveBeenCalled()
     expect(screen.queryByPlaceholderText('+1 (555) 123-4567')).not.toBeInTheDocument()
     expect(api.subscribeToRound).not.toHaveBeenCalled()
   })

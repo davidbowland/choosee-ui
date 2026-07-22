@@ -8,7 +8,9 @@ import { Profile } from '@types'
 export interface UseProfileReturn {
   profile: Profile | undefined
   isLoading: boolean
+  isError: boolean
   setProfile: (p: Profile) => void
+  refetch: () => void
 }
 
 export const useProfile = (): UseProfileReturn => {
@@ -23,6 +25,7 @@ export const useProfile = (): UseProfileReturn => {
   })
 
   const setProfile = useCallback((p: Profile) => queryClient.setQueryData<Profile>(['profile'], p), [queryClient])
+  const refetch = useCallback(() => void query.refetch(), [query])
 
-  return { profile: query.data, isLoading: query.isLoading, setProfile }
+  return { profile: query.data, isLoading: query.isLoading, isError: query.isError, setProfile, refetch }
 }
