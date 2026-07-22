@@ -30,7 +30,6 @@ const baseSession: SessionData = {
 const baseUser: User = {
   userId: 'user-1',
   name: 'Test',
-  phone: null,
   subscribedRounds: [],
   votes: [[null, null]],
   textsSent: 0,

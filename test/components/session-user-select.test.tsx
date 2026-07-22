@@ -17,8 +17,8 @@ jest.mock('@services/api', () => ({
 }))
 
 const mockUsers: User[] = [
-  { userId: 'brave-tiger', name: null, phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
-  { userId: 'user-2', name: 'Alice', phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
+  { userId: 'brave-tiger', name: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
+  { userId: 'user-2', name: 'Alice', subscribedRounds: [], votes: [[null]], textsSent: 0 },
 ]
 
 function renderWithClient(ui: React.ReactElement) {
@@ -58,7 +58,6 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: null,
-      phone: null,
       subscribedRounds: [],
       votes: [],
       textsSent: 0,
@@ -79,7 +78,6 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: null,
-      phone: null,
       subscribedRounds: [],
       votes: [],
       textsSent: 0,
@@ -182,7 +180,6 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: 'Google User',
-      phone: null,
       subscribedRounds: [],
       votes: [],
       textsSent: 0,

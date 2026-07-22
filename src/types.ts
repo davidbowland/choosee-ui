@@ -70,7 +70,6 @@ export interface SessionData {
 export interface User {
   userId: string
   name: string | null
-  phone: string | null
   subscribedRounds: number[]
   votes: (string | null)[][]
   textsSent: number

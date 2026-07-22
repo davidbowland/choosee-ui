@@ -76,7 +76,6 @@ const baseSession: SessionData = {
 const mockUser: User = {
   userId: 'user-1',
   name: 'Test User',
-  phone: null,
   subscribedRounds: [],
   votes: [[null]],
   textsSent: 0,

@@ -38,7 +38,6 @@ const mockUsers: User[] = [
   {
     userId: 'user-1',
     name: 'Test User',
-    phone: null,
     subscribedRounds: [],
     votes: [[null]],
     textsSent: 0,
@@ -133,9 +132,7 @@ describe('Session phase router', () => {
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: true })
     jest
       .mocked(api.fetchUsers)
-      .mockResolvedValue([
-        { userId: 'user-1', name: 'Test User', phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
-      ])
+      .mockResolvedValue([{ userId: 'user-1', name: 'Test User', subscribedRounds: [], votes: [[null]], textsSent: 0 }])
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
     expect(await screen.findByText(/Welcome back/i)).toBeInTheDocument()
