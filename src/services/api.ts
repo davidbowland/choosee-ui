@@ -8,9 +8,11 @@ import {
   ErrorCode,
   NewSessionRequest,
   PatchOperation,
+  Profile,
   SessionConfig,
   SessionData,
   User,
+  VerifyResult,
 } from '@types'
 
 type AnyBody = any
@@ -40,6 +42,11 @@ async function apiGet<T>(
   headers?: Record<string, string>,
 ): Promise<T> {
   const { body } = await get({ apiName: apiNameUnauthenticated, path, options: { headers, queryParams } }).response
+  return body.json() as Promise<T>
+}
+
+async function apiGetAuthed<T>(path: string): Promise<T> {
+  const { body } = await get({ apiName, path, options: { headers: await authHeaders() } }).response
   return body.json() as Promise<T>
 }
 
@@ -147,6 +154,13 @@ export const subscribeToRound = (
   authenticated: boolean,
 ): Promise<User> =>
   apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/subscribe`, authenticated, { userId, roundId })
+
+export const fetchProfile = (): Promise<Profile> => apiGetAuthed('/profile')
+
+export const registerPhone = (phone: string, consent: boolean): Promise<Profile> =>
+  apiPost('/profile/phone', true, { phone, consent })
+
+export const verifyPhone = (pin: string): Promise<VerifyResult> => apiPost('/profile/phone/verify', true, { pin })
 
 export function parseApiMessage(body: string | undefined, fallback: string): string {
   return parseBodyField(body, 'message') ?? fallback

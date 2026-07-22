@@ -76,6 +76,18 @@ export interface User {
   textsSent: number
 }
 
+export interface Profile {
+  verified: boolean
+  phoneLast4: string | null
+  consent: boolean
+}
+
+export interface VerifyResult {
+  verified: boolean
+  locked: boolean
+  attemptsRemaining?: number
+}
+
 export interface SortOption {
   value: string
   label: string
