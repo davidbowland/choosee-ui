@@ -303,6 +303,18 @@ describe('Session', () => {
       restoreUrl()
     })
 
+    it('discards a stale stashed pin when signed out (abandoned sign-in), never auto-verifying', async () => {
+      restoreUrl()
+      sessionStorage.setItem('choosee_pending_pin', '777777')
+      mockSetAuthState({ isSignedIn: false, isLoading: false, handleSignIn: jest.fn() })
+      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+
+      renderWithClient(<Session sessionId="test-session" />)
+
+      await waitFor(() => expect(sessionStorage.getItem('choosee_pending_pin')).toBeNull())
+      expect(api.verifyPhone).not.toHaveBeenCalled()
+    })
+
     it('shows an error toast when verification fails unexpectedly', async () => {
       restoreUrl()
       sessionStorage.setItem('choosee_pending_pin', '999888')

@@ -106,6 +106,11 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
       // Verifying needs a Cognito JWT — stash the pin and send them through sign-in first.
       sessionStorage.setItem(PENDING_PIN_KEY, urlPin)
       handleSignIn()
+    } else {
+      // Signed out with only a stale stashed pin (an abandoned sign-in): discard it so it
+      // can't silently auto-fire on a later unrelated sign-in and burn verification attempts
+      // toward the terminal lock on a write-once number.
+      sessionStorage.removeItem(PENDING_PIN_KEY)
     }
   }, [authLoading, isSignedIn, urlPin, handleSignIn, queryClient])
 
