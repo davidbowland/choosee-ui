@@ -43,11 +43,9 @@ export const NotifySection = ({ children }: { children: React.ReactNode }): Reac
 
 export const ForceRoundButton = ({
   isLoading,
-  label,
   onPress,
 }: {
   isLoading: boolean
-  label: string
   onPress: () => void
 }): React.ReactNode => (
   <button
@@ -57,7 +55,7 @@ export const ForceRoundButton = ({
     type="button"
   >
     {isLoading && <Spinner color="current" size="sm" />}
-    {label}
+    Skip ahead without them
   </button>
 )
 

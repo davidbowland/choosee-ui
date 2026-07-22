@@ -145,11 +145,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
             <Share sessionId={sessionId} variant="bare" />
           </div>
         </SegmentedActions>
-        <ForceRoundButton
-          isLoading={closeMutation.isPending}
-          label={solo ? 'Skip to next round' : 'Skip ahead without them'}
-          onPress={() => setConfirmOpen(true)}
-        />
+        {!solo && <ForceRoundButton isLoading={closeMutation.isPending} onPress={() => setConfirmOpen(true)} />}
       </ActionRow>
 
       {confirmOpen && (

@@ -100,11 +100,10 @@ describe('WaitingPhase', () => {
     expect(screen.getByText(/Skip ahead without them/i)).toBeInTheDocument()
   })
 
-  it('should use neutral skip copy for a solo voter', () => {
+  it('should not show the skip-ahead link for a solo voter', () => {
     const soloSession = { ...mockSession, users: ['user-1'], voterCount: 1, votersSubmitted: 0 }
     renderWithClient(<WaitingPhase {...defaultProps} session={soloSession} />)
-    expect(screen.getByText(/Skip to next round/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Skip ahead without them/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Skip ahead/i)).not.toBeInTheDocument()
   })
 
   it('should show confirmation dialog when Skip to next round is clicked', async () => {
