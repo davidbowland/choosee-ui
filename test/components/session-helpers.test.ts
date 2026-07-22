@@ -1,4 +1,4 @@
-import { firstUnvotedIndex } from '@components/session/helpers'
+import { firstUnvotedIndex, pinResultToast } from '@components/session/helpers'
 import { SessionData, User } from '@types'
 
 const baseSession: SessionData = {
@@ -59,5 +59,35 @@ describe('firstUnvotedIndex', () => {
   it('should return 0 when bracket round is undefined', () => {
     const session = { ...baseSession, currentRound: 5 }
     expect(firstUnvotedIndex(session, baseUser)).toBe(-1)
+  })
+})
+
+describe('pinResultToast', () => {
+  it('returns a success toast when verified', () => {
+    expect(pinResultToast({ verified: true, locked: false })).toEqual({
+      severity: 'success',
+      message: 'Your number is verified — you can now turn on round reminders.',
+    })
+  })
+
+  it('returns a danger toast when locked', () => {
+    expect(pinResultToast({ verified: false, locked: true, attemptsRemaining: 0 })).toEqual({
+      severity: 'danger',
+      message: "You've run out of attempts to verify this number.",
+    })
+  })
+
+  it('returns a warning toast with the remaining-attempt count on mismatch', () => {
+    expect(pinResultToast({ verified: false, locked: false, attemptsRemaining: 5 })).toEqual({
+      severity: 'warning',
+      message: "That code didn't match. 5 tries left.",
+    })
+  })
+
+  it('uses the singular for exactly one attempt left', () => {
+    expect(pinResultToast({ verified: false, locked: false, attemptsRemaining: 1 })).toEqual({
+      severity: 'warning',
+      message: "That code didn't match. 1 try left.",
+    })
   })
 })
