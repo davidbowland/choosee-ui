@@ -43,21 +43,22 @@ export const NotifySection = ({ children }: { children: React.ReactNode }): Reac
 
 export const ForceRoundButton = ({
   isLoading,
+  label,
   onPress,
 }: {
   isLoading: boolean
+  label: string
   onPress: () => void
 }): React.ReactNode => (
-  <Button
-    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
-    isDisabled={isLoading}
-    onPress={onPress}
-    size="sm"
-    variant="outline"
+  <button
+    className="inline-flex items-center gap-1.5 text-[13px] text-[#6B7280] underline decoration-white/15 underline-offset-4 transition-colors hover:text-[#9CA3AF] focus:outline-none disabled:opacity-50"
+    disabled={isLoading}
+    onClick={onPress}
+    type="button"
   >
     {isLoading && <Spinner color="current" size="sm" />}
-    Skip to next round
-  </Button>
+    {label}
+  </button>
 )
 
 export const ConfirmDialog = ({
@@ -185,19 +186,24 @@ export const PhoneInput = ({
 )
 
 export const ActionRow = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="flex flex-wrap items-center justify-center gap-3">{children}</div>
+  <div className="flex flex-col items-center gap-3">{children}</div>
 )
 
+export const SegmentedActions = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <div className="inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.06] p-1">{children}</div>
+)
+
+export const SegmentDivider = (): React.ReactNode => <div className="mx-1 h-5 w-px bg-white/[0.08]" />
+
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button
-    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
-    onPress={onPress}
-    size="sm"
-    variant="outline"
+  <button
+    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-[#E5E7EB] transition-colors hover:bg-white/[0.08] focus:outline-none"
+    onClick={onPress}
+    type="button"
   >
     <Eye className="h-4 w-4" />
     View bracket
-  </Button>
+  </button>
 )
 
 export const NotifyAuthGate = ({ onSignIn }: { onSignIn: () => void }): React.ReactNode => (

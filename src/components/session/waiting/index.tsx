@@ -12,6 +12,8 @@ import {
   NotifySection,
   PhoneInput,
   ProgressText,
+  SegmentDivider,
+  SegmentedActions,
   WaitingContainer,
 } from './elements'
 import { useAuthContext } from '@components/auth-context'
@@ -134,13 +136,20 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
         )}
       </NotifySection>
 
-      {/* Action buttons in a compact row */}
+      {/* Tools grouped in a pill; the consequential skip sits apart as a quiet link */}
       <ActionRow>
-        <BracketButton onPress={() => setBracketOpen(true)} />
-        <div onClick={() => setHasShared(true)}>
-          <Share sessionId={sessionId} />
-        </div>
-        <ForceRoundButton isLoading={closeMutation.isPending} onPress={() => setConfirmOpen(true)} />
+        <SegmentedActions>
+          <BracketButton onPress={() => setBracketOpen(true)} />
+          <SegmentDivider />
+          <div onClick={() => setHasShared(true)}>
+            <Share sessionId={sessionId} variant="bare" />
+          </div>
+        </SegmentedActions>
+        <ForceRoundButton
+          isLoading={closeMutation.isPending}
+          label={solo ? 'Skip to next round' : 'Skip ahead without them'}
+          onPress={() => setConfirmOpen(true)}
+        />
       </ActionRow>
 
       {confirmOpen && (

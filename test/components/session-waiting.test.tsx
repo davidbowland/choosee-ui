@@ -95,22 +95,29 @@ describe('WaitingPhase', () => {
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
   })
 
-  it('should display Skip to next round button', () => {
+  it('should display the skip-ahead link', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
+    expect(screen.getByText(/Skip ahead without them/i)).toBeInTheDocument()
+  })
+
+  it('should use neutral skip copy for a solo voter', () => {
+    const soloSession = { ...mockSession, users: ['user-1'], voterCount: 1, votersSubmitted: 0 }
+    renderWithClient(<WaitingPhase {...defaultProps} session={soloSession} />)
     expect(screen.getByText(/Skip to next round/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Skip ahead without them/i)).not.toBeInTheDocument()
   })
 
   it('should show confirmation dialog when Skip to next round is clicked', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     expect(screen.getByText(/Not everyone has voted yet/i)).toBeInTheDocument()
   })
 
   it('should close confirmation dialog on Cancel', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     expect(screen.getByText(/Not everyone has voted yet/i)).toBeInTheDocument()
 
     await user.click(screen.getByText('Cancel'))
@@ -120,7 +127,7 @@ describe('WaitingPhase', () => {
   it('should close confirmation dialog on Escape key', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     expect(screen.getByText(/Not everyone has voted yet/i)).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
@@ -134,7 +141,7 @@ describe('WaitingPhase', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     const spy = jest.spyOn(queryClient, 'setQueryData')
 
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     await user.click(screen.getByText('Confirm'))
 
     await waitFor(() => {
@@ -202,7 +209,7 @@ describe('WaitingPhase', () => {
   it('should render dialog with aria-modal attribute', async () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     const dialog = screen.getByRole('alertdialog')
     expect(dialog).toBeInTheDocument()
   })
@@ -270,7 +277,7 @@ describe('WaitingPhase', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     const spy = jest.spyOn(queryClient, 'invalidateQueries')
 
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     await user.click(screen.getByText('Confirm'))
 
     await waitFor(() => {
@@ -290,7 +297,7 @@ describe('WaitingPhase', () => {
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
 
-    await user.click(screen.getByText(/Skip to next round/i))
+    await user.click(screen.getByText(/Skip ahead without them/i))
     await user.click(screen.getByText('Confirm'))
 
     await waitFor(() => {
