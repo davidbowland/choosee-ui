@@ -5,14 +5,24 @@ import React from 'react'
 // @ts-expect-error — mock-only export from __mocks__/index.tsx
 import { mockSetAuthState } from '@components/auth-context'
 import WaitingPhase from '@components/session/waiting'
+import { useProfile } from '@hooks/useProfile'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ChoicesMap, SessionData, User } from '@types'
+import { ChoicesMap, Profile, SessionData, User } from '@types'
 
 jest.mock('@components/auth-context')
 jest.mock('@services/api')
+jest.mock('@hooks/useProfile')
+
+const setProfile = jest.fn()
+const mockProfile = (profile: Profile) =>
+  jest.mocked(useProfile).mockReturnValue({ profile, isLoading: false, setProfile })
+const setupSignedIn = (profile: Profile): void => {
+  mockSetAuthState({ isSignedIn: true })
+  mockProfile(profile)
+}
 
 jest.mock('@heroui/react', () => ({
   ...jest.requireActual('@heroui/react'),
@@ -84,6 +94,7 @@ const defaultProps = {
 describe('WaitingPhase', () => {
   beforeEach(() => {
     mockSetAuthState({ isSignedIn: true })
+    mockProfile({ verified: true, phoneLast4: '4567', consent: true })
     jest.mocked(toast.info).mockClear()
     jest.mocked(toast.danger).mockClear()
   })
@@ -155,49 +166,62 @@ describe('WaitingPhase', () => {
     expect(screen.getByText(/Text me when voting opens/i)).toBeInTheDocument()
   })
 
-  it('should show phone input when notify checked and user has no phone', async () => {
+  it('reveals consent + phone entry when no number is registered', async () => {
+    setupSignedIn({ verified: false, phoneLast4: null, consent: false })
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
     await user.click(screen.getByText(/Text me when voting opens/i))
     expect(screen.getByPlaceholderText('+1 (555) 123-4567')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /I agree to receive Choosee text reminders/i })).toBeInTheDocument()
   })
 
-  it('should subscribe immediately when user already has a phone', async () => {
-    const userWithPhone = { ...doneUser, phone: '+15551234567' }
-    jest.mocked(api.subscribeToRound).mockResolvedValue(userWithPhone)
-
-    const user = userEvent.setup()
-    renderWithClient(<WaitingPhase {...defaultProps} currentUser={userWithPhone} />)
-    await user.click(screen.getByText(/Text me when voting opens/i))
-
-    await waitFor(() => {
-      expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true)
-    })
-  })
-
-  it('should save phone then subscribe when phone is submitted', async () => {
-    jest.mocked(api.patchUser).mockResolvedValue({ ...doneUser, phone: '+15559999999' })
-    jest.mocked(api.subscribeToRound).mockResolvedValue({ ...doneUser, phone: '+15559999999' })
-
+  it('keeps Register disabled until consent is checked and phone is valid', async () => {
+    setupSignedIn({ verified: false, phoneLast4: null, consent: false })
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
     await user.click(screen.getByText(/Text me when voting opens/i))
+    const register = screen.getByRole('button', { name: 'Register' })
+    expect(register).toBeDisabled()
+    await user.type(screen.getByPlaceholderText('+1 (555) 123-4567'), '5559999999')
+    expect(register).toBeDisabled() // valid phone but no consent
+    await user.click(screen.getByRole('checkbox', { name: /I agree/i }))
+    expect(register).toBeEnabled()
+  })
 
-    const phoneInput = screen.getByPlaceholderText('+1 (555) 123-4567')
-    await user.type(phoneInput, '5559999999')
-    await user.click(screen.getByText('Save'))
+  it('registers the phone then subscribes on submit', async () => {
+    setupSignedIn({ verified: false, phoneLast4: null, consent: false })
+    jest.mocked(api.registerPhone).mockResolvedValue({ verified: false, phoneLast4: '9999', consent: true })
+    jest.mocked(api.subscribeToRound).mockResolvedValue(doneUser)
+    const user = userEvent.setup()
+    renderWithClient(<WaitingPhase {...defaultProps} />)
+    await user.click(screen.getByText(/Text me when voting opens/i))
+    await user.type(screen.getByPlaceholderText('+1 (555) 123-4567'), '5559999999')
+    await user.click(screen.getByRole('checkbox', { name: /I agree/i }))
+    await user.click(screen.getByRole('button', { name: 'Register' }))
+    await waitFor(() => expect(api.registerPhone).toHaveBeenCalledWith('+15559999999', true))
+    await waitFor(() => expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true))
+    expect(await screen.findByText(/one-tap verification link/i)).toBeInTheDocument()
+  })
 
-    await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith(
-        'test-session',
-        'user-1',
-        [{ op: 'replace', path: '/phone', value: '+15559999999' }],
-        true,
-      )
-    })
-    await waitFor(() => {
-      expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true)
-    })
+  it('subscribes directly when a verified number is already registered', async () => {
+    setupSignedIn({ verified: true, phoneLast4: '4567', consent: true })
+    jest.mocked(api.subscribeToRound).mockResolvedValue(doneUser)
+    const user = userEvent.setup()
+    renderWithClient(<WaitingPhase {...defaultProps} />)
+    await user.click(screen.getByText(/Text me when voting opens/i))
+    await waitFor(() => expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true))
+    expect(screen.queryByPlaceholderText('+1 (555) 123-4567')).not.toBeInTheDocument()
+  })
+
+  it('subscribes then shows the verification hint for an unverified number', async () => {
+    setupSignedIn({ verified: false, phoneLast4: '4567', consent: true })
+    jest.mocked(api.subscribeToRound).mockResolvedValue(doneUser)
+    const user = userEvent.setup()
+    renderWithClient(<WaitingPhase {...defaultProps} />)
+    await user.click(screen.getByText(/Text me when voting opens/i))
+    await waitFor(() => expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true))
+    expect(await screen.findByText(/one-tap verification link/i)).toBeInTheDocument()
+    expect(screen.getByText(/●●●●4567/)).toBeInTheDocument()
   })
 
   it('should display View bracket button', () => {
@@ -214,6 +238,7 @@ describe('WaitingPhase', () => {
   })
 
   it('should uncheck notify when already checked', async () => {
+    setupSignedIn({ verified: false, phoneLast4: null, consent: false })
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
     // Check it
@@ -225,11 +250,11 @@ describe('WaitingPhase', () => {
   })
 
   it('should reset notify on subscribe failure', async () => {
-    const userWithPhone = { ...doneUser, phone: '+15551234567' }
+    setupSignedIn({ verified: true, phoneLast4: '4567', consent: true })
     jest.mocked(api.subscribeToRound).mockRejectedValueOnce(new Error('fail'))
 
     const user = userEvent.setup()
-    renderWithClient(<WaitingPhase {...defaultProps} currentUser={userWithPhone} />)
+    renderWithClient(<WaitingPhase {...defaultProps} />)
     await user.click(screen.getByText(/Text me when voting opens/i))
 
     await waitFor(() => {
@@ -247,12 +272,13 @@ describe('WaitingPhase', () => {
   })
 
   it('should not submit empty phone', async () => {
+    setupSignedIn({ verified: false, phoneLast4: null, consent: false })
     const user = userEvent.setup()
     renderWithClient(<WaitingPhase {...defaultProps} />)
     await user.click(screen.getByText(/Text me when voting opens/i))
-    // Save button should be disabled with empty phone
-    const saveBtn = screen.getByText('Save')
-    expect(saveBtn).toBeDisabled()
+    // Register button should be disabled with empty phone
+    const registerBtn = screen.getByText('Register')
+    expect(registerBtn).toBeDisabled()
   })
 
   it('should display voter progress from session payload', () => {

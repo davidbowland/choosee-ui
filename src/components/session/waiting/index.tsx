@@ -6,6 +6,7 @@ import {
   ActionRow,
   BracketButton,
   ConfirmDialog,
+  ConsentCheckbox,
   ForceRoundButton,
   NotifyAuthGate,
   NotifyCheckbox,
@@ -14,6 +15,7 @@ import {
   ProgressText,
   SegmentDivider,
   SegmentedActions,
+  VerificationHint,
   WaitingContainer,
 } from './elements'
 import { useAuthContext } from '@components/auth-context'
@@ -21,7 +23,8 @@ import BracketView from '@components/bracket-view'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
 import { usePhoneInput } from '@hooks/use-phone-input'
-import { closeRound, patchUser, subscribeToRound, hasErrorCode } from '@services/api'
+import { useProfile } from '@hooks/useProfile'
+import { closeRound, registerPhone, subscribeToRound, hasErrorCode } from '@services/api'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
 import { isSoloVoter } from '@utils/users'
 
@@ -35,14 +38,17 @@ export interface WaitingPhaseProps {
 const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
   const { isSignedIn, handleSignIn } = useAuthContext()
+  const { profile, setProfile } = useProfile()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [notifyChecked, setNotifyChecked] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
   const [hasShared, setHasShared] = useState(false)
   const phoneInput = usePhoneInput()
   const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'subscribed'>('idle')
 
   const currentRound = session.currentRound
+  const hasPhone = profile?.phoneLast4 != null
 
   const closeMutation = useMutation({
     mutationFn: () => closeRound(sessionId, currentRound),
@@ -61,22 +67,19 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
     },
   })
 
-  const phoneMutation = useMutation({
-    mutationFn: (phone: string) =>
-      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/phone', value: phone }], isSignedIn),
-  })
-
   const savePhoneAndSubscribe = async (phone?: string): Promise<void> => {
     setNotifyStatus('saving')
     try {
       if (phone) {
-        await phoneMutation.mutateAsync(phone)
+        const updated = await registerPhone(phone, true)
+        setProfile(updated)
       }
       await subscribeToRound(sessionId, currentRound + 1, currentUser.userId, isSignedIn)
       setNotifyStatus('subscribed')
     } catch {
       setNotifyChecked(false)
       setNotifyStatus('idle')
+      void queryClient.invalidateQueries({ queryKey: ['profile'] })
     }
   }
 
@@ -86,14 +89,14 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       return
     }
     setNotifyChecked(true)
-    if (currentUser.phone) {
+    if (hasPhone) {
       await savePhoneAndSubscribe()
     }
   }
 
   const handlePhoneSubmit = async (): Promise<void> => {
     phoneInput.showError()
-    if (!phoneInput.isValid) return
+    if (!phoneInput.isValid || !consentChecked) return
     await savePhoneAndSubscribe(phoneInput.value)
   }
 
@@ -120,15 +123,21 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
               onChange={handleNotifyToggle}
               subscribed={notifyStatus === 'subscribed'}
             />
-            {notifyChecked && !currentUser.phone && notifyStatus !== 'subscribed' && (
-              <PhoneInput
-                error={phoneInput.error}
-                isLoading={notifyStatus === 'saving'}
-                isValid={phoneInput.isValid}
-                onChange={phoneInput.onChange}
-                onSubmit={handlePhoneSubmit}
-                value={phoneInput.value}
-              />
+            {notifyChecked && !hasPhone && notifyStatus !== 'subscribed' && (
+              <>
+                <ConsentCheckbox checked={consentChecked} onChange={setConsentChecked} />
+                <PhoneInput
+                  error={phoneInput.error}
+                  isLoading={notifyStatus === 'saving'}
+                  isValid={phoneInput.isValid && consentChecked}
+                  onChange={phoneInput.onChange}
+                  onSubmit={handlePhoneSubmit}
+                  value={phoneInput.value}
+                />
+              </>
+            )}
+            {notifyStatus === 'subscribed' && profile?.verified === false && (
+              <VerificationHint last4={profile.phoneLast4} />
             )}
           </>
         ) : (

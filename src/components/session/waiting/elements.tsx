@@ -178,9 +178,46 @@ export const PhoneInput = ({
       variant="primary"
     >
       {isLoading && <Spinner color="current" size="sm" />}
-      Save
+      Register
     </Button>
   </div>
+)
+
+export const ConsentCheckbox = ({
+  checked,
+  onChange,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}): React.ReactNode => (
+  <button
+    aria-checked={checked}
+    aria-label="I agree to receive Choosee text reminders"
+    className="flex w-full items-start gap-3 text-left"
+    onClick={() => onChange(!checked)}
+    role="checkbox"
+    type="button"
+  >
+    <div
+      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border transition-colors ${
+        checked ? 'border-[#F59E0B] bg-[#F59E0B] text-[#0A0A0B]' : 'border-white/[0.2] bg-white/[0.05]'
+      }`}
+    >
+      {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+    </div>
+    <span className="text-xs leading-relaxed text-[#9CA3AF]">
+      I agree to let Choosee text me about rounds in this and other Choosee polls I join. My number stays private —
+      it&apos;s never sold, shared, or used for marketing. I can stop anytime by replying STOP or turning off reminders.
+      Message and data rates may apply.
+    </span>
+  </button>
+)
+
+export const VerificationHint = ({ last4 }: { last4: string | null }): React.ReactNode => (
+  <p className="text-xs leading-relaxed text-[#9CA3AF]">
+    You&apos;re subscribed. The first text includes a one-tap verification link — open it to keep reminders coming to{' '}
+    ●●●●{last4 ?? ''}.
+  </p>
 )
 
 export const ActionRow = ({ children }: { children: React.ReactNode }): React.ReactNode => (
