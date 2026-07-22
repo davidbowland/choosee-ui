@@ -1,9 +1,15 @@
+import { toast } from '@heroui/react'
 import React from 'react'
 
 import Share from '@components/share'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+
+jest.mock('@heroui/react', () => ({
+  ...jest.requireActual('@heroui/react'),
+  toast: Object.assign(jest.fn(), { danger: jest.fn(), info: jest.fn(), success: jest.fn(), warning: jest.fn() }),
+}))
 
 const sessionId = 'test-session'
 const shareMock = jest.fn()
@@ -73,10 +79,11 @@ describe('Share', () => {
     expect(screen.queryByText('Copy URL')).not.toBeInTheDocument()
   })
 
-  it('should silently ignore a clipboard failure', async () => {
+  it('should show a toast and stay in the copy state when the clipboard write fails', async () => {
     const user = setup()
     jest.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('Permission denied'))
     await user.click(screen.getByRole('button', { name: 'Copy link' }))
+    await waitFor(() => expect(toast.danger).toHaveBeenCalledWith("Couldn't copy the link. Use the QR code instead."))
     expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
   })
 })

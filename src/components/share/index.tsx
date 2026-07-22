@@ -1,3 +1,4 @@
+import { toast } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 
 import { CopyButton, QrButton, QrModal, ShareButton, ShareGroup } from './elements'
@@ -40,7 +41,7 @@ const Share = ({ sessionId }: ShareProps): React.ReactNode => {
       await navigator.clipboard.writeText(sessionUrl)
       setCopied(true)
     } catch {
-      // Clipboard unavailable; QR remains available.
+      toast.danger("Couldn't copy the link. Use the QR code instead.")
     }
   }
 
