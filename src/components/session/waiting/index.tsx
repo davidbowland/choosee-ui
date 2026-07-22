@@ -38,7 +38,7 @@ export interface WaitingPhaseProps {
 const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
   const { isSignedIn, handleSignIn } = useAuthContext()
-  const { profile, setProfile } = useProfile()
+  const { profile, isLoading: profileLoading, setProfile } = useProfile()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [notifyChecked, setNotifyChecked] = useState(false)
@@ -88,6 +88,9 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       setNotifyChecked(false)
       return
     }
+    // Don't act until we know the profile — otherwise a user with an existing number
+    // would be shown the (write-once) registration form and hit a 409 on submit.
+    if (!profile) return
     setNotifyChecked(true)
     if (hasPhone) {
       await savePhoneAndSubscribe()
@@ -119,11 +122,11 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
           <>
             <NotifyCheckbox
               checked={notifyChecked}
-              disabled={notifyStatus === 'subscribed'}
+              disabled={notifyStatus === 'subscribed' || profileLoading}
               onChange={handleNotifyToggle}
               subscribed={notifyStatus === 'subscribed'}
             />
-            {notifyChecked && !hasPhone && notifyStatus !== 'subscribed' && (
+            {notifyChecked && profile != null && !hasPhone && notifyStatus !== 'subscribed' && (
               <>
                 <ConsentCheckbox checked={consentChecked} onChange={setConsentChecked} />
                 <PhoneInput

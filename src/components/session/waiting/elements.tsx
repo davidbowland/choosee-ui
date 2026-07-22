@@ -192,7 +192,7 @@ export const ConsentCheckbox = ({
 }): React.ReactNode => (
   <button
     aria-checked={checked}
-    aria-label="I agree to receive Choosee text reminders"
+    aria-labelledby="consent-text"
     className="flex w-full items-start gap-3 text-left"
     onClick={() => onChange(!checked)}
     role="checkbox"
@@ -205,7 +205,7 @@ export const ConsentCheckbox = ({
     >
       {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
     </div>
-    <span className="text-xs leading-relaxed text-[#9CA3AF]">
+    <span className="text-xs leading-relaxed text-[#9CA3AF]" id="consent-text">
       I agree to let Choosee text me about rounds in this and other Choosee polls I join. My number stays private —
       it&apos;s never sold, shared, or used for marketing. I can stop anytime by replying STOP or turning off reminders.
       Message and data rates may apply.

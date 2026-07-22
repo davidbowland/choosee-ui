@@ -171,7 +171,7 @@ describe('WaitingPhase', () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     await user.click(screen.getByText(/Text me when voting opens/i))
     expect(screen.getByPlaceholderText('+1 (555) 123-4567')).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /I agree to receive Choosee text reminders/i })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /I agree to let Choosee text me about rounds/i })).toBeInTheDocument()
   })
 
   it('keeps Register disabled until consent is checked and phone is valid', async () => {
@@ -200,6 +200,16 @@ describe('WaitingPhase', () => {
     await waitFor(() => expect(api.registerPhone).toHaveBeenCalledWith('+15559999999', true))
     await waitFor(() => expect(api.subscribeToRound).toHaveBeenCalledWith('test-session', 1, 'user-1', true))
     expect(await screen.findByText(/one-tap verification link/i)).toBeInTheDocument()
+  })
+
+  it('does not reveal the registration form while the profile is still loading', async () => {
+    mockSetAuthState({ isSignedIn: true })
+    jest.mocked(useProfile).mockReturnValue({ profile: undefined, isLoading: true, setProfile })
+    const user = userEvent.setup()
+    renderWithClient(<WaitingPhase {...defaultProps} />)
+    await user.click(screen.getByText(/Text me when voting opens/i))
+    expect(screen.queryByPlaceholderText('+1 (555) 123-4567')).not.toBeInTheDocument()
+    expect(api.subscribeToRound).not.toHaveBeenCalled()
   })
 
   it('subscribes directly when a verified number is already registered', async () => {

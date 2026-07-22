@@ -72,7 +72,7 @@ export interface SessionProps {
 
 const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { isSignedIn, handleSignIn } = useAuthContext()
+  const { isSignedIn, isLoading: authLoading, handleSignIn } = useAuthContext()
   const { userId, setUserId } = useSessionCookie(sessionId)
 
   // Read and strip ?id= from URL once on mount so the URL stays clean
@@ -82,6 +82,9 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const urlPin = useMemo(() => consumeUrlPin(), [])
   const verifyFired = useRef(false)
   useEffect(() => {
+    // Wait until auth has actually resolved — isSignedIn is false while still loading,
+    // and treating that as "signed out" would bounce a signed-in user through a redirect.
+    if (authLoading) return
     // useEffect only runs client-side, so sessionStorage is always available here.
     const stashed = sessionStorage.getItem(PENDING_PIN_KEY) ?? undefined
     const pin = urlPin ?? stashed
@@ -96,14 +99,15 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
           if (result.verified) void queryClient.invalidateQueries({ queryKey: ['profile'] })
         })
         .catch(() => {
-          verifyFired.current = false
+          // The original text link still carries the pin, so re-tapping it is the recovery path.
+          toast.danger('Something went wrong verifying your number. Open the link from your text again.')
         })
     } else if (urlPin) {
       // Verifying needs a Cognito JWT — stash the pin and send them through sign-in first.
       sessionStorage.setItem(PENDING_PIN_KEY, urlPin)
       handleSignIn()
     }
-  }, [isSignedIn, urlPin, handleSignIn, queryClient])
+  }, [authLoading, isSignedIn, urlPin, handleSignIn, queryClient])
 
   // Expose derived phase to refetchInterval via ref so the callback sees the latest phase
   // without duplicating phase logic or needing access to users state.

@@ -286,6 +286,39 @@ describe('Session', () => {
       restoreUrl()
     })
 
+    it('waits for auth to resolve before acting on a pin (no premature redirect)', async () => {
+      sessionStorage.clear()
+      setUrl('?pin=123456')
+      const handleSignIn = jest.fn()
+      // Auth still loading: isSignedIn is false but must NOT be treated as signed out.
+      mockSetAuthState({ isSignedIn: false, isLoading: true, handleSignIn })
+      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+
+      renderWithClient(<Session sessionId="test-session" />)
+
+      await waitFor(() => expect(screen.getByTestId('loading-phase')).toBeInTheDocument())
+      expect(handleSignIn).not.toHaveBeenCalled()
+      expect(api.verifyPhone).not.toHaveBeenCalled()
+      expect(sessionStorage.getItem('choosee_pending_pin')).toBeNull()
+      restoreUrl()
+    })
+
+    it('shows an error toast when verification fails unexpectedly', async () => {
+      restoreUrl()
+      sessionStorage.setItem('choosee_pending_pin', '999888')
+      mockSetAuthState({ isSignedIn: true, isLoading: false })
+      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+      jest.mocked(api.verifyPhone).mockRejectedValue(new Error('network'))
+
+      renderWithClient(<Session sessionId="test-session" />)
+
+      await waitFor(() =>
+        expect(toast.danger).toHaveBeenCalledWith(
+          'Something went wrong verifying your number. Open the link from your text again.',
+        ),
+      )
+    })
+
     it('verifies a stashed pin after returning signed in', async () => {
       restoreUrl()
       sessionStorage.setItem('choosee_pending_pin', '111222')
