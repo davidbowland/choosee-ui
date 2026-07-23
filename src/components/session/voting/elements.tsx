@@ -2,6 +2,8 @@ import { Skeleton } from '@heroui/react'
 import { Eye, MousePointerClick, Pencil } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
+import { LabeledRule } from '@components/labeled-rule'
+
 export const VotingContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 p-4">{children}</div>
 )
@@ -107,14 +109,10 @@ export const VoteCallToAction = (): React.ReactNode => {
   }, [])
 
   return (
-    <div className="flex w-full items-center justify-center gap-3">
-      <div className="h-px flex-1 bg-white/[0.04]" />
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#374151]">
-        <MousePointerClick className="h-3.5 w-3.5" />
-        {verb ? <span>{verb} a card to vote</span> : <Skeleton className="h-3 w-28 rounded-sm" />}
-      </div>
-      <div className="h-px flex-1 bg-white/[0.04]" />
-    </div>
+    <LabeledRule>
+      <MousePointerClick className="h-3.5 w-3.5" />
+      {verb ? <span>{verb} a card to vote</span> : <Skeleton className="h-3 w-28 rounded-sm" />}
+    </LabeledRule>
   )
 }
 

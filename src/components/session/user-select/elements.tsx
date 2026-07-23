@@ -1,6 +1,7 @@
 import { UserPlus } from 'lucide-react'
 import React from 'react'
 
+import { LabeledRule } from '@components/labeled-rule'
 import { PillArrowButton } from '@components/pill-arrow-button'
 import Share from '@components/share'
 
@@ -69,10 +70,10 @@ export const ErrorMessage = ({ message }: { message: string }): React.ReactNode 
   <p className="text-sm text-red-400">{message}</p>
 )
 
-// A quiet secondary affordance — "Let's go" is the only primary action on this screen.
+// A quiet section break — "Let's go" stays the only primary action on this screen.
 export const InviteSection = ({ sessionId }: { sessionId: string }): React.ReactNode => (
-  <div className="flex flex-col items-center gap-2 pt-1">
-    <p className="text-xs text-[#4B5563]">Invite someone else</p>
+  <div className="flex flex-col items-center gap-3 pt-1">
+    <LabeledRule>Invite someone</LabeledRule>
     <Share sessionId={sessionId} />
   </div>
 )
