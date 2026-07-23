@@ -29,7 +29,18 @@ describe('SessionCreate component', () => {
 
   const grecaptchaExecute = jest.fn()
   const grecaptchaReady = jest.fn((cb: () => void) => cb())
+  const getCurrentPosition = jest.fn((success: PositionCallback) =>
+    success({ coords: { latitude: 34.09, longitude: -118.41 } } as GeolocationPosition),
+  )
   const originalRandom = Math.random
+
+  const forbiddenError = (): ApiError => {
+    const error = new ApiError({ message: 'Forbidden', name: 'ApiError', recoverySuggestion: '' })
+    Object.defineProperty(error, 'response', { get: () => ({ statusCode: 403, headers: {}, body: '{}' }) })
+    return error
+  }
+
+  const executesFor = (action: string) => grecaptchaExecute.mock.calls.filter((call) => call[1].action === action)
 
   beforeAll(() => {
     Math.random = jest.fn(() => 0.5)
@@ -44,6 +55,10 @@ describe('SessionCreate component', () => {
       value: { execute: grecaptchaExecute, ready: grecaptchaReady },
     })
     grecaptchaExecute.mockResolvedValue(recaptchaToken)
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    })
   })
 
   afterAll(() => {
@@ -125,15 +140,7 @@ describe('SessionCreate component', () => {
     })
 
     it('should show 403 error message', async () => {
-      const error = new ApiError({
-        message: 'Forbidden',
-        name: 'ApiError',
-        recoverySuggestion: '',
-      })
-      Object.defineProperty(error, 'response', {
-        get: () => ({ statusCode: 403, headers: {}, body: '{}' }),
-      })
-      jest.mocked(api).createSession.mockRejectedValueOnce(error)
+      jest.mocked(api).createSession.mockRejectedValueOnce(forbiddenError()).mockRejectedValueOnce(forbiddenError())
       renderWithClient(<SessionCreate />)
 
       const user = userEvent.setup()
@@ -168,6 +175,133 @@ describe('SessionCreate component', () => {
       })
 
       expect(await screen.findByText(/Something went wrong setting up your restaurants/i)).toBeInTheDocument()
+    })
+
+    it('should replay the request with a fresh token when the first token is rejected', async () => {
+      jest.mocked(api).createSession.mockRejectedValueOnce(forbiddenError())
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const addressInput = await screen.findByLabelText(/Your location/i)
+      await act(async () => {
+        await user.clear(addressInput)
+        await user.type(addressInput, address)
+      })
+
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
+      await act(async () => {
+        await user.click(chooseButton)
+      })
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith(`/s/${sessionId}`))
+      expect(api.createSession).toHaveBeenCalledTimes(2)
+      expect(executesFor('CREATE_SESSION')).toHaveLength(2)
+      expect(screen.queryByText(/Unusual traffic detected/i)).not.toBeInTheDocument()
+    })
+
+    it('should not replay the request on a non-403 error', async () => {
+      jest.mocked(api).createSession.mockRejectedValueOnce(new Error('Server error'))
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const addressInput = await screen.findByLabelText(/Your location/i)
+      await act(async () => {
+        await user.clear(addressInput)
+        await user.type(addressInput, address)
+      })
+
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
+      await act(async () => {
+        await user.click(chooseButton)
+      })
+
+      expect(await screen.findByText(/Something went wrong setting up your restaurants/i)).toBeInTheDocument()
+      expect(api.createSession).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('reCAPTCHA warm-up', () => {
+    it('should not prime before the user touches the form', async () => {
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByLabelText(/Your location/i)
+
+      expect(grecaptchaExecute).not.toHaveBeenCalled()
+    })
+
+    it('should prime once on first interaction with the form', async () => {
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const addressInput = await screen.findByLabelText(/Your location/i)
+      await act(async () => {
+        await user.click(addressInput)
+        await user.type(addressInput, address)
+      })
+
+      const milesSliderInput = await screen.findByRole('slider', { name: /Maximum distance/i })
+      fireEvent.change(milesSliderInput, { target: { value: 1 } })
+
+      await waitFor(() => expect(executesFor('WARMUP')).toHaveLength(1))
+    })
+
+    it('should not surface a failed warm-up', async () => {
+      grecaptchaExecute.mockRejectedValueOnce(new Error('reCAPTCHA unavailable'))
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const addressInput = await screen.findByLabelText(/Your location/i)
+      await act(async () => {
+        await user.click(addressInput)
+        await user.type(addressInput, address)
+      })
+
+      await waitFor(() => expect(executesFor('WARMUP')).toHaveLength(1))
+      expect(screen.queryByText(/went wrong/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Unusual traffic detected/i)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('use my location', () => {
+    it('should look up the address and fill the field', async () => {
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const locationButton = await screen.findByRole('button', { name: /location/i })
+      await act(async () => {
+        await user.click(locationButton)
+      })
+
+      await waitFor(() => expect(api.fetchAddress).toHaveBeenCalledWith(34.09, -118.41, recaptchaToken))
+      expect(await screen.findByDisplayValue(address)).toBeInTheDocument()
+    })
+
+    it('should replay the lookup with a fresh token when the first token is rejected', async () => {
+      jest.mocked(api).fetchAddress.mockRejectedValueOnce(forbiddenError())
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const locationButton = await screen.findByRole('button', { name: /location/i })
+      await act(async () => {
+        await user.click(locationButton)
+      })
+
+      await waitFor(() => expect(api.fetchAddress).toHaveBeenCalledTimes(2))
+      expect(executesFor('GEOCODE')).toHaveLength(2)
+      expect(await screen.findByDisplayValue(address)).toBeInTheDocument()
+    })
+
+    it('should show a lookup error when both attempts are rejected', async () => {
+      jest.mocked(api).fetchAddress.mockRejectedValueOnce(forbiddenError()).mockRejectedValueOnce(forbiddenError())
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const locationButton = await screen.findByRole('button', { name: /location/i })
+      await act(async () => {
+        await user.click(locationButton)
+      })
+
+      expect(await screen.findByText(/Couldn't look up your address/i)).toBeInTheDocument()
     })
   })
 
