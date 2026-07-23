@@ -1,9 +1,8 @@
-import { Button } from '@heroui/react'
 import { UserPlus } from 'lucide-react'
-import { QRCodeSVG } from 'qrcode.react'
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 
 import { PillArrowButton } from '@components/pill-arrow-button'
+import Share from '@components/share'
 
 export const SectionContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mx-auto flex w-full max-w-md flex-col gap-4 p-4">{children}</div>
@@ -70,40 +69,10 @@ export const ErrorMessage = ({ message }: { message: string }): React.ReactNode 
   <p className="text-sm text-red-400">{message}</p>
 )
 
-export const InviteSection = ({ sessionId }: { sessionId: string }): React.ReactNode => {
-  const [copied, setCopied] = useState(false)
-  const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const sessionUrl = `${typeof window === 'undefined' ? '' : window.location.origin}/s/${sessionId}`
-
-  useEffect(() => {
-    return () => clearTimeout(copiedTimer.current)
-  }, [])
-
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(sessionUrl)
-      clearTimeout(copiedTimer.current)
-      setCopied(true)
-      copiedTimer.current = setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* clipboard API unavailable */
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-3 rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-4">
-      <p className="text-sm font-semibold text-[#D4D4D4]">Invite someone</p>
-      <p className="text-xs text-[#4B5563]">Share this link so others can join</p>
-      <Button
-        className="w-full rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B] hover:opacity-90"
-        onPress={handleCopy}
-        variant="primary"
-      >
-        {copied ? 'Copied!' : 'Copy invite link'}
-      </Button>
-      <div className="flex justify-center rounded-lg bg-white p-3">
-        <QRCodeSVG size={128} value={sessionUrl} />
-      </div>
-    </div>
-  )
-}
+// A quiet secondary affordance — "Let's go" is the only primary action on this screen.
+export const InviteSection = ({ sessionId }: { sessionId: string }): React.ReactNode => (
+  <div className="flex flex-col items-center gap-2 pt-1">
+    <p className="text-xs text-[#4B5563]">Invite someone else</p>
+    <Share sessionId={sessionId} />
+  </div>
+)
