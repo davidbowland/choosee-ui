@@ -38,10 +38,8 @@ const mockUsers: User[] = [
   {
     userId: 'user-1',
     name: 'Test User',
-    phone: null,
     subscribedRounds: [],
     votes: [[null]],
-    textsSent: 0,
   },
 ]
 
@@ -117,6 +115,24 @@ describe('Session phase router', () => {
     expect(await screen.findByText(/Something went wrong on the server/i)).toBeInTheDocument()
   })
 
+  it('should render a not-found message when the session request 404s', async () => {
+    jest.mocked(api.fetchSession).mockRejectedValue(new Error('Not Found'))
+    jest.mocked(api.hasStatusCode).mockReturnValue(true)
+    renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
+
+    expect(await screen.findByText(/can.t find this Choosee/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Scouting the competition/i)).not.toBeInTheDocument()
+  })
+
+  it('should render a generic message when the session request fails for another reason', async () => {
+    jest.mocked(api.fetchSession).mockRejectedValue(new Error('Network down'))
+    jest.mocked(api.hasStatusCode).mockReturnValue(false)
+    renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
+
+    expect(await screen.findByText(/couldn.t load this Choosee/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Scouting the competition/i)).not.toBeInTheDocument()
+  })
+
   it('should render winner phase when winner is set', async () => {
     jest.mocked(api.fetchSession).mockResolvedValue({
       ...mockSession,
@@ -133,9 +149,7 @@ describe('Session phase router', () => {
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: true })
     jest
       .mocked(api.fetchUsers)
-      .mockResolvedValue([
-        { userId: 'user-1', name: 'Test User', phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
-      ])
+      .mockResolvedValue([{ userId: 'user-1', name: 'Test User', subscribedRounds: [], votes: [[null]] }])
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
     expect(await screen.findByText(/Welcome back/i)).toBeInTheDocument()

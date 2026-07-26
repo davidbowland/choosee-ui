@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   AddressField,
@@ -41,6 +41,27 @@ const waitForRecaptcha = (): Promise<void> =>
     check()
   })
 
+/** Waits for reCAPTCHA to be ready, then mints a fresh token for `action`. */
+const executeRecaptcha = async (action: string): Promise<string> => {
+  await waitForRecaptcha()
+  return grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action })
+}
+
+const isScoreRejection = (error: unknown): boolean => error instanceof ApiError && error.response?.statusCode === 403
+
+/** Runs a reCAPTCHA-guarded request, replaying it once with a fresh token when the API rejects the
+    score. Both guarded endpoints verify the token before doing any other work, so a rejected
+    request creates nothing and is safe to replay — and the replay's token is a second, warmer
+    execute, which is what clears the score threshold. */
+const withRecaptchaRetry = async <T,>(action: string, request: (token: string) => Promise<T>): Promise<T> => {
+  try {
+    return await request(await executeRecaptcha(action))
+  } catch (error) {
+    if (!isScoreRejection(error)) throw error
+    return request(await executeRecaptcha(action))
+  }
+}
+
 const SessionCreate = (): React.ReactNode => {
   const router = useRouter()
   const [address, setAddress] = useState('')
@@ -70,11 +91,8 @@ const SessionCreate = (): React.ReactNode => {
   })
 
   const sessionMutation = useMutation({
-    mutationFn: async (session: NewSessionRequest) => {
-      await waitForRecaptcha()
-      const token = await grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'CREATE_SESSION' })
-      return createSession(session, token)
-    },
+    mutationFn: (session: NewSessionRequest) =>
+      withRecaptchaRetry('CREATE_SESSION', (token) => createSession(session, token)),
     onSuccess: (data) => {
       setIsNavigating(true)
       router.push(`/s/${data.sessionId}`)
@@ -108,6 +126,26 @@ const SessionCreate = (): React.ReactNode => {
     }
   }, [])
 
+  // reCAPTCHA v3 scores the first, cold `execute` of a page load low because it has gathered almost
+  // no behavioural signal yet; the next execute, against a warmed session, scores comfortably above
+  // the API's threshold. Fire one throwaway token as soon as the visitor touches the form so their
+  // real request is never the cold first execute. The token is discarded client-side, so it never
+  // reaches siteverify and costs no assessment. Once per mount, and best-effort — a failed warm-up
+  // must never block or surface to the user.
+  const hasPrimedRef = useRef(false)
+  const primeRecaptcha = (): void => {
+    if (hasPrimedRef.current) return
+    hasPrimedRef.current = true
+    const prime = async (): Promise<void> => {
+      try {
+        await executeRecaptcha('WARMUP')
+      } catch {
+        // best-effort priming; ignore failures
+      }
+    }
+    void prime()
+  }
+
   const handleUseMyLocation = (): void => {
     if (!navigator.geolocation) {
       setLocationError("Location services aren't supported by your browser. Please enter your address manually.")
@@ -119,9 +157,9 @@ const SessionCreate = (): React.ReactNode => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          await waitForRecaptcha()
-          const token = await grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'GEOCODE' })
-          const result = await fetchAddress(pos.coords.latitude, pos.coords.longitude, token)
+          const result = await withRecaptchaRetry('GEOCODE', (token) =>
+            fetchAddress(pos.coords.latitude, pos.coords.longitude, token),
+          )
           setAddress(result.address)
         } catch {
           setLocationError("Couldn't look up your address. Please enter it manually.")
@@ -224,53 +262,58 @@ const SessionCreate = (): React.ReactNode => {
 
   return (
     <>
-      <CreateCard>
-        <AddressField disabled={isLoading} error={addressError} onChange={(v) => setAddress(v)} value={address} />
-        <UseMyLocationButton error={locationError} isLoading={isLocating} onPress={handleUseMyLocation} />
-        <MultiSelect
-          disabled={isLoading}
-          items={config.placeTypes.map((t) => ({ id: t.value, name: t.display }))}
-          label="Restaurant type"
-          onChange={handleChoiceTypeChange}
-          selectedKeys={choiceTypes.map((t) => t.value)}
-        />
-        <MultiSelect
-          disabled={isLoading}
-          items={config.placeTypes
-            .filter((type) => type.canBeExcluded !== false)
-            .map((t) => ({ id: t.value, name: t.display }))}
-          label="Excluded types"
-          onChange={handleExcludedTypeChange}
-          selectedKeys={excludedTypes.map((t) => t.value)}
-        />
-        <SortByFieldset
-          isLoading={isLoading}
-          onChange={handleRankByChange}
-          options={config.sortOptions}
-          rankBy={rankBy ?? config.sortOptions[0]?.value}
-        />
-        {maxChoices !== undefined && selectedSortOption && (
-          <MaxChoicesSlider
+      {/* Capture-phase so the warm-up starts on the very first touch of the form — including the
+          pointerdown that precedes a "Use my location" click, which gives the warm-up the whole
+          permission prompt and GPS fix to settle before the geocode token is minted. */}
+      <div onFocusCapture={primeRecaptcha} onPointerDownCapture={primeRecaptcha}>
+        <CreateCard>
+          <AddressField disabled={isLoading} error={addressError} onChange={(v) => setAddress(v)} value={address} />
+          <UseMyLocationButton error={locationError} isLoading={isLocating} onPress={handleUseMyLocation} />
+          <MultiSelect
             disabled={isLoading}
-            max={selectedSortOption.maxChoices}
-            min={2}
-            onChange={setMaxChoices}
-            value={maxChoices}
+            items={config.placeTypes.map((t) => ({ id: t.value, name: t.display }))}
+            label="Restaurant type"
+            onChange={handleChoiceTypeChange}
+            selectedKeys={choiceTypes.map((t) => t.value)}
           />
-        )}
-        {maxChoices !== undefined && <VoteCountHint maxChoices={maxChoices} />}
-        <DistanceSlider
-          disabled={isLoading}
-          max={config.radius.maxMiles}
-          min={config.radius.minMiles}
-          onChange={(v) => setRadiusMiles(v)}
-          value={radiusMiles ?? config.radius.defaultMiles}
-        />
-        <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
-        <p className="text-center text-xs">Your Choosee expires in 24 hours</p>
-        <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
-        <p className="text-center text-[10px] text-[#4B5563]">This site is protected by reCAPTCHA</p>
-      </CreateCard>
+          <MultiSelect
+            disabled={isLoading}
+            items={config.placeTypes
+              .filter((type) => type.canBeExcluded !== false)
+              .map((t) => ({ id: t.value, name: t.display }))}
+            label="Excluded types"
+            onChange={handleExcludedTypeChange}
+            selectedKeys={excludedTypes.map((t) => t.value)}
+          />
+          <SortByFieldset
+            isLoading={isLoading}
+            onChange={handleRankByChange}
+            options={config.sortOptions}
+            rankBy={rankBy ?? config.sortOptions[0]?.value}
+          />
+          {maxChoices !== undefined && selectedSortOption && (
+            <MaxChoicesSlider
+              disabled={isLoading}
+              max={selectedSortOption.maxChoices}
+              min={2}
+              onChange={setMaxChoices}
+              value={maxChoices}
+            />
+          )}
+          {maxChoices !== undefined && <VoteCountHint maxChoices={maxChoices} />}
+          <DistanceSlider
+            disabled={isLoading}
+            max={config.radius.maxMiles}
+            min={config.radius.minMiles}
+            onChange={(v) => setRadiusMiles(v)}
+            value={radiusMiles ?? config.radius.defaultMiles}
+          />
+          <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
+          <p className="text-center text-xs">Your Choosee expires in 24 hours</p>
+          <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
+          <p className="text-center text-[10px] text-[#4B5563]">This site is protected by reCAPTCHA</p>
+        </CreateCard>
+      </div>
       <FeedbackMessage autoHideDuration={15_000} message={errorMessage} onClose={clearError} severity="error" />
     </>
   )

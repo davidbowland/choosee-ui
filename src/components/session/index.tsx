@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useMemo, useRef } from 'react'
 
 import { ClosingSoonErrorAlert, ErrorBanner } from './elements'
-import { firstUnvotedIndex } from './helpers'
+import { firstUnvotedIndex, sessionLoadErrorMessage } from './helpers'
 import LoadingPhase from './loading'
 import UserSelectPhase from './user-select'
 import VotingPhase from './voting'
@@ -11,7 +11,7 @@ import WinnerPhase from './winner'
 import { useAuthContext } from '@components/auth-context'
 import ErrorBoundary from '@components/error-boundary'
 import { useSessionCookie } from '@hooks/useSessionCookie'
-import { fetchChoices, fetchSession, fetchUsers, patchUser } from '@services/api'
+import { backfillUserFromToken, fetchChoices, fetchSession, fetchUsers } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 import { isClosingSoonError } from '@utils/session'
 
@@ -22,8 +22,11 @@ function derivePhase(
   currentUser: User | undefined,
   userIdentified: boolean,
   usersLoaded: boolean,
+  sessionError: unknown,
 ): Phase {
-  if (!session) return 'loading'
+  // A failed fetch leaves session undefined. Without this the phase stays
+  // 'loading' forever and the spinner keeps polling a session that isn't there.
+  if (!session) return sessionError ? 'error' : 'loading'
   if (!session.isReady && session.errorMessage == null) return 'loading'
   if (!session.isReady && session.errorMessage != null) return 'error'
   if (session.winner != null) return 'winner'
@@ -66,7 +69,7 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   // without duplicating phase logic or needing access to users state.
   const phaseRef = useRef<Phase>('loading')
 
-  const { data: session } = useQuery<SessionData>({
+  const { data: session, error: sessionError } = useQuery<SessionData>({
     queryKey: ['session', sessionId],
     queryFn: () => fetchSession(sessionId),
     refetchInterval: () => {
@@ -120,7 +123,7 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   useEffect(() => {
     if (isSignedIn && currentUserId && currentUserName === null && !namePatchFired.current) {
       namePatchFired.current = true
-      patchUser(sessionId, currentUserId, [], true)
+      backfillUserFromToken(sessionId, currentUserId)
         .then((updated) => {
           if (updated.name) {
             queryClient.setQueryData<User[]>(['users', sessionId], (old) =>
@@ -129,13 +132,13 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
           }
         })
         .catch(() => {
-          // Graceful degradation — name will be set on the next PATCH (e.g. vote)
+          // Graceful degradation — the guard resets so the next load retries the backfill
           namePatchFired.current = false
         })
     }
   }, [isSignedIn, currentUserId, currentUserName, sessionId, queryClient])
 
-  const phase = derivePhase(session, currentUser, effectiveUserId != null, usersLoaded)
+  const phase = derivePhase(session, currentUser, effectiveUserId != null, usersLoaded, sessionError)
   phaseRef.current = phase
 
   const handleUserSelected = (newUserId: string): void => {
@@ -148,6 +151,7 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
       case 'loading':
         return <LoadingPhase session={session} />
       case 'error':
+        if (!session) return <ErrorBanner message={sessionLoadErrorMessage(sessionError)} />
         return isClosingSoonError(session?.errorMessage) ? (
           <ClosingSoonErrorAlert />
         ) : (

@@ -1,5 +1,15 @@
-import { firstUnvotedIndex } from '@components/session/helpers'
+import { ApiError } from 'aws-amplify/api'
+
+import { firstUnvotedIndex, isFinalRound, sessionLoadErrorMessage } from '@components/session/helpers'
 import { SessionData, User } from '@types'
+
+function apiError(statusCode: number): ApiError {
+  const error = Object.assign(new Error('Request failed'), {
+    response: { statusCode, headers: {}, body: '{}' },
+  })
+  Object.setPrototypeOf(error, ApiError.prototype)
+  return error as ApiError
+}
 
 const baseSession: SessionData = {
   sessionId: 'test',
@@ -30,10 +40,8 @@ const baseSession: SessionData = {
 const baseUser: User = {
   userId: 'user-1',
   name: 'Test',
-  phone: null,
   subscribedRounds: [],
   votes: [[null, null]],
-  textsSent: 0,
 }
 
 describe('firstUnvotedIndex', () => {
@@ -59,5 +67,33 @@ describe('firstUnvotedIndex', () => {
   it('should return 0 when bracket round is undefined', () => {
     const session = { ...baseSession, currentRound: 5 }
     expect(firstUnvotedIndex(session, baseUser)).toBe(-1)
+  })
+})
+
+describe('isFinalRound', () => {
+  it('should be false while rounds remain after this one', () => {
+    expect(isFinalRound({ ...baseSession, currentRound: 0, totalRounds: 3 })).toBe(false)
+  })
+
+  it('should be true on the last round', () => {
+    expect(isFinalRound({ ...baseSession, currentRound: 2, totalRounds: 3 })).toBe(true)
+  })
+
+  it('should be true past the last round', () => {
+    expect(isFinalRound({ ...baseSession, currentRound: 3, totalRounds: 3 })).toBe(true)
+  })
+})
+
+describe('sessionLoadErrorMessage', () => {
+  it('should report a missing session on 404', () => {
+    expect(sessionLoadErrorMessage(apiError(404))).toContain("can't find this Choosee")
+  })
+
+  it('should report a load failure on other status codes', () => {
+    expect(sessionLoadErrorMessage(apiError(500))).toContain("couldn't load this Choosee")
+  })
+
+  it('should report a load failure for non-API errors', () => {
+    expect(sessionLoadErrorMessage(new Error('Network down'))).toContain("couldn't load this Choosee")
   })
 })

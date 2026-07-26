@@ -17,8 +17,8 @@ jest.mock('@services/api', () => ({
 }))
 
 const mockUsers: User[] = [
-  { userId: 'brave-tiger', name: null, phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
-  { userId: 'user-2', name: 'Alice', phone: null, subscribedRounds: [], votes: [[null]], textsSent: 0 },
+  { userId: 'brave-tiger', name: null, subscribedRounds: [], votes: [[null]] },
+  { userId: 'user-2', name: 'Alice', subscribedRounds: [], votes: [[null]] },
 ]
 
 function renderWithClient(ui: React.ReactElement) {
@@ -58,10 +58,8 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: null,
-      phone: null,
       subscribedRounds: [],
       votes: [],
-      textsSent: 0,
     }
     jest.mocked(api.createUser).mockResolvedValue(newUser)
 
@@ -79,10 +77,8 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: null,
-      phone: null,
       subscribedRounds: [],
       votes: [],
-      textsSent: 0,
     }
     jest.mocked(api.createUser).mockResolvedValue(newUser)
 
@@ -118,26 +114,28 @@ describe('UserSelectPhase', () => {
     expect(await screen.findByText(/Max players reached/i)).toBeInTheDocument()
   })
 
-  it('should show invite section with copy link and QR code', () => {
+  it('should show invite section with copy and QR actions', () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
     expect(screen.getByText(/Invite someone/i)).toBeInTheDocument()
-    expect(screen.getByText(/Copy invite link/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show QR code' })).toBeInTheDocument()
   })
 
   it('should copy invite link to clipboard', async () => {
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
     const writeTextSpy = jest.spyOn(navigator.clipboard, 'writeText')
-    await user.click(screen.getByText(/Copy invite link/i))
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
     expect(writeTextSpy).toHaveBeenCalledWith(expect.stringContaining('/s/s1'))
     writeTextSpy.mockRestore()
   })
 
-  it('should show Copied! after clicking copy', async () => {
+  it('should show the QR code in a modal', async () => {
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
-    await user.click(screen.getByText(/Copy invite link/i))
-    expect(screen.getByText('Copied!')).toBeInTheDocument()
+    expect(screen.queryByText('Scan to join')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Show QR code' }))
+    await waitFor(() => expect(screen.getByText('Scan to join')).toBeInTheDocument())
   })
 
   it('should show generic error when createUser fails with non-400', async () => {
@@ -150,15 +148,6 @@ describe('UserSelectPhase', () => {
     await user.click(screen.getByText(/Let's go/i))
 
     expect(await screen.findByText(/Couldn't join/i)).toBeInTheDocument()
-  })
-
-  it('should handle clipboard failure gracefully', async () => {
-    const user = userEvent.setup()
-    renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
-    jest.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('Permission denied'))
-    await user.click(screen.getByText(/Copy invite link/i))
-    // Should not crash
-    expect(screen.getByText(/Invite someone/i)).toBeInTheDocument()
   })
 
   it('should not auto-create user while auth is still loading', () => {
@@ -182,10 +171,8 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: 'Google User',
-      phone: null,
       subscribedRounds: [],
       votes: [],
-      textsSent: 0,
     }
     jest.mocked(api.createUser).mockResolvedValue(newUser)
 

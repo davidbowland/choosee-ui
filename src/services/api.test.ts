@@ -2,6 +2,7 @@ import { ApiError, get, patch, post } from 'aws-amplify/api'
 import { fetchAuthSession } from 'aws-amplify/auth'
 
 import {
+  backfillUserFromToken,
   closeRound,
   createSession,
   createUser,
@@ -10,9 +11,9 @@ import {
   fetchSessionConfig,
   fetchSession,
   fetchUsers,
+  hasStatusCode,
   parseApiMessage,
   patchUser,
-  shareSession,
   subscribeToRound,
 } from './api'
 
@@ -310,6 +311,20 @@ describe('API service', () => {
     })
   })
 
+  describe('backfillUserFromToken', () => {
+    it('should send an empty patch to the authenticated user endpoint', async () => {
+      const updatedUser = { userId, name: 'Alice' }
+      mockPatch.mockReturnValue(mockResponse(updatedUser))
+      const result = await backfillUserFromToken(sessionId, userId)
+      expect(mockPatch).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPI',
+        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/authed`,
+        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: [] },
+      })
+      expect(result).toEqual(updatedUser)
+    })
+  })
+
   describe('closeRound', () => {
     it('should post to close round endpoint (unauthenticated)', async () => {
       const updatedSession = { sessionId, currentRound: 1 }
@@ -325,36 +340,44 @@ describe('API service', () => {
   })
 
   describe('subscribeToRound', () => {
-    it('should use authenticated endpoint when signed in', async () => {
+    it('should post to the authenticated subscribe endpoint', async () => {
       const updatedUser = { userId, subscribedRounds: [1] }
       mockPost.mockReturnValue(mockResponse(updatedUser))
-      const result = await subscribeToRound(sessionId, 1, userId, true)
+      const result = await subscribeToRound(sessionId, 1, userId)
       expect(mockPost).toHaveBeenCalledWith({
         apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/rounds/1/subscribe`,
+        path: `/sessions/${encodeURIComponent(sessionId)}/rounds/1/subscribe/authed`,
         options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { userId, roundId: 1 } },
       })
       expect(result).toEqual(updatedUser)
     })
   })
 
-  describe('shareSession', () => {
-    it('should post share with phone and type (always authenticated)', async () => {
-      const response = { userId: 'clever-fox' }
-      mockPost.mockReturnValue(mockResponse(response))
-      const result = await shareSession(sessionId, userId, '+15559876543')
-      expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/share`,
-        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { phone: '+15559876543', type: 'text' } },
-      })
-      expect(result).toEqual(response)
+  describe('hasStatusCode', () => {
+    const apiErrorWith = (statusCode: number): Error => {
+      const error = Object.assign(new Error('api failure'), { response: { statusCode, headers: {}, body: '' } })
+      Object.setPrototypeOf(error, ApiError.prototype)
+      return error
+    }
+
+    it('should return true when the ApiError carries the given status', () => {
+      expect(hasStatusCode(apiErrorWith(403), 403)).toBe(true)
+    })
+
+    it('should return false when the ApiError carries a different status', () => {
+      expect(hasStatusCode(apiErrorWith(400), 403)).toBe(false)
+    })
+
+    it('should return false for a non-ApiError', () => {
+      expect(hasStatusCode(new Error('network down'), 403)).toBe(false)
     })
   })
 
   describe('parseApiMessage', () => {
     it('should extract message from valid JSON body', () => {
-      expect(parseApiMessage(JSON.stringify({ message: 'Phone required' }), 'fallback')).toBe('Phone required')
+      expect(parseApiMessage(JSON.stringify({ message: 'Round already closed' }), 'fallback')).toBe(
+        'Round already closed',
+      )
     })
 
     it('should return fallback when body is undefined', () => {

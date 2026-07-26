@@ -137,29 +137,27 @@ export const patchUser = (
 ): Promise<User> =>
   apiPatch(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`, authenticated, operations)
 
+// Empty patch against the authed route: the server backfills name and googleSub from the
+// verified JWT when those fields are still null. It deliberately does NOT write email here
+// — this call fires automatically, so doing so would store an address with no opt-in, and on
+// a record claimed by another account it would misdirect that account's reminders. Email is
+// written only by post-user and by subscribe (ownership-guarded, on explicit opt-in).
+// Do not "restore" an email backfill in patch-user to match an older comment.
+export const backfillUserFromToken = (sessionId: string, userId: string): Promise<User> =>
+  apiPatch(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/authed`, true, [])
+
 export const closeRound = (sessionId: string, roundId: number): Promise<SessionData> =>
   apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`, false)
 
-export const subscribeToRound = (
-  sessionId: string,
-  roundId: number,
-  userId: string,
-  authenticated: boolean,
-): Promise<User> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/subscribe`, authenticated, { userId, roundId })
-
-export interface ShareResult {
-  userId: string
-}
-
-export const shareSession = (sessionId: string, userId: string, phone: string): Promise<ShareResult> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/share`, true, {
-    phone,
-    type: 'text',
-  })
+export const subscribeToRound = (sessionId: string, roundId: number, userId: string): Promise<User> =>
+  apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/subscribe/authed`, true, { userId, roundId })
 
 export function parseApiMessage(body: string | undefined, fallback: string): string {
   return parseBodyField(body, 'message') ?? fallback
+}
+
+export function hasStatusCode(err: unknown, statusCode: number): boolean {
+  return err instanceof ApiError && err.response?.statusCode === statusCode
 }
 
 export function hasErrorCode(err: unknown, code: ErrorCode): boolean {

@@ -1,4 +1,4 @@
-import { AlertDialog, Button, FieldError, Input, ProgressBar, Spinner, TextField } from '@heroui/react'
+import { AlertDialog, Button, ProgressBar, Spinner } from '@heroui/react'
 import { BellRing, Check, Eye } from 'lucide-react'
 import React from 'react'
 
@@ -48,16 +48,15 @@ export const ForceRoundButton = ({
   isLoading: boolean
   onPress: () => void
 }): React.ReactNode => (
-  <Button
-    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
-    isDisabled={isLoading}
-    onPress={onPress}
-    size="sm"
-    variant="outline"
+  <button
+    className="inline-flex items-center gap-1.5 text-[13px] text-[#6B7280] underline decoration-white/15 underline-offset-4 transition-colors hover:text-[#9CA3AF] focus:outline-none disabled:opacity-50"
+    disabled={isLoading}
+    onClick={onPress}
+    type="button"
   >
     {isLoading && <Spinner color="current" size="sm" />}
-    Skip to next round
-  </Button>
+    Skip ahead without them
+  </button>
 )
 
 export const ConfirmDialog = ({
@@ -72,55 +71,71 @@ export const ConfirmDialog = ({
   open: boolean
 }): React.ReactNode => (
   <AlertDialog isOpen={open} onOpenChange={(isOpen: boolean) => !isOpen && onCancel()}>
-    <AlertDialog.Backdrop variant="blur" />
-    <AlertDialog.Container size="sm">
-      <AlertDialog.Dialog>
-        <AlertDialog.Header>
-          <AlertDialog.Heading>Skip to next round?</AlertDialog.Heading>
-        </AlertDialog.Header>
-        <AlertDialog.Body>
-          <p className="text-sm text-[#6B7280]">Not everyone has voted yet. We&apos;ll skip their picks and move on.</p>
-        </AlertDialog.Body>
-        <AlertDialog.Footer className="flex justify-end gap-2">
-          <Button
-            className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
-            isDisabled={isLoading}
-            onPress={onCancel}
-            slot="close"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-          <Button
-            className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
-            isDisabled={isLoading}
-            onPress={onConfirm}
-            variant="primary"
-          >
-            {isLoading && <Spinner color="current" size="sm" />}
-            Confirm
-          </Button>
-        </AlertDialog.Footer>
-      </AlertDialog.Dialog>
-    </AlertDialog.Container>
+    {/* Container must nest inside Backdrop: the backdrop is the fixed, full-screen positioned
+        layer, so a sibling container renders in its own unpositioned portal — invisible behind
+        the blur. AlertDialog defaults to blocking Escape; dismissing this prompt does nothing
+        destructive, so allow it. */}
+    <AlertDialog.Backdrop isKeyboardDismissDisabled={false} variant="blur">
+      <AlertDialog.Container size="sm">
+        <AlertDialog.Dialog>
+          <AlertDialog.Header>
+            {/* Echoes the link that opened this, and stays true on the last round,
+                where skipping ahead produces a winner rather than another round. */}
+            <AlertDialog.Heading>Skip ahead without them?</AlertDialog.Heading>
+          </AlertDialog.Header>
+          <AlertDialog.Body>
+            <p className="text-sm text-[#6B7280]">
+              Not everyone has voted. Their votes won&apos;t count in this round.
+            </p>
+          </AlertDialog.Body>
+          <AlertDialog.Footer className="flex justify-end gap-2">
+            <Button
+              className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+              isDisabled={isLoading}
+              onPress={onCancel}
+              slot="close"
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+              isDisabled={isLoading}
+              onPress={onConfirm}
+              variant="primary"
+            >
+              {isLoading && <Spinner color="current" size="sm" />}
+              Skip ahead
+            </Button>
+          </AlertDialog.Footer>
+        </AlertDialog.Dialog>
+      </AlertDialog.Container>
+    </AlertDialog.Backdrop>
   </AlertDialog>
 )
 
 export const NotifyCheckbox = ({
   checked,
   disabled,
+  isSaving,
   onChange,
+  reminderEvent,
   subscribed,
 }: {
   checked: boolean
   disabled: boolean
+  isSaving?: boolean
   onChange: () => void
+  reminderEvent: string
   subscribed: boolean
 }): React.ReactNode => (
   <button
+    aria-checked={checked || subscribed}
+    aria-live="polite"
     className={`flex w-full items-center gap-3 rounded-lg text-left ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
     disabled={disabled}
     onClick={onChange}
+    role="switch"
     type="button"
   >
     <div
@@ -128,14 +143,24 @@ export const NotifyCheckbox = ({
         subscribed ? 'bg-success/15 text-success' : 'bg-[rgba(245,158,11,0.1)] text-[#F59E0B]'
       }`}
     >
-      {subscribed ? <Check className="h-5 w-5" /> : <BellRing className="h-5 w-5" />}
+      {isSaving ? (
+        <Spinner color="current" size="sm" />
+      ) : subscribed ? (
+        <Check className="h-5 w-5" />
+      ) : (
+        <BellRing className="h-5 w-5" />
+      )}
     </div>
     <div className="min-w-0 flex-1">
       <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-[#D4D4D4]'}`}>
-        {subscribed ? "We'll text you!" : 'Text me when voting opens'}
+        {subscribed ? "We'll email you!" : `Email me when ${reminderEvent}`}
       </p>
       <p className="text-xs text-[#4B5563]">
-        {subscribed ? "We'll send you a text when voting opens" : 'Tap to get a text reminder'}
+        {isSaving
+          ? 'Turning on reminders…'
+          : subscribed
+            ? `One email when ${reminderEvent}.`
+            : 'One email — nothing else.'}
       </p>
     </div>
     <div
@@ -152,57 +177,37 @@ export const NotifyCheckbox = ({
   </button>
 )
 
-export const PhoneInput = ({
-  error,
-  isLoading,
-  isValid,
-  onChange,
-  onSubmit,
-  value,
-}: {
-  error?: string
-  isLoading: boolean
-  isValid?: boolean
-  onChange: (v: string) => void
-  onSubmit: () => void
-  value: string
-}): React.ReactNode => (
-  <div className="flex w-full gap-2">
-    <TextField className="flex-1" isInvalid={!!error}>
-      <Input onChange={(e) => onChange(e.target.value)} placeholder="+1 (555) 123-4567" type="tel" value={value} />
-      {error && <FieldError>{error}</FieldError>}
-    </TextField>
-    <Button
-      className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
-      isDisabled={!isValid || isLoading}
-      onPress={onSubmit}
-      variant="primary"
-    >
-      {isLoading && <Spinner color="current" size="sm" />}
-      Save
-    </Button>
-  </div>
+export const ActionRow = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <div className="flex flex-col items-center gap-3">{children}</div>
 )
 
-export const ActionRow = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <div className="flex flex-wrap items-center justify-center gap-3">{children}</div>
+export const SegmentedActions = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+  <div className="inline-flex items-center rounded-full border border-white/[0.12] bg-white/[0.06] p-1">{children}</div>
 )
+
+export const SegmentDivider = (): React.ReactNode => <div className="mx-1 h-5 w-px bg-white/[0.08]" />
 
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button
-    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
-    onPress={onPress}
-    size="sm"
-    variant="outline"
+  <button
+    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-[#E5E7EB] transition-colors hover:bg-white/[0.08] focus:outline-none"
+    onClick={onPress}
+    type="button"
   >
     <Eye className="h-4 w-4" />
     View bracket
-  </Button>
+  </button>
 )
 
-export const NotifyAuthGate = ({ onSignIn }: { onSignIn: () => void }): React.ReactNode => (
+export const NotifyAuthGate = ({
+  onSignIn,
+  reminderEvent,
+}: {
+  onSignIn: () => void
+  reminderEvent: string
+}): React.ReactNode => (
   <div className="flex flex-col items-center gap-2">
-    <p className="text-center text-sm text-[#6B7280]">Sign in with Google for text reminders</p>
+    {/* The button below already says "Sign in with Google" — this line sells the reason. */}
+    <p className="text-center text-sm text-[#6B7280]">Want an email when {reminderEvent}?</p>
     <Button
       className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#D4D4D4]"
       onPress={onSignIn}

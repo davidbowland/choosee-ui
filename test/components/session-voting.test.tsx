@@ -57,10 +57,8 @@ const mockSession: SessionData = {
 const mockUser: User = {
   userId: 'user-1',
   name: 'Test User',
-  phone: null,
   subscribedRounds: [],
   votes: [[null, null]],
-  textsSent: 0,
 }
 
 const mockChoices: ChoicesMap = {
@@ -82,11 +80,20 @@ function renderWithClient(ui: React.ReactElement) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
+// Wording pinned here so the conflict paths cannot be quietly conflated with the
+// permanent ROUND_NOT_CURRENT path, which must keep its own copy.
+const voteConflictMessage =
+  "That didn't save — the Choosee updated at the same moment. Refreshed — tap your pick again."
+const nameConflictMessage =
+  "Your name didn't save — the Choosee updated at the same moment. Tap your name to try again."
+
 describe('VotingPhase', () => {
-  beforeEach(() => {
+  beforeAll(() => {
     jest.mocked(api.patchUser).mockResolvedValue(mockUser)
-    jest.mocked(toast.danger).mockClear()
-    jest.mocked(toast.info).mockClear()
+    // Without a `false` default these module mocks return undefined and the status-code
+    // branches under test would never be reached — nor excluded.
+    jest.mocked(api.hasErrorCode).mockReturnValue(false)
+    jest.mocked(api.hasStatusCode).mockReturnValue(false)
   })
 
   it('should display the current matchup restaurants', () => {
@@ -276,11 +283,52 @@ describe('VotingPhase', () => {
     await user.click(screen.getByTestId('card-Restaurant A'))
 
     await waitFor(() => {
-      expect(toast.info).toHaveBeenCalledWith('Round was advanced, moving to the next round.')
+      expect(toast.info).toHaveBeenCalledWith("That round ended before your vote landed — here's the next one.")
     })
+    // ROUND_NOT_CURRENT is permanent for this vote — it must never borrow the transient
+    // conflict copy, which invites a re-tap that could never apply.
+    expect(toast.info).not.toHaveBeenCalledWith(voteConflictMessage)
   })
 
-  it('should show toast on non-409 vote failure', async () => {
+  it('should refresh users and session and ask for a re-tap when the vote hits a 409', async () => {
+    jest.mocked(api.patchUser).mockRejectedValueOnce(new Error('conflict'))
+    jest.mocked(api.hasStatusCode).mockReturnValueOnce(true)
+
+    const user = userEvent.setup()
+    renderWithClient(
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        usersCount={2}
+      />,
+    )
+    const spy = jest.spyOn(queryClient, 'invalidateQueries')
+
+    await user.click(screen.getByTestId('card-Restaurant A'))
+
+    await waitFor(() => {
+      expect(toast.info).toHaveBeenCalledWith(voteConflictMessage)
+    })
+    // Only ['session'] is asserted: onSettled invalidates ['users'] on every path, so
+    // asserting that here would pass even with the branch deleted. The session query's
+    // refetchInterval is false during voting, so this invalidation is the only thing that
+    // refreshes it.
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['session', 'test-session'] })
+    // Pin the literal status. @services/api is auto-mocked, so hasStatusCode ignores its
+    // arguments — without this, changing 409 to any other code keeps the suite green.
+    expect(api.hasStatusCode).toHaveBeenCalledWith(expect.anything(), 409)
+    // A 409 is not a breakage — no danger toast, and the optimistic vote is rolled back
+    expect(toast.danger).not.toHaveBeenCalled()
+    expect(queryClient.getQueryData<User[]>(['users', 'test-session'])?.[0].votes).toEqual([[null, null]])
+    // No auto-retry: re-submitting against unseen data is the user's call, not ours
+    expect(api.patchUser).toHaveBeenCalledTimes(1)
+
+    spy.mockRestore()
+  })
+
+  it('should show the generic danger toast on a plain 500 vote failure', async () => {
     jest.mocked(api.patchUser).mockRejectedValueOnce(new Error('Network error'))
 
     const user = userEvent.setup()
@@ -296,8 +344,9 @@ describe('VotingPhase', () => {
     await user.click(screen.getByTestId('card-Restaurant A'))
 
     await waitFor(() => {
-      expect(toast.danger).toHaveBeenCalledWith('Vote failed. Please try again.')
+      expect(toast.danger).toHaveBeenCalledWith("Your vote didn't save. Tap your pick again.")
     })
+    expect(toast.info).not.toHaveBeenCalled()
   })
 
   it('should allow inline name editing', async () => {
@@ -393,8 +442,40 @@ describe('VotingPhase', () => {
     await user.keyboard('{Enter}')
 
     await waitFor(() => {
-      expect(toast.danger).toHaveBeenCalledWith('Failed to update name. Please try again.')
+      expect(toast.danger).toHaveBeenCalledWith("Your name didn't save. Tap your name to try again.")
     })
+  })
+
+  it('should invite a retry without blaming another user when the name update hits a 409', async () => {
+    jest.mocked(api.patchUser).mockRejectedValueOnce(new Error('conflict'))
+    jest.mocked(api.hasStatusCode).mockReturnValueOnce(true)
+
+    const user = userEvent.setup()
+    renderWithClient(
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        usersCount={2}
+      />,
+    )
+
+    await user.click(screen.getAllByText('Test User')[0])
+    const input = screen.getByDisplayValue('Test User')
+    await user.clear(input)
+    await user.type(input, 'New Name')
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => {
+      expect(toast.info).toHaveBeenCalledWith(nameConflictMessage)
+    })
+    expect(api.hasStatusCode).toHaveBeenCalledWith(expect.anything(), 409)
+    expect(toast.danger).not.toHaveBeenCalled()
+    expect(api.patchUser).toHaveBeenCalledTimes(1)
+    // The name lives on the caller's own record, so no other participant can have written
+    // it — copy that blames "someone else" would be misattribution.
+    expect(toast.info).not.toHaveBeenCalledWith(expect.stringContaining('Someone else'))
   })
 
   it('should not save name when it matches current name', async () => {

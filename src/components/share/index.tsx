@@ -1,90 +1,62 @@
-import { ApiError } from 'aws-amplify/api'
-import React, { useState } from 'react'
+import { toast } from '@heroui/react'
+import React, { useEffect, useState } from 'react'
 
-import { CopyUrlButton, QrCode, ShareModal, SmsAuthGate, SmsForm, StatusMessage } from './elements'
-import { useAuthContext } from '@components/auth-context'
-import { usePhoneInput } from '@hooks/use-phone-input'
-import { parseApiMessage, shareSession } from '@services/api'
+import { CopyButton, QrButton, QrModal, ShareBareGroup, ShareButton, ShareGroup } from './elements'
 
 export interface ShareProps {
   sessionId: string
-  userId: string
+  variant?: 'group' | 'bare'
 }
 
-const Share = ({ sessionId, userId }: ShareProps): React.ReactNode => {
-  const { isSignedIn, handleSignIn } = useAuthContext()
+const SHARE_TITLE = 'Choosee'
+const SHARE_TEXT = 'Help me pick a place to eat'
+const COPIED_RESET_MS = 2000
+
+const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode => {
   const [copied, setCopied] = useState(false)
-  const phone = usePhoneInput()
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
+  const [canShare, setCanShare] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
+
+  useEffect(() => {
+    setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+  }, [])
+
+  useEffect(() => {
+    if (!copied) return undefined
+    const timer = setTimeout(() => setCopied(false), COPIED_RESET_MS)
+    return () => clearTimeout(timer)
+  }, [copied])
 
   const sessionUrl = `${typeof window === 'undefined' ? '' : window.location.origin}/s/${sessionId}`
+
+  const handleShare = async (): Promise<void> => {
+    try {
+      await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: sessionUrl })
+    } catch {
+      // User cancelled or the share failed; copy and QR remain available.
+    }
+  }
 
   const handleCopy = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(sessionUrl)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     } catch {
-      setErrorMsg('Failed to copy URL to clipboard.')
-      setStatus('error')
+      toast.danger("Couldn't copy the link. Use the QR code instead.")
     }
   }
 
-  const handleSendSms = async (): Promise<void> => {
-    phone.showError()
-    if (!phone.isValid || status === 'sending') return
-    setStatus('sending')
-    setErrorMsg('')
-    try {
-      await shareSession(sessionId, userId, phone.value)
-      setStatus('sent')
-      phone.reset()
-    } catch (err: unknown) {
-      setStatus('error')
-      if (err instanceof ApiError && err.response) {
-        const { statusCode, body } = err.response
-        if (statusCode === 401) {
-          setErrorMsg('Sign in to invite people by text.')
-          return
-        }
-        if (statusCode === 403) {
-          setErrorMsg(parseApiMessage(body, 'That phone number is linked to a different account.'))
-          return
-        }
-        if (statusCode === 429) {
-          setErrorMsg("You're going a bit fast — try again in a minute.")
-          return
-        }
-        if (statusCode === 400) {
-          setErrorMsg(parseApiMessage(body, "That didn't work. Try again."))
-          return
-        }
-      }
-      setErrorMsg('Failed to send invite. Please try again.')
-    }
-  }
+  const Group = variant === 'bare' ? ShareBareGroup : ShareGroup
 
   return (
-    <ShareModal>
-      <CopyUrlButton copied={copied} onPress={handleCopy} />
-      <QrCode url={sessionUrl} />
-      {isSignedIn ? (
-        <>
-          <SmsForm
-            error={phone.error}
-            isSending={status === 'sending'}
-            isValid={phone.isValid}
-            onChange={phone.onChange}
-            onSend={handleSendSms}
-            phone={phone.value}
-          />
-          <StatusMessage error={errorMsg} status={status} />
-        </>
-      ) : (
-        <SmsAuthGate onSignIn={handleSignIn} />
-      )}
-    </ShareModal>
+    <>
+      <Group>
+        {canShare && <ShareButton onPress={handleShare} />}
+        <CopyButton copied={copied} onPress={handleCopy} />
+        <QrButton onPress={() => setQrOpen(true)} />
+      </Group>
+      <QrModal isOpen={qrOpen} onClose={() => setQrOpen(false)} url={sessionUrl} />
+    </>
   )
 }
 

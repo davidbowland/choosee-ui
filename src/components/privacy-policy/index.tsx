@@ -31,8 +31,8 @@ const PrivacyPolicy = (): React.ReactNode => {
           cookie to keep you identified within your Choosee.
         </p>
         <p>
-          If you provide a phone number, we use it only to send Choosee invites via text message. Your phone number is
-          never used for anything else.
+          If you sign in with Google and turn on round reminders, we use the email address from your Google account to
+          email you about rounds in Choosee polls you join. It is never sold, shared, or used for marketing.
         </p>
         <p>
           When you create a Choosee, we use Google reCAPTCHA to verify you&apos;re not a bot. reCAPTCHA collects
@@ -44,14 +44,18 @@ const PrivacyPolicy = (): React.ReactNode => {
       <Section title="Why We Collect It">
         <p>
           We process server log data under legitimate interests — operating a secure, functional website. We don&apos;t
-          rely on your consent, and we don&apos;t use your data for advertising or profiling.
+          rely on your consent for that, and we don&apos;t use your data for advertising or profiling.
+        </p>
+        <p>
+          We only send you email when you turn on round reminders, and only because you asked us to. We send nothing
+          until you switch it on. Reminders relate to a single Choosee and stop when it expires.
         </p>
       </Section>
 
       <Section title="What We Don't Do">
         <p>
           We don&apos;t sell your data. We don&apos;t share it with advertisers. We don&apos;t build profiles. We
-          don&apos;t use your phone number or email for marketing.
+          don&apos;t use your email for marketing.
         </p>
       </Section>
 
@@ -90,8 +94,9 @@ const PrivacyPolicy = (): React.ReactNode => {
       <Section title="Data Retention">
         <p>
           Server logs are kept for up to 90 days, then deleted. Restaurant Choosee data is deleted when your Choosee
-          expires — typically 24 hours. If you create an account, your login information is stored until you delete it.
-          Phone numbers are retained only for the duration of the Choosee.
+          expires — typically 24 hours. If you sign in, the email address from your Google account is stored alongside
+          that Choosee and is deleted when it expires — whether or not you turn on reminders. If you create an account,
+          your login information is stored until you delete it.
         </p>
       </Section>
 

@@ -7,6 +7,8 @@ import {
   ActionRow,
   BracketButton,
   MatchupContainer,
+  SegmentDivider,
+  SegmentedActions,
   TournamentHeader,
   VoteCallToAction,
   VotingContainer,
@@ -17,11 +19,26 @@ import BracketView from '@components/bracket-view'
 import RestaurantCard from '@components/restaurant-card'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
-import { patchUser, hasErrorCode } from '@services/api'
+import { patchUser, hasErrorCode, hasStatusCode } from '@services/api'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
 import { displayName } from '@utils/users'
 
 const VOTE_ACCEPT_DELAY_MS = 300 // Time green check shows
+
+// A 409 means the write lost a race against a concurrent update of the same record, not that
+// anything is broken — hence `info`, not `danger`. The action itself is still valid, so the
+// copy asks for the same gesture again once the refreshed data has landed.
+// Pinned here so the conflict paths cannot be quietly conflated with the permanent
+// ROUND_NOT_CURRENT path, which must keep its own copy.
+// Not "someone else voted": the vote is on your OWN record, so the contender is the
+// round-advance loop or your own second tab — no other participant writes your votes.
+const VOTE_CONFLICT_MESSAGE =
+  "That didn't save — the Choosee updated at the same moment. Refreshed — tap your pick again."
+// Not "someone else": your name lives on your own record, so the contender is the
+// round-advance loop or your own second tab. And the editor closes on commit, discarding
+// what was typed, so the retry is re-opening it — not one more tap on a save button.
+const NAME_CONFLICT_MESSAGE =
+  "Your name didn't save — the Choosee updated at the same moment. Tap your name to try again."
 
 export interface VotingPhaseProps {
   sessionId: string
@@ -95,15 +112,27 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
       )
       return { previous }
     },
-    onError: (err, _vars, context) => {
+    onError: async (err, _vars, context) => {
       queryClient.setQueryData(['users', sessionId], context?.previous)
       setPendingVote(null)
+      // Permanent for this vote: the round genuinely advanced, so it can never apply.
       if (hasErrorCode(err, ErrorCode.ROUND_NOT_CURRENT)) {
-        toast.info('Round was advanced, moving to the next round.')
+        toast.info("That round ended before your vote landed — here's the next one.")
         void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
         return
       }
-      toast.danger('Vote failed. Please try again.')
+      // Transient: the record moved under us. Deliberately no auto-retry — the optimistic
+      // update is already rolled back, and retrying would re-submit against data the user
+      // has not seen. Await the session refetch before toasting: the likeliest contender is
+      // the round-advance loop, so an immediate re-tap against the stale round would come
+      // straight back as ROUND_NOT_CURRENT and contradict this very message. Only ['session']
+      // is invalidated here — onSettled already invalidates ['users'] on every path.
+      if (hasStatusCode(err, 409)) {
+        await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+        toast.info(VOTE_CONFLICT_MESSAGE)
+        return
+      }
+      toast.danger("Your vote didn't save. Tap your pick again.")
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['users', sessionId] })
@@ -128,9 +157,14 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
       )
       return { previous }
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       queryClient.setQueryData(['users', sessionId], context?.previous)
-      toast.danger('Failed to update name. Please try again.')
+      // onSettled already invalidates ['users'] on every path, so no invalidation here.
+      if (hasStatusCode(err, 409)) {
+        toast.info(NAME_CONFLICT_MESSAGE)
+        return
+      }
+      toast.danger("Your name didn't save. Tap your name to try again.")
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['users', sessionId] })
@@ -192,8 +226,11 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
       </MatchupContainer>
 
       <ActionRow>
-        <BracketButton onPress={() => setBracketOpen(true)} />
-        <Share sessionId={sessionId} userId={currentUser.userId} />
+        <SegmentedActions>
+          <BracketButton onPress={() => setBracketOpen(true)} />
+          <SegmentDivider />
+          <Share sessionId={sessionId} variant="bare" />
+        </SegmentedActions>
       </ActionRow>
 
       <BracketView choices={choices} onClose={() => setBracketOpen(false)} open={bracketOpen} session={session} />
