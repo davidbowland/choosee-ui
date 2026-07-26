@@ -21,7 +21,7 @@ import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/eleme
 import Share from '@components/share'
 import { patchUser, hasErrorCode, hasStatusCode } from '@services/api'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
-import { displayName } from '@utils/users'
+import { displayName, isSoloVoter } from '@utils/users'
 
 const VOTE_ACCEPT_DELAY_MS = 300 // Time green check shows
 
@@ -45,10 +45,9 @@ export interface VotingPhaseProps {
   session: SessionData
   currentUser: User
   choices: ChoicesMap
-  usersCount: number
 }
 
-const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: VotingPhaseProps): React.ReactNode => {
+const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
   const { isSignedIn } = useAuthContext()
   const [bracketOpen, setBracketOpen] = useState(false)
@@ -136,6 +135,15 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['users', sessionId] })
+      // The session query does not poll during voting, so without this the object held here
+      // is as old as the moment this phase was entered — and the waiting screen renders it
+      // the instant the last vote lands, showing a stale "0 of 1" and a stale solo hint until
+      // the 5s waiting poll corrects them. A vote writes votersSubmitted server-side, so
+      // re-reading the session after one is what makes those numbers true.
+      // This must stay in onSettled: the phase flips to waiting during onMutate while the
+      // PATCH is still in flight, so invalidating there would race the write and read back
+      // the same stale votersSubmitted anyway.
+      void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
       clearTimeout(pendingVoteTimer.current)
       pendingVoteTimer.current = setTimeout(() => setPendingVote(null), VOTE_ACCEPT_DELAY_MS)
     },
@@ -179,7 +187,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices, usersCount }: V
 
   return (
     <VotingContainer>
-      {usersCount <= 1 && session.currentRound === 0 && <SoloVoterHint />}
+      {isSoloVoter(session) && <SoloVoterHint />}
       {session.filterClosingSoon && <FilterClosingSoonBadge />}
 
       <TournamentHeader

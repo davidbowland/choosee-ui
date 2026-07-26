@@ -163,13 +163,7 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
         return <UserSelectPhase onUserSelected={handleUserSelected} sessionId={sessionId} users={users ?? []} />
       case 'voting':
         return (
-          <VotingPhase
-            choices={choices ?? {}}
-            currentUser={currentUser!}
-            session={session!}
-            sessionId={sessionId}
-            usersCount={users?.length ?? 1}
-          />
+          <VotingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
         )
       case 'waiting':
         return (
