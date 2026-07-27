@@ -10,15 +10,13 @@ describe('useSessionCookie', () => {
   const mockSet = jest.mocked(Cookies.set)
   const mockRemove = jest.mocked(Cookies.remove)
 
-  beforeEach(() => {
-    jest.clearAllMocks()
-    Object.defineProperty(window, 'location', {
-      value: { protocol: 'https:' },
-      writable: true,
-    })
-  })
+  /** Puts the page on https, where the cookie is written with `secure: true`. */
+  const setup = (protocol = 'https:'): void => {
+    Object.defineProperty(window, 'location', { value: { protocol }, writable: true })
+  }
 
   it('should read userId from cookie on mount', () => {
+    setup()
     mockGet.mockReturnValue('user-123' as any)
 
     const { result } = renderHook(() => useSessionCookie('abc'))
@@ -28,6 +26,7 @@ describe('useSessionCookie', () => {
   })
 
   it('should return undefined when no cookie exists', () => {
+    setup()
     mockGet.mockReturnValue(undefined as any)
 
     const { result } = renderHook(() => useSessionCookie('abc'))
@@ -36,6 +35,7 @@ describe('useSessionCookie', () => {
   })
 
   it('should set cookie and update state', () => {
+    setup()
     mockGet.mockReturnValue(undefined as any)
 
     const { result } = renderHook(() => useSessionCookie('abc'))
@@ -54,10 +54,7 @@ describe('useSessionCookie', () => {
   })
 
   it('should set secure to false on http', () => {
-    Object.defineProperty(window, 'location', {
-      value: { protocol: 'http:' },
-      writable: true,
-    })
+    setup('http:')
     mockGet.mockReturnValue(undefined as any)
 
     const { result } = renderHook(() => useSessionCookie('abc'))
@@ -75,6 +72,7 @@ describe('useSessionCookie', () => {
   })
 
   it('should clear cookie and reset state', () => {
+    setup()
     mockGet.mockReturnValue('user-123' as any)
 
     const { result } = renderHook(() => useSessionCookie('abc'))

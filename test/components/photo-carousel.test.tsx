@@ -46,17 +46,15 @@ const images = [
 ]
 
 describe('PhotoCarousel', () => {
-  beforeEach(() => {
+  /** Rewires the Embla mock to a freshly-mounted carousel sitting on the first slide. */
+  const setup = (): void => {
     selectCb = null
     reInitCb = null
     mockMainApi.selectedScrollSnap.mockReturnValue(0)
-    mockMainApi.scrollTo.mockClear()
-    mockThumbsApi.scrollTo.mockClear()
-    mockMainApi.on.mockClear()
-    mockMainApi.off.mockClear()
-  })
+  }
 
   it('should render all main images', () => {
+    setup()
     render(<PhotoCarousel images={images} />)
     const namedImgs = screen.getAllByRole('img').filter((img) => img.getAttribute('alt') !== '')
     expect(namedImgs).toHaveLength(3)
@@ -65,6 +63,7 @@ describe('PhotoCarousel', () => {
   })
 
   it('should render thumbnail buttons for each image', () => {
+    setup()
     render(<PhotoCarousel images={images} />)
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(3)
@@ -73,19 +72,22 @@ describe('PhotoCarousel', () => {
   })
 
   it('should mark thumbnail images as decorative', () => {
+    setup()
     const { container } = render(<PhotoCarousel images={images} />)
     const thumbImgs = container.querySelectorAll('button img')
     thumbImgs.forEach((img) => expect(img).toHaveAttribute('alt', ''))
   })
 
-  it('should highlight the first thumbnail by default', () => {
+  it('should mark the first thumbnail as current by default', () => {
+    setup()
     render(<PhotoCarousel images={images} />)
     const buttons = screen.getAllByRole('button')
-    expect(buttons[0].className).toContain('ring-2')
-    expect(buttons[1].className).toContain('opacity-50')
+    expect(buttons[0]).toHaveAttribute('aria-current', 'true')
+    expect(buttons[1]).toHaveAttribute('aria-current', 'false')
   })
 
   it('should scroll to the clicked thumbnail index', async () => {
+    setup()
     const user = userEvent.setup()
     render(<PhotoCarousel images={images} />)
     const buttons = screen.getAllByRole('button')
@@ -93,18 +95,20 @@ describe('PhotoCarousel', () => {
     expect(mockMainApi.scrollTo).toHaveBeenCalledWith(1)
   })
 
-  it('should update selected index on select event', () => {
+  it('should move the current thumbnail on a select event', () => {
+    setup()
     render(<PhotoCarousel images={images} />)
     mockMainApi.selectedScrollSnap.mockReturnValue(2)
     act(() => {
       selectCb?.()
     })
     const buttons = screen.getAllByRole('button')
-    expect(buttons[2].className).toContain('ring-2')
-    expect(buttons[0].className).toContain('opacity-50')
+    expect(buttons[2]).toHaveAttribute('aria-current', 'true')
+    expect(buttons[0]).toHaveAttribute('aria-current', 'false')
   })
 
   it('should sync thumbs on reInit event', () => {
+    setup()
     render(<PhotoCarousel images={images} />)
     mockMainApi.selectedScrollSnap.mockReturnValue(1)
     act(() => {
@@ -114,6 +118,7 @@ describe('PhotoCarousel', () => {
   })
 
   it('should render dot indicators when showThumbnails is false', () => {
+    setup()
     render(<PhotoCarousel images={images} showThumbnails={false} />)
     const allButtons = screen.getAllByRole('button')
     const dots = allButtons.filter((btn) => btn.getAttribute('aria-label')?.startsWith('Photo'))
@@ -122,16 +127,19 @@ describe('PhotoCarousel', () => {
   })
 
   it('should not render dots when showThumbnails is false and only one image', () => {
+    setup()
     render(<PhotoCarousel images={[images[0]]} showThumbnails={false} />)
     expect(screen.queryAllByRole('button')).toHaveLength(0)
   })
 
   it('should render overlay when provided', () => {
+    setup()
     render(<PhotoCarousel images={images} overlay={<span>Overlay</span>} />)
     expect(screen.getByText('Overlay')).toBeInTheDocument()
   })
 
   it('should scroll to dot index when clicked', async () => {
+    setup()
     const user = userEvent.setup()
     render(<PhotoCarousel images={images} showThumbnails={false} />)
     const allButtons = screen.getAllByRole('button')
@@ -143,11 +151,7 @@ describe('PhotoCarousel', () => {
   describe('with null embla API', () => {
     const useEmblaCarousel = jest.mocked(require('embla-carousel-react').default)
 
-    beforeEach(() => {
-      useEmblaCarousel.mockImplementation(() => [React.createRef(), null])
-    })
-
-    afterEach(() => {
+    afterAll(() => {
       useEmblaCarousel.mockImplementation((opts?: Record<string, unknown>) => {
         if (opts && opts.dragFree) return [React.createRef(), mockThumbsApi]
         return [React.createRef(), mockMainApi]
@@ -155,6 +159,7 @@ describe('PhotoCarousel', () => {
     })
 
     it('should render without crashing', () => {
+      useEmblaCarousel.mockImplementation(() => [React.createRef(), null])
       render(<PhotoCarousel images={images} />)
       const buttons = screen.getAllByRole('button')
       expect(buttons).toHaveLength(3)

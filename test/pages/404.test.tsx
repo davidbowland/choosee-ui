@@ -16,11 +16,13 @@ describe('404 error page', () => {
     })
   })
 
-  beforeEach(() => {
-    window.location.pathname = '/an-invalid-page'
-  })
+  /** Points the page at `pathname`; the 404 body is suppressed under /s/<id>. */
+  const setup = (pathname = '/an-invalid-page'): void => {
+    window.location.pathname = pathname
+  }
 
   it('should render AppBar for non-session paths', async () => {
+    setup()
     await act(async () => {
       render(<NotFound />)
     })
@@ -28,6 +30,7 @@ describe('404 error page', () => {
   })
 
   it('should render heading', async () => {
+    setup()
     await act(async () => {
       render(<NotFound />)
     })
@@ -35,6 +38,7 @@ describe('404 error page', () => {
   })
 
   it('should render error message', async () => {
+    setup()
     await act(async () => {
       render(<NotFound />)
     })
@@ -42,7 +46,7 @@ describe('404 error page', () => {
   })
 
   it('should not render error content when path begins /s/', async () => {
-    window.location.pathname = '/s/aeiou'
+    setup('/s/aeiou')
     await act(async () => {
       render(<NotFound />)
     })
@@ -52,7 +56,7 @@ describe('404 error page', () => {
   })
 
   it('should render when pathname has three slashes', async () => {
-    window.location.pathname = '/s/aeiou/y'
+    setup('/s/aeiou/y')
     await act(async () => {
       render(<NotFound />)
     })
@@ -60,6 +64,7 @@ describe('404 error page', () => {
   })
 
   it('should render a link to home', async () => {
+    setup()
     await act(async () => {
       render(<NotFound />)
     })

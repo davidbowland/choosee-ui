@@ -15,21 +15,26 @@ const LOADING_MESSAGES = [
   'Sharpening the knives...',
 ]
 
-const shuffle = <T,>(arr: readonly T[]): T[] => {
+export const shuffle = <T,>(arr: readonly T[], random: () => number = Math.random): T[] => {
   const copy = [...arr]
   for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = Math.floor(random() * (i + 1))
     ;[copy[i], copy[j]] = [copy[j], copy[i]]
   }
   return copy
 }
 
-export const LoadingSpinner = (): React.ReactNode => {
+export interface LoadingSpinnerProps {
+  random?: () => number
+}
+
+export const LoadingSpinner = ({ random = Math.random }: LoadingSpinnerProps = {}): React.ReactNode => {
   const [messages, setMessages] = useState<string[] | null>(null)
   const [msgIdx, setMsgIdx] = useState(0)
 
   useEffect(() => {
-    setMessages(shuffle(LOADING_MESSAGES))
+    // The order is picked once on mount; re-shuffling on every render would thrash the copy.
+    setMessages(shuffle(LOADING_MESSAGES, random))
   }, [])
 
   useEffect(() => {
@@ -49,7 +54,7 @@ export const LoadingSpinner = (): React.ReactNode => {
           style={{ animationDirection: 'reverse', animationDuration: '1.4s' }}
         />
       </div>
-      <p className="text-center text-[#4B5563] transition-all duration-500">
+      <p aria-live="polite" className="text-center text-[#4B5563] transition-all duration-500" role="status">
         {messages ? messages[msgIdx] : 'Loading...'}
       </p>
     </div>

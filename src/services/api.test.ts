@@ -45,8 +45,7 @@ function mockRejection(error: any) {
   } as any
 }
 
-beforeEach(() => {
-  jest.clearAllMocks()
+beforeAll(() => {
   mockFetchAuthSession.mockResolvedValue({
     tokens: { idToken: { toString: () => 'mock-jwt-token', payload: {} } },
   } as any)

@@ -18,30 +18,31 @@ describe('Session page', () => {
     jest.mocked(Session).mockReturnValue(<></>)
   })
 
-  beforeEach(() => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/s/aeio/' },
-      writable: true,
-    })
-  })
+  /** Points the page at `pathname`, which is where the sessionId is read from. */
+  const setup = (pathname = '/s/aeio/'): void => {
+    Object.defineProperty(window, 'location', { value: { pathname }, writable: true })
+  }
 
   it('should render AppBar', () => {
+    setup()
     render(<SessionPage />)
     expect(AppBar).toHaveBeenCalled()
   })
 
   it('should render PrivacyLink', () => {
+    setup()
     render(<SessionPage />)
     expect(PrivacyLink).toHaveBeenCalled()
   })
 
   it('should render Session with sessionId from pathname', () => {
+    setup()
     render(<SessionPage />)
     expect(Session).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 'aeio' }), undefined)
   })
 
   it('should not render Session when pathname has no sessionId', () => {
-    Object.defineProperty(window, 'location', { value: { pathname: '/' }, writable: true })
+    setup('/')
     render(<SessionPage />)
     expect(Session).not.toHaveBeenCalled()
   })

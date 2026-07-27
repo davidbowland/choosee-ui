@@ -94,12 +94,13 @@ describe('Session', () => {
     queryClient?.clear()
   })
 
-  beforeEach(() => {
-    mockUserId = null
-    mockSetUserId.mockClear()
-  })
+  /** Starts each test with no identified user in the cookie. */
+  const setup = (userId: string | null = null): void => {
+    mockUserId = userId
+  }
 
   it('should show loading phase when session is not yet loaded', () => {
+    setup()
     const resolve = jest.fn()
     jest.mocked(api.fetchSession).mockReturnValue(new Promise((r) => resolve.mockImplementation(r)))
     renderWithClient(<Session sessionId="test-session" />)
@@ -108,12 +109,14 @@ describe('Session', () => {
   })
 
   it('should show loading phase when session is not ready', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({ ...baseSession, isReady: false })
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByTestId('loading-phase')).toBeInTheDocument())
   })
 
   it('should show error phase when session has error', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({
       ...baseSession,
       isReady: false,
@@ -124,6 +127,7 @@ describe('Session', () => {
   })
 
   it('should show contextual closing-soon error when session error mentions closing-soon filter', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({
       ...baseSession,
       isReady: false,
@@ -136,6 +140,7 @@ describe('Session', () => {
   })
 
   it('should show winner phase when session has a winner', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({ ...baseSession, winner: 'a' })
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
@@ -144,6 +149,7 @@ describe('Session', () => {
   })
 
   it('should show user-select phase when no user is identified', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
@@ -152,7 +158,7 @@ describe('Session', () => {
   })
 
   it('should show voting phase when user has unvoted matchups', async () => {
-    mockUserId = 'user-1'
+    setup('user-1')
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
@@ -161,7 +167,7 @@ describe('Session', () => {
   })
 
   it('should show waiting phase when user has voted all matchups', async () => {
-    mockUserId = 'user-1'
+    setup('user-1')
     const votedUser = { ...mockUser, votes: [['a']] }
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([votedUser])
@@ -171,6 +177,7 @@ describe('Session', () => {
   })
 
   it('should use query param id when available', async () => {
+    setup()
     // Set ?id=user-1 in the URL
     Object.defineProperty(window, 'location', {
       value: { ...window.location, search: '?id=user-1', pathname: '/s/test-session' },
@@ -194,6 +201,7 @@ describe('Session', () => {
   })
 
   it('should show error banner with fallback message when errorMessage is null', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({
       ...baseSession,
       isReady: false,
@@ -205,7 +213,7 @@ describe('Session', () => {
   })
 
   it('should prefer cookie userId over nothing', async () => {
-    mockUserId = 'user-1'
+    setup('user-1')
     const votedUser = { ...mockUser, votes: [['a']] }
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([votedUser])
@@ -215,7 +223,7 @@ describe('Session', () => {
   })
 
   it('should ignore cookie userId if not in users list', async () => {
-    mockUserId = 'nonexistent-user'
+    setup('nonexistent-user')
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
@@ -224,6 +232,7 @@ describe('Session', () => {
   })
 
   it('should handle user selection callback', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
@@ -241,7 +250,7 @@ describe('Session', () => {
 
     it('should backfill from the token for a signed-in user with no name', async () => {
       mockSetAuthState({ isSignedIn: true })
-      mockUserId = 'user-1'
+      setup('user-1')
       jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
       jest.mocked(api.fetchUsers).mockResolvedValue([namelessUser])
       jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
@@ -254,7 +263,7 @@ describe('Session', () => {
 
     it('should not backfill when the user already has a name', async () => {
       mockSetAuthState({ isSignedIn: true })
-      mockUserId = 'user-1'
+      setup('user-1')
       jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
       jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
       jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
@@ -269,7 +278,7 @@ describe('Session', () => {
       // Explicit: mockSetAuthState uses mockReturnValue, which clearMocks does not reset,
       // so a signed-in state set by an earlier test would otherwise leak into this one.
       mockSetAuthState({ isSignedIn: false })
-      mockUserId = 'user-1'
+      setup('user-1')
       jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
       jest.mocked(api.fetchUsers).mockResolvedValue([namelessUser])
       jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)

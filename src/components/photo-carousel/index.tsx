@@ -93,6 +93,7 @@ const PhotoCarousel = ({ images, overlay, showThumbnails = true }: PhotoCarousel
           <div className="flex justify-center gap-2">
             {images.map((image, index) => (
               <button
+                aria-current={index === selectedIndex}
                 aria-label={image.alt}
                 className={`min-w-0 flex-[0_0_20%] overflow-hidden rounded transition-opacity ${
                   index === selectedIndex ? 'opacity-100 ring-2 ring-inset ring-primary' : 'opacity-50'
@@ -115,6 +116,7 @@ const PhotoCarousel = ({ images, overlay, showThumbnails = true }: PhotoCarousel
         <div className="flex justify-center gap-1.5 py-1">
           {images.map((_, index) => (
             <button
+              aria-current={index === selectedIndex}
               aria-label={`Photo ${index + 1}`}
               className={`h-1.5 rounded-full transition-all ${
                 index === selectedIndex ? 'w-4 bg-primary' : 'w-1.5 bg-default-300'

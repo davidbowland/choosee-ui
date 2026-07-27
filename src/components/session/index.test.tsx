@@ -68,43 +68,39 @@ function renderWithClient(ui: React.ReactElement) {
 describe('Session phase router', () => {
   const originalLocation = window.location
   const replaceStateSpy = jest.spyOn(window.history, 'replaceState')
-  const originalRandom = Math.random
+
+  /** Restores the happy-path API responses and a clean session URL. */
+  const setup = (): void => {
+    jest.mocked(api.fetchSession).mockResolvedValue(mockSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue(mockUsers)
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, pathname: '/s/test-session', search: '' },
+    })
+  }
 
   afterEach(async () => {
     await queryClient?.cancelQueries()
     queryClient?.clear()
   })
 
-  beforeAll(() => {
-    Math.random = jest.fn(() => 0.5)
-  })
-
-  beforeEach(() => {
-    jest.mocked(api.fetchSession).mockResolvedValue(mockSession)
-    jest.mocked(api.fetchUsers).mockResolvedValue(mockUsers)
-    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-    replaceStateSpy.mockClear()
-
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { ...originalLocation, pathname: '/s/test-session', search: '' },
-    })
-  })
-
   afterAll(() => {
-    Math.random = originalRandom
     Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
     replaceStateSpy.mockRestore()
   })
 
   it('should render loading phase when session is not ready', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: false, errorMessage: null })
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
-    expect(await screen.findByText(/Scouting the competition/i)).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toBeInTheDocument()
   })
 
   it('should render error when session has errorMessage', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({
       ...mockSession,
       isReady: false,
@@ -116,24 +112,27 @@ describe('Session phase router', () => {
   })
 
   it('should render a not-found message when the session request 404s', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockRejectedValue(new Error('Not Found'))
     jest.mocked(api.hasStatusCode).mockReturnValue(true)
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
     expect(await screen.findByText(/can.t find this Choosee/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Scouting the competition/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('should render a generic message when the session request fails for another reason', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockRejectedValue(new Error('Network down'))
     jest.mocked(api.hasStatusCode).mockReturnValue(false)
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
     expect(await screen.findByText(/couldn.t load this Choosee/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Scouting the competition/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('should render winner phase when winner is set', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({
       ...mockSession,
       isReady: true,
@@ -146,6 +145,7 @@ describe('Session phase router', () => {
   })
 
   it('should render user select phase when no user is identified', async () => {
+    setup()
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: true })
     jest
       .mocked(api.fetchUsers)
@@ -156,6 +156,7 @@ describe('Session phase router', () => {
   })
 
   it('should render loading phase while users are still fetching', async () => {
+    setup()
     let resolveUsers: (value: User[]) => void
     const pendingUsers = new Promise<User[]>((resolve) => {
       resolveUsers = resolve
@@ -164,7 +165,7 @@ describe('Session phase router', () => {
     jest.mocked(api.fetchUsers).mockReturnValue(pendingUsers)
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
-    expect(await screen.findByText(/Scouting the competition/i)).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toBeInTheDocument()
 
     // Resolve so react-query cleans up
     await act(async () => {
@@ -173,6 +174,7 @@ describe('Session phase router', () => {
   })
 
   it('should read ?id= from URL and strip it via replaceState', async () => {
+    setup()
     window.location.search = '?id=user-1'
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: true })
     jest.mocked(api.fetchUsers).mockResolvedValue(mockUsers)
@@ -184,6 +186,7 @@ describe('Session phase router', () => {
   })
 
   it('should preserve other query params when stripping ?id=', async () => {
+    setup()
     window.location.search = '?id=user-1&ref=share'
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: true })
     jest.mocked(api.fetchUsers).mockResolvedValue(mockUsers)

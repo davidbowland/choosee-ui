@@ -32,8 +32,6 @@ describe('SessionCreate component', () => {
   const getCurrentPosition = jest.fn((success: PositionCallback) =>
     success({ coords: { latitude: 34.09, longitude: -118.41 } } as GeolocationPosition),
   )
-  const originalRandom = Math.random
-
   const forbiddenError = (): ApiError => {
     const error = new ApiError({ message: 'Forbidden', name: 'ApiError', recoverySuggestion: '' })
     Object.defineProperty(error, 'response', { get: () => ({ statusCode: 403, headers: {}, body: '{}' }) })
@@ -43,7 +41,6 @@ describe('SessionCreate component', () => {
   const executesFor = (action: string) => grecaptchaExecute.mock.calls.filter((call) => call[1].action === action)
 
   beforeAll(() => {
-    Math.random = jest.fn(() => 0.5)
     jest.mocked(api).fetchSessionConfig.mockResolvedValue(sessionConfigResult)
     jest.mocked(api).fetchAddress.mockResolvedValue({ address })
     jest.mocked(api).createSession.mockResolvedValue({ sessionId })
@@ -59,10 +56,6 @@ describe('SessionCreate component', () => {
       configurable: true,
       value: { getCurrentPosition },
     })
-  })
-
-  afterAll(() => {
-    Math.random = originalRandom
   })
 
   describe('form validation', () => {
@@ -648,7 +641,7 @@ describe('SessionCreate component', () => {
       jest.mocked(api).fetchSessionConfig.mockReturnValueOnce(new Promise(() => {}))
       renderWithClient(<SessionCreate />)
 
-      expect(screen.getByText(/Scouting the competition/i)).toBeInTheDocument()
+      expect(screen.getByRole('status')).toBeInTheDocument()
       expect(screen.queryByText(/Find restaurants/i)).not.toBeInTheDocument()
     })
 

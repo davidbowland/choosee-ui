@@ -6,15 +6,16 @@ import { SessionData } from '@types'
 export { LoadingSpinner } from './elements'
 
 export interface LoadingPhaseProps {
+  now?: () => number
   session?: SessionData
 }
 
-const LoadingPhase = ({ session }: LoadingPhaseProps): React.ReactNode => {
+const LoadingPhase = ({ now = Date.now, session }: LoadingPhaseProps): React.ReactNode => {
   if (session?.errorMessage != null) {
     return <ErrorAlert message={session.errorMessage} />
   }
 
-  if (session?.timeoutAt != null && Date.now() > session.timeoutAt) {
+  if (session?.timeoutAt != null && now() > session.timeoutAt) {
     return <TimeoutAlert />
   }
 

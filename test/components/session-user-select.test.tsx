@@ -31,10 +31,6 @@ function renderWithClient(ui: React.ReactElement) {
 describe('UserSelectPhase', () => {
   const onUserSelected = jest.fn()
 
-  beforeEach(() => {
-    onUserSelected.mockClear()
-  })
-
   it('should display user list with display names', () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
     expect(screen.getByText('brave tiger')).toBeInTheDocument()

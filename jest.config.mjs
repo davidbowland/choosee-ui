@@ -39,6 +39,9 @@ const config = {
   },
   setupFiles: ['<rootDir>/jest.polyfills.js', '<rootDir>/jest.setup-test-env.js'],
   testEnvironment: 'jsdom',
+  // HeroUI form components legitimately take 3-5s per interaction-heavy test. Jest's 5s default
+  // leaves no margin, so tests time out whenever the machine is under load.
+  testTimeout: 30_000,
   testEnvironmentOptions: {
     customExportConditions: [''],
   },

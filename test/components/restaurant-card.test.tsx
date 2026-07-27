@@ -229,11 +229,14 @@ describe('RestaurantCard (voting variant)', () => {
     expect(screen.queryByText('More details')).not.toBeInTheDocument()
   })
 
-  it('should handle image load event', () => {
+  it('should hide the loading placeholder once the image loads', () => {
     render(<RestaurantCard choice={baseChoice} variant="voting" />)
     const img = screen.getByRole('img', { name: "Dave's Place" })
+    expect(screen.getByRole('status', { name: 'Loading photo' })).toBeInTheDocument()
+
     fireEvent.load(img)
-    expect(img.className).toContain('opacity-100')
+
+    expect(screen.queryByRole('status', { name: 'Loading photo' })).not.toBeInTheDocument()
   })
 
   it('should render without priceLevel', () => {

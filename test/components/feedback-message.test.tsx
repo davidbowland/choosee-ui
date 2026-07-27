@@ -7,11 +7,11 @@ import userEvent from '@testing-library/user-event'
 
 describe('FeedbackMessage', () => {
   describe('with fake timers', () => {
-    beforeEach(() => {
+    beforeAll(() => {
       jest.useFakeTimers()
     })
 
-    afterEach(() => {
+    afterAll(() => {
       jest.useRealTimers()
     })
 

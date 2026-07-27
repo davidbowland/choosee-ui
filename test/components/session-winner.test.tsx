@@ -50,10 +50,6 @@ const mockChoices: ChoicesMap = {
 }
 
 describe('WinnerPhase', () => {
-  beforeEach(() => {
-    mockPush.mockClear()
-  })
-
   it('should display the winning restaurant name', () => {
     render(<WinnerPhase choices={mockChoices} session={mockSession} />)
     expect(screen.getByText('Winner Restaurant')).toBeInTheDocument()

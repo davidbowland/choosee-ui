@@ -43,10 +43,6 @@ const baseSession: SessionData = {
 describe('BracketView', () => {
   const onClose = jest.fn()
 
-  beforeEach(() => {
-    onClose.mockClear()
-  })
-
   it('should not render when open is false', () => {
     const { container } = render(<BracketView choices={choices} onClose={onClose} open={false} session={baseSession} />)
     expect(container.innerHTML).toBe('')
@@ -80,15 +76,12 @@ describe('BracketView', () => {
   it('should call onClose when backdrop is clicked', async () => {
     const user = userEvent.setup()
     render(<BracketView choices={choices} onClose={onClose} open={true} session={baseSession} />)
-    // HeroUI Drawer is dismissable — clicking outside the dialog content triggers close.
-    // In JSDOM the overlay is the element with data-react-aria-underlay.
-    const underlay = document.querySelector('[data-react-aria-underlay]')
-    if (underlay) {
-      await user.click(underlay)
-    } else {
-      // Fallback: Escape also dismisses
-      await user.keyboard('{Escape}')
-    }
+    // HeroUI Drawer is dismissable — clicking the backdrop outside the dialog triggers close.
+    const backdrop = document.querySelector('[data-slot="drawer-backdrop"]')
+    expect(backdrop).toBeInTheDocument()
+
+    await user.click(backdrop as Element)
+
     expect(onClose).toHaveBeenCalled()
   })
 
@@ -130,7 +123,7 @@ describe('BracketView', () => {
     )
 
     // Backdrop overlay should be removed from the DOM
-    expect(document.querySelector('[data-react-aria-underlay]')).not.toBeInTheDocument()
+    expect(document.querySelector('[data-slot="drawer-backdrop"]')).not.toBeInTheDocument()
   })
 
   it('should not crash when choiceB advances to next round', () => {

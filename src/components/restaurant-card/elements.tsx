@@ -59,7 +59,11 @@ export const VotingCardImage = ({
   return (
     <div className="relative h-60 w-full overflow-hidden bg-white/[0.03]">
       {!loaded && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
+        <div
+          aria-label="Loading photo"
+          className="absolute inset-0 z-10 flex items-center justify-center"
+          role="status"
+        >
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/[0.06] border-t-[#F59E0B]" />
         </div>
       )}
