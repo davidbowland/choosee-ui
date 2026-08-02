@@ -1,33 +1,31 @@
-import { ApiError, get, patch, post } from 'aws-amplify/api'
-import { fetchAuthSession } from 'aws-amplify/auth'
+import { ApiError, del, get, patch, post } from 'aws-amplify/api'
 
 import {
-  backfillUserFromToken,
   closeRound,
   createSession,
   createUser,
+  deletePushSubscription,
   fetchAddress,
   fetchChoices,
   fetchSessionConfig,
   fetchSession,
   fetchUsers,
+  fetchVapidPublicKey,
   hasStatusCode,
   parseApiMessage,
   patchUser,
-  subscribeToRound,
+  postPushSubscription,
 } from './api'
 
 jest.mock('aws-amplify/api')
-jest.mock('aws-amplify/auth')
 jest.mock('@config/amplify', () => ({
-  apiName: 'ChooseeAPI',
   apiNameUnauthenticated: 'ChooseeAPIUnauthenticated',
 }))
 
 const mockGet = jest.mocked(get)
 const mockPost = jest.mocked(post)
 const mockPatch = jest.mocked(patch)
-const mockFetchAuthSession = jest.mocked(fetchAuthSession)
+const mockDel = jest.mocked(del)
 
 const sessionId = 'fuzzy-penguin'
 const userId = 'brave-tiger'
@@ -36,20 +34,6 @@ const recaptchaToken = 'test-recaptcha-token'
 function mockResponse(data: any) {
   return { response: Promise.resolve({ body: { json: () => Promise.resolve(data) } }) } as any
 }
-
-function mockRejection(error: any) {
-  return {
-    response: Promise.resolve().then(() => {
-      throw error
-    }),
-  } as any
-}
-
-beforeAll(() => {
-  mockFetchAuthSession.mockResolvedValue({
-    tokens: { idToken: { toString: () => 'mock-jwt-token', payload: {} } },
-  } as any)
-})
 
 describe('API service', () => {
   describe('fetchAddress', () => {
@@ -146,20 +130,9 @@ describe('API service', () => {
   describe('createUser', () => {
     const newUser = { userId: 'clever-fox', name: null, votes: [[]] }
 
-    it('should hit /users/authed with auth headers when authenticated', async () => {
+    it('should post to the users endpoint with an empty body', async () => {
       mockPost.mockReturnValue(mockResponse(newUser))
-      const result = await createUser(sessionId, true)
-      expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/users/authed`,
-        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: {} },
-      })
-      expect(result).toEqual(newUser)
-    })
-
-    it('should hit /users without auth when not authenticated', async () => {
-      mockPost.mockReturnValue(mockResponse(newUser))
-      const result = await createUser(sessionId, false)
+      const result = await createUser(sessionId)
       expect(mockPost).toHaveBeenCalledWith({
         apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}/users`,
@@ -167,158 +140,19 @@ describe('API service', () => {
       })
       expect(result).toEqual(newUser)
     })
-
-    it('should fall back to /users when /users/authed returns 401', async () => {
-      const error = Object.assign(new Error('Unauthorized'), {
-        response: { statusCode: 401, headers: {}, body: '{"message":"Unauthorized"}' },
-      })
-      Object.setPrototypeOf(error, ApiError.prototype)
-
-      // First call: /users/authed fails 401
-      // fetchAuthSession called again with forceRefresh
-      // Second call: retry /users/authed also fails 401
-      // Third call: fallback to /users succeeds
-      mockPost
-        .mockReturnValueOnce(mockRejection(error))
-        .mockReturnValueOnce(mockRejection(error))
-        .mockReturnValueOnce(mockResponse(newUser))
-
-      const result = await createUser(sessionId, true)
-
-      // authHeaders() for initial call + forceRefresh + authHeaders() for retry
-      expect(mockFetchAuthSession).toHaveBeenCalledTimes(3)
-      expect(mockFetchAuthSession).toHaveBeenNthCalledWith(2, { forceRefresh: true })
-      expect(mockPost).toHaveBeenCalledTimes(3)
-      expect(mockPost).toHaveBeenNthCalledWith(
-        1,
-        expect.objectContaining({
-          path: `/sessions/${encodeURIComponent(sessionId)}/users/authed`,
-        }),
-      )
-      expect(mockPost).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          path: `/sessions/${encodeURIComponent(sessionId)}/users/authed`,
-        }),
-      )
-      expect(mockPost).toHaveBeenNthCalledWith(
-        3,
-        expect.objectContaining({
-          apiName: 'ChooseeAPIUnauthenticated',
-          path: `/sessions/${encodeURIComponent(sessionId)}/users`,
-        }),
-      )
-      expect(result).toEqual(newUser)
-    })
-
-    it('should succeed on retry after token refresh when /users/authed initially returns 401', async () => {
-      const error = Object.assign(new Error('Unauthorized'), {
-        response: { statusCode: 401, headers: {}, body: '{"message":"Unauthorized"}' },
-      })
-      Object.setPrototypeOf(error, ApiError.prototype)
-
-      // First call: /users/authed fails 401
-      // Token refresh succeeds
-      // Second call: retry /users/authed succeeds
-      mockPost.mockReturnValueOnce(mockRejection(error)).mockReturnValueOnce(mockResponse(newUser))
-
-      const result = await createUser(sessionId, true)
-
-      // authHeaders() for initial call + forceRefresh + authHeaders() for retry
-      expect(mockFetchAuthSession).toHaveBeenCalledTimes(3)
-      expect(mockFetchAuthSession).toHaveBeenNthCalledWith(2, { forceRefresh: true })
-      expect(mockPost).toHaveBeenCalledTimes(2)
-      expect(mockPost).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          path: `/sessions/${encodeURIComponent(sessionId)}/users/authed`,
-        }),
-      )
-      expect(result).toEqual(newUser)
-    })
-
-    it('should fall back to /users when /users/authed returns 403', async () => {
-      const error = Object.assign(new Error('Forbidden'), {
-        response: { statusCode: 403, headers: {}, body: '{"message":"Forbidden"}' },
-      })
-      Object.setPrototypeOf(error, ApiError.prototype)
-
-      mockPost.mockReturnValueOnce(mockRejection(error)).mockReturnValueOnce(mockResponse(newUser))
-
-      const result = await createUser(sessionId, true)
-      // 403 should not attempt token refresh, just fall back directly
-      expect(mockFetchAuthSession).toHaveBeenCalledTimes(1)
-      expect(mockPost).toHaveBeenCalledTimes(2)
-      expect(result).toEqual(newUser)
-    })
-
-    it('should rethrow non-auth errors from /users/authed', async () => {
-      const error = Object.assign(new Error('Bad Request'), {
-        response: { statusCode: 400, headers: {}, body: '{"message":"Max players"}' },
-      })
-      Object.setPrototypeOf(error, ApiError.prototype)
-
-      mockPost.mockReturnValueOnce(mockRejection(error))
-
-      await expect(createUser(sessionId, true)).rejects.toThrow()
-      expect(mockPost).toHaveBeenCalledTimes(1)
-    })
-
-    it('should rethrow non-auth errors from retry after token refresh', async () => {
-      const authError = Object.assign(new Error('Unauthorized'), {
-        response: { statusCode: 401, headers: {}, body: '{"message":"Unauthorized"}' },
-      })
-      Object.setPrototypeOf(authError, ApiError.prototype)
-
-      const capacityError = Object.assign(new Error('Bad Request'), {
-        response: { statusCode: 400, headers: {}, body: '{"message":"Max players"}' },
-      })
-      Object.setPrototypeOf(capacityError, ApiError.prototype)
-
-      // First call: 401 triggers refresh+retry, retry returns 400
-      mockPost.mockReturnValueOnce(mockRejection(authError)).mockReturnValueOnce(mockRejection(capacityError))
-
-      await expect(createUser(sessionId, true)).rejects.toThrow('Bad Request')
-      expect(mockPost).toHaveBeenCalledTimes(2)
-    })
   })
 
   describe('patchUser', () => {
     const operations = [{ op: 'replace' as const, path: '/name', value: 'Alice' }]
     const updatedUser = { userId, name: 'Alice' }
 
-    it('should use authenticated endpoint when signed in', async () => {
+    it('should patch the user endpoint with the supplied operations', async () => {
       mockPatch.mockReturnValue(mockResponse(updatedUser))
-      const result = await patchUser(sessionId, userId, operations, true)
-      expect(mockPatch).toHaveBeenCalledWith({
-        apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`,
-        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: operations },
-      })
-      expect(result).toEqual(updatedUser)
-    })
-
-    it('should use unauthenticated endpoint when not signed in', async () => {
-      mockPatch.mockReturnValue(mockResponse(updatedUser))
-      const result = await patchUser(sessionId, userId, operations, false)
+      const result = await patchUser(sessionId, userId, operations)
       expect(mockPatch).toHaveBeenCalledWith({
         apiName: 'ChooseeAPIUnauthenticated',
         path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`,
-        options: { headers: undefined, body: operations },
-      })
-      expect(result).toEqual(updatedUser)
-    })
-  })
-
-  describe('backfillUserFromToken', () => {
-    it('should send an empty patch to the authenticated user endpoint', async () => {
-      const updatedUser = { userId, name: 'Alice' }
-      mockPatch.mockReturnValue(mockResponse(updatedUser))
-      const result = await backfillUserFromToken(sessionId, userId)
-      expect(mockPatch).toHaveBeenCalledWith({
-        apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/authed`,
-        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: [] },
+        options: { body: operations },
       })
       expect(result).toEqual(updatedUser)
     })
@@ -338,17 +172,52 @@ describe('API service', () => {
     })
   })
 
-  describe('subscribeToRound', () => {
-    it('should post to the authenticated subscribe endpoint', async () => {
-      const updatedUser = { userId, subscribedRounds: [1] }
-      mockPost.mockReturnValue(mockResponse(updatedUser))
-      const result = await subscribeToRound(sessionId, 1, userId)
-      expect(mockPost).toHaveBeenCalledWith({
-        apiName: 'ChooseeAPI',
-        path: `/sessions/${encodeURIComponent(sessionId)}/rounds/1/subscribe/authed`,
-        options: { headers: { Authorization: 'Bearer mock-jwt-token' }, body: { userId, roundId: 1 } },
+  describe('fetchVapidPublicKey', () => {
+    it('should fetch the VAPID public key', async () => {
+      mockGet.mockReturnValue(mockResponse({ publicKey: 'BFakePublicKey' }))
+      const result = await fetchVapidPublicKey()
+      expect(mockGet).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPIUnauthenticated',
+        path: '/push/vapid-public-key',
+        options: { headers: undefined, queryParams: undefined },
       })
-      expect(result).toEqual(updatedUser)
+      expect(result).toEqual({ publicKey: 'BFakePublicKey' })
+    })
+  })
+
+  describe('postPushSubscription', () => {
+    const subscription = {
+      endpoint: 'https://fcm.googleapis.com/send/abc',
+      keys: { auth: 'auth-key', p256dh: 'p256dh-key' },
+    }
+
+    it('should post the subscription to the push-subscription endpoint', async () => {
+      mockPost.mockReturnValue(mockResponse(undefined))
+      await postPushSubscription(sessionId, userId, subscription)
+      expect(mockPost).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPIUnauthenticated',
+        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+        options: { body: subscription },
+      })
+    })
+
+    it('should resolve without reading a body, since the endpoint answers 204', async () => {
+      mockPost.mockReturnValue({ response: Promise.resolve({}) } as any)
+      await expect(postPushSubscription(sessionId, userId, subscription)).resolves.toBeUndefined()
+    })
+  })
+
+  describe('deletePushSubscription', () => {
+    const endpoint = 'https://fcm.googleapis.com/send/abc'
+
+    it('should send the endpoint as a query parameter rather than a body', async () => {
+      mockDel.mockReturnValue({ response: Promise.resolve({}) } as any)
+      await deletePushSubscription(sessionId, userId, endpoint)
+      expect(mockDel).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPIUnauthenticated',
+        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+        options: { queryParams: { endpoint } },
+      })
     })
   })
 

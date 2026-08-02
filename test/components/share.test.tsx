@@ -61,7 +61,7 @@ describe('Share', () => {
     expect(shareMock).toHaveBeenCalledWith(expect.objectContaining({ url: expect.stringContaining(`/s/${sessionId}`) }))
   })
 
-  it('should not surface an error when the share sheet is cancelled', async () => {
+  it('should not surface an error when the share sheet is canceled', async () => {
     const user = setup({ withShare: true })
     shareMock.mockRejectedValueOnce(new Error('AbortError'))
     const shareButton = await screen.findByRole('button', { name: 'Share' })

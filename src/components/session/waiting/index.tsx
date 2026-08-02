@@ -8,20 +8,24 @@ import {
   BracketButton,
   ConfirmDialog,
   ForceRoundButton,
-  NotifyAuthGate,
+  IosNotifySheet,
+  NotifyBlocked,
   NotifyCheckbox,
+  NotifyRetryMessage,
   NotifySection,
   ProgressText,
   SegmentDivider,
   SegmentedActions,
+  TurnOffLink,
   WaitingContainer,
 } from './elements'
-import { useAuthContext } from '@components/auth-context'
 import BracketView from '@components/bracket-view'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
-import { closeRound, hasErrorCode, hasStatusCode, subscribeToRound } from '@services/api'
+import { closeRound, hasErrorCode, hasStatusCode } from '@services/api'
+import { isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from '@services/push'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
+import { PushCapability, readCapabilityEnv, resolvePushCapability } from '@utils/push-capability'
 import { isSoloVoter } from '@utils/users'
 
 export interface WaitingPhaseProps {
@@ -33,28 +37,91 @@ export interface WaitingPhaseProps {
 
 const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { isSignedIn, handleSignIn } = useAuthContext()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [hasShared, setHasShared] = useState(false)
+  // null until the device has been resolved. Nothing is rendered in the meantime: `isSubscribedToPush`
+  // waits on the service worker, and guessing a state before that answer arrives would flash a
+  // sentence — most likely "This browser can't send notifications" — that is wrong for most devices.
+  const [capability, setCapability] = useState<PushCapability | null>(null)
+  const [isIos, setIsIos] = useState(false)
+  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'failed-on' | 'failed-off'>('idle')
+  const [iosSheetOpen, setIosSheetOpen] = useState(false)
 
   const currentRound = session.currentRound
-  const nextRound = currentRound + 1
-  const alreadySubscribed = currentUser.subscribedRounds.includes(nextRound)
+  const reminderEvent = isFinalRound(session) ? 'a winner is chosen' : 'the next round opens'
 
-  // 'unavailable' is a terminal failure for this identity (403/400) — the toggle stays
-  // disabled because the same request cannot start succeeding.
-  const [notifyChecked, setNotifyChecked] = useState(alreadySubscribed)
-  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'subscribed' | 'unavailable'>(
-    alreadySubscribed ? 'subscribed' : 'idle',
-  )
-
-  // The waiting screen re-renders across rounds, so lazy useState initializers alone
-  // would leave a stale toggle when a new round opens. Re-derive from the server data.
+  // Resolved on mount, and never prompting: isSubscribedToPush only reads. A permission prompt on
+  // load is iOS-hostile and trains people to deny before they know what they are being offered.
   useEffect(() => {
-    setNotifyChecked(alreadySubscribed)
-    setNotifyStatus(alreadySubscribed ? 'subscribed' : 'idle')
-  }, [nextRound, alreadySubscribed])
+    let canceled = false
+    const env = readCapabilityEnv()
+    void isSubscribedToPush()
+      // A read that throws is not proof of a subscription, and the honest answer to "do you already
+      // hold one?" under uncertainty is no — which is also what the caller assumed before asking.
+      .catch(() => false)
+      .then((isSubscribed) => {
+        if (!canceled) {
+          setIsIos(env.isIos)
+          setCapability(resolvePushCapability(env, isSubscribed))
+        }
+      })
+    return () => {
+      canceled = true
+    }
+  }, [])
+
+  const handleNotifyToggle = async (): Promise<void> => {
+    // iOS Safari outside standalone cannot be asked at all — Notification.requestPermission does not
+    // exist there — so pressing through would do precisely nothing. Intercepting here is what turns
+    // a dead switch into the one instruction that helps.
+    if (capability === 'needs-install') {
+      setIosSheetOpen(true)
+      return
+    }
+    if (capability === 'subscribed') {
+      // Flip only after the browser has actually let go. Setting it first meant a rejecting
+      // unsubscribe left the UI claiming notifications were off while the device stayed subscribed
+      // — the one lie this screen must not tell.
+      try {
+        await unsubscribeFromPush(sessionId, currentUser.userId)
+        setCapability('ready')
+        // Clear any earlier failure. Without this a retry that succeeds leaves the previous
+        // "Couldn't turn off notifications" sitting under a switch that now reads unsubscribed.
+        setNotifyStatus('idle')
+      } catch {
+        setNotifyStatus('failed-off')
+      }
+      return
+    }
+
+    setNotifyStatus('saving')
+    // Every step inside subscribeToPush can reject — the VAPID fetch, pushManager.subscribe (Chrome
+    // throws InvalidStateError when an existing subscription carries a different applicationServerKey),
+    // and the POST. Without this the switch sits disabled on "Turning on notifications…" forever,
+    // which is precisely the dead end READY_TIMEOUT_MS exists to prevent.
+    const result = await subscribeToPush(sessionId, currentUser.userId).catch(() => 'unready' as const)
+    if (result === 'subscribed') {
+      setNotifyStatus('idle')
+      setCapability('subscribed')
+      return
+    }
+    // 'unready' is transient — keep the switch armed and say so.
+    if (result === 'unready') {
+      setNotifyStatus('failed-on')
+      return
+    }
+    // 'dismissed' means the prompt was closed without a choice. Nothing is wrong, nothing needs
+    // explaining, and nagging someone who just declined to decide is the wrong move — so drop
+    // silently back to idle with the switch still offered.
+    setNotifyStatus('idle')
+    if (result === 'dismissed') {
+      return
+    }
+    // 'denied' is terminal and 'unsupported' means the browser cannot. Both become the capability
+    // itself — a static explanation with no control, because neither can be resolved from here.
+    setCapability(result)
+  }
 
   const closeMutation = useMutation({
     mutationFn: () => closeRound(sessionId, currentRound),
@@ -83,43 +150,10 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
     },
   })
 
-  const handleNotifyToggle = async (): Promise<void> => {
-    setNotifyChecked(true)
-    setNotifyStatus('saving')
-    try {
-      const updatedUser = await subscribeToRound(sessionId, currentRound + 1, currentUser.userId)
-      setNotifyStatus('subscribed')
-      // Fold the authoritative subscribedRounds in rather than waiting up to 30s for the
-      // users poll, so a remount in between re-seeds as subscribed instead of idle.
-      queryClient.setQueryData<User[]>(['users', sessionId], (old) =>
-        old?.map((u) => (u.userId === updatedUser.userId ? updatedUser : u)),
-      )
-    } catch (err) {
-      setNotifyChecked(false)
-      // A 403 (this name is claimed by another Google account) and a 400 (no verified
-      // address available) are both permanent for this identity — the same request will
-      // fail identically forever. Leave the toggle disabled rather than re-arming it to
-      // invite a futile retry, and don't instruct an action the UI cannot perform: there
-      // is no in-app way to re-pick an identity once the session cookie is set.
-      if (hasStatusCode(err, 403)) {
-        setNotifyStatus('unavailable')
-        toast.danger("Someone else claimed this name with their Google account, so we can't email you.")
-        return
-      }
-      if (hasStatusCode(err, 400)) {
-        setNotifyStatus('unavailable')
-        toast.danger("Your Google account has no verified email address, so we can't send reminders.")
-        return
-      }
-      setNotifyStatus('idle')
-      toast.danger("Couldn't turn on reminders. Please try again.")
-    }
-  }
-
-  const solo = isSoloVoter(session)
-  // On the last round there is no next round to be notified about — closing it
-  // decides the winner, so the reminder has to promise that instead.
-  const reminderEvent = isFinalRound(session) ? 'a winner is chosen' : 'the next round opens'
+  // Stays on the session's own count: this screen polls the session, and `solo` also picks the
+  // subtitle sitting next to `total={session.voterCount}` below. Reading the two from different
+  // snapshots is how you end up with "waiting for others" over a total of one.
+  const solo = isSoloVoter(session.voterCount, session.currentRound)
 
   return (
     <WaitingContainer>
@@ -133,20 +167,38 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       />
 
       {/* Notification opt-in grouped together */}
-      <NotifySection>
-        {isSignedIn ? (
-          <NotifyCheckbox
-            checked={notifyChecked}
-            disabled={notifyStatus !== 'idle'}
-            isSaving={notifyStatus === 'saving'}
-            onChange={handleNotifyToggle}
-            reminderEvent={reminderEvent}
-            subscribed={notifyStatus === 'subscribed'}
-          />
-        ) : (
-          <NotifyAuthGate onSignIn={handleSignIn} reminderEvent={reminderEvent} />
-        )}
-      </NotifySection>
+      {capability !== null && (
+        <NotifySection>
+          {capability === 'denied' && (
+            <NotifyBlocked body="Turn them back on in your browser settings." title="Notifications are blocked" />
+          )}
+          {capability === 'unsupported' && (
+            <NotifyBlocked
+              // Naming the browser this device actually has is the whole value of the line. Safari
+              // is the only one that can push on iOS; Chrome is the safe answer everywhere else.
+              body={`Open Choosee in ${isIos ? 'Safari' : 'Chrome'} to turn them on.`}
+              title="This browser can't send notifications"
+            />
+          )}
+          {capability !== 'denied' && capability !== 'unsupported' && (
+            <>
+              <NotifyCheckbox
+                disabled={notifyStatus === 'saving'}
+                isFinal={isFinalRound(session)}
+                isSaving={notifyStatus === 'saving'}
+                onChange={() => void handleNotifyToggle()}
+                reminderEvent={reminderEvent}
+                subscribed={capability === 'subscribed'}
+              />
+              {capability === 'subscribed' && <TurnOffLink onPress={() => void handleNotifyToggle()} />}
+              {notifyStatus === 'failed-on' && <NotifyRetryMessage action="on" />}
+              {notifyStatus === 'failed-off' && <NotifyRetryMessage action="off" />}
+            </>
+          )}
+        </NotifySection>
+      )}
+
+      <IosNotifySheet onClose={() => setIosSheetOpen(false)} open={iosSheetOpen} />
 
       {/* Tools grouped in a pill; the consequential skip sits apart as a quiet link */}
       <ActionRow>

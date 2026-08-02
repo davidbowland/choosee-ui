@@ -14,7 +14,6 @@ import {
   VotingContainer,
   VsLabel,
 } from './elements'
-import { useAuthContext } from '@components/auth-context'
 import BracketView from '@components/bracket-view'
 import RestaurantCard from '@components/restaurant-card'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
@@ -45,11 +44,16 @@ export interface VotingPhaseProps {
   session: SessionData
   currentUser: User
   choices: ChoicesMap
+  /**
+   * Live voter count, from the users query. Deliberately not read off `session` here: this screen
+   * never refetches the session, so `session.voterCount` is frozen at whatever it was when the
+   * page loaded — which for whoever sent the invite is the count from before anyone accepted it.
+   */
+  voterCount: number
 }
 
-const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhaseProps): React.ReactNode => {
+const VotingPhase = ({ sessionId, session, currentUser, choices, voterCount }: VotingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { isSignedIn } = useAuthContext()
   const [bracketOpen, setBracketOpen] = useState(false)
 
   const currentRound = session.currentRound
@@ -86,12 +90,9 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
 
   const voteMutation = useMutation({
     mutationFn: ({ idx, choiceId }: { idx: number; choiceId: string }) =>
-      patchUser(
-        sessionId,
-        currentUser.userId,
-        [{ op: 'replace', path: `/votes/${currentRound}/${idx}`, value: choiceId }],
-        isSignedIn,
-      ),
+      patchUser(sessionId, currentUser.userId, [
+        { op: 'replace', path: `/votes/${currentRound}/${idx}`, value: choiceId },
+      ]),
     onMutate: async ({ idx, choiceId }) => {
       setPendingVote({ idx, choiceId })
       await queryClient.cancelQueries({ queryKey: ['users', sessionId] })
@@ -156,7 +157,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
 
   const nameMutation = useMutation({
     mutationFn: (newName: string) =>
-      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/name', value: newName }], isSignedIn),
+      patchUser(sessionId, currentUser.userId, [{ op: 'replace', path: '/name', value: newName }]),
     onMutate: async (newName) => {
       await queryClient.cancelQueries({ queryKey: ['users', sessionId] })
       const previous = queryClient.getQueryData<User[]>(['users', sessionId])
@@ -187,7 +188,7 @@ const VotingPhase = ({ sessionId, session, currentUser, choices }: VotingPhasePr
 
   return (
     <VotingContainer>
-      {isSoloVoter(session) && <SoloVoterHint />}
+      {isSoloVoter(voterCount, session.currentRound) && <SoloVoterHint />}
       {session.filterClosingSoon && <FilterClosingSoonBadge />}
 
       <TournamentHeader

@@ -8,16 +8,7 @@ const config = {
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*'],
   coverageDirectory: 'coverage',
-  coveragePathIgnorePatterns: [
-    '.*\\.d\\.ts',
-    'config/*',
-    'types.ts',
-    'pages/_app.tsx',
-    'pages/_document.tsx',
-    'pages/auth/*',
-    'hooks/useAuth.ts',
-    'components/auth-context/*',
-  ],
+  coveragePathIgnorePatterns: ['.*\\.d\\.ts', 'config/*', 'types.ts', 'pages/_app.tsx', 'pages/_document.tsx'],
   coverageThreshold: {
     global: { branches: 80, functions: 90, lines: 80 },
   },
@@ -45,7 +36,26 @@ const config = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
-  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out'],
+  // `.worktrees/` holds linked git worktrees, each a full copy of the repo including its tests.
+  // Without this, a run from the main tree discovers those copies and executes them against the
+  // MAIN tree's src — moduleNameMapper resolves @components/* etc. to <rootDir> regardless of which
+  // worktree the test file came from — so an in-progress branch's tests get graded against another
+  // branch's source. Every failure that produces is a phantom.
+  // Keeps worktree copies out of the module map as well as out of test discovery. Each worktree
+  // carries its own `__mocks__/file-mock.js`, and duplicates in the haste map make jest warn and
+  // then resolve a manual mock from whichever copy it saw first.
+  // `.claude/worktrees/` is where the agent harness puts worktrees; `.worktrees/` is the manual
+  // convention. Both need excluding for the reason above, and missing the first one is silent:
+  // TypeScript's wildcard globs skip dot-directories so `npm run typecheck` never noticed, while
+  // jest happily discovered 75 worktree copies and graded them against this tree's src.
+  modulePathIgnorePatterns: ['<rootDir>/.worktrees/', '<rootDir>/.claude/worktrees/'],
+  testPathIgnorePatterns: [
+    'node_modules',
+    '\\.cache',
+    '<rootDir>.*/out',
+    '<rootDir>/.worktrees/',
+    '<rootDir>/.claude/worktrees/',
+  ],
 }
 
 // next/jest prepends its own transformIgnorePatterns that block all node_modules.

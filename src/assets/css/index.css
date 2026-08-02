@@ -41,7 +41,7 @@ html.dark {
   --primary-foreground: #0a0a0b;
   --color-primary-foreground: #0a0a0b;
 
-  /* Default neutral scale — dark greys */
+  /* Default neutral scale — dark grays */
   --default-50: #0d0d0e;
   --color-default-50: #0d0d0e;
   --default-100: #111113;
@@ -117,4 +117,95 @@ html.dark {
   .drawer__dialog[data-placement='right'] {
     @apply w-[min(80vw,48rem)] max-w-none;
   }
+}
+
+/* ---- Home page: two settings of one layout ----
+   Which setting is correct depends on whether this device has a Choosee in flight, which only
+   localStorage knows. The attribute lands on <html> before first paint and is corrected after
+   mount. The switch itself is pure CSS, so on a device the script guessed correctly — every device
+   after its first load — nothing swaps and nothing reflows.
+
+   One <h1> serves both: the line breaks collapse and the type shrinks. Two headings, one hidden,
+   would put a second level-one heading in the document for no reason.
+
+   Every rule below descends through `.home-grid`, which only `src/pages/index.tsx` renders. That
+   is not tidiness — data-resume sits on <html>, the pre-paint script is in the shared _document,
+   and nothing clears the attribute on navigation, so a returning visitor carries data-resume="1"
+   onto the session and privacy pages. A bare `[data-resume='1'] .hero-title` would follow them
+   there and resize anything that ever reuses the name. */
+
+.home-grid .hero-title {
+  font-size: clamp(64px, 7.5vw, 100px);
+}
+
+/* Tracking, not just size. `.choosee-brand` sets 0.12em unlayered, which beats any `tracking-*`
+   utility on the element no matter what that utility says — so the compact line was ~20% wider than
+   the class on the h1 claimed. At 375px the clamp floors at 34px and twenty tracked characters do
+   not fit the ~335px available, and "single line" became two on a phone. Tightening the letter
+   spacing for this setting only is what keeps the promise, and the floor drops with it so the
+   narrowest phones have room. Deliberately not `text-wrap: nowrap`: if the line still does not fit
+   somewhere, two lines is a worse headline but a horizontal scrollbar is a broken page. The full
+   hero is untouched — it has three lines to wrap into anyway. */
+[data-resume='1'] .home-grid .hero-title {
+  font-size: clamp(30px, 3.4vw, 46px);
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+}
+
+[data-resume='1'] .home-grid .hero-break,
+[data-resume='1'] .home-grid [data-hero='full'] {
+  display: none;
+}
+
+/* The short subhead, and the label above the create card. Both ship in the markup and both are off
+   by default, so the first frame is correct without waiting on hydration.
+
+   The label is only half a CSS decision: this shows it to a returning visitor before any JavaScript
+   has run, but React still removes it once storage has been read and come back empty. The attribute
+   latches — that is what keeps the headline from regrowing — and a label bound to the latch alone
+   would go on saying "Start another Choosee" after you dismissed the only other one. */
+.home-grid [data-hero='compact'],
+.home-grid .resume-only {
+  display: none;
+}
+
+[data-resume='1'] .home-grid [data-hero='compact'] {
+  display: block;
+}
+
+[data-resume='1'] .home-grid .resume-only {
+  display: flex;
+}
+
+/* Column alignment, and only where there are columns. Below md the wrapper is a single flex
+   column, where align-items runs horizontally — setting it there would shrink both children to
+   their content width instead of letting them fill the screen. @apply borrows Tailwind's own md
+   so this can never drift from the md:grid on the element itself.
+
+   Unlayered like every other rule in this block. Wrapping these two in `components` would not
+   protect them from a utility — the whole components layer loses to the whole utilities layer
+   regardless — it would only have made them the one pair in this file that a stray md:items-*
+   class on the element could silently beat. Specificity alone orders them: 0,1,0 then 0,2,0. */
+.home-grid {
+  @apply md:items-center;
+}
+
+[data-resume='1'] .home-grid {
+  @apply md:items-start;
+}
+
+/* Dismiss your last card and the mode still says "returning", because regrowing the headline under
+   the thumb that just dismissed it is the movement this whole design removes. But the pitch can come
+   back: the subhead sits below the headline with nothing under it now that the cards are gone, so
+   swapping it moves nothing — and one line of copy beside an otherwise empty column is the thinnest
+   the page ever looks. The longer sentence is also the right thing to say to someone who no longer
+   has anything in progress.
+
+   Specificity: 0,4,0 against the 0,3,0 pair above, so this wins wherever the two disagree. */
+[data-resume='1'] .home-grid.resume-empty [data-hero='full'] {
+  display: block;
+}
+
+[data-resume='1'] .home-grid.resume-empty [data-hero='compact'] {
+  display: none;
 }

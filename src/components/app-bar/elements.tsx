@@ -1,8 +1,4 @@
-import { Button } from '@heroui/react'
-import { LogOut } from 'lucide-react'
 import React from 'react'
-
-import { GoogleLogo } from '@components/google-logo'
 
 export const NavContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <nav className="px-4 pt-4 pb-2 relative z-40">
@@ -28,6 +24,42 @@ const Mark = (): React.ReactNode => (
   </svg>
 )
 
+// A phone with a plus, drawn in lucide's idiom so it sits beside the app's other icons. Not a
+// download arrow: an arrow into a tray says "save a file", not "put this on my phone".
+const PhonePlus = (): React.ReactNode => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    height="18"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={1.6}
+    viewBox="0 0 24 24"
+    width="18"
+  >
+    <rect height="19" rx="2.5" width="11" x="2.5" y="2.5" />
+    <path d="M6.5 18.5h3" />
+    <path d="M18 5v6" />
+    <path d="M21 8h-6" />
+  </svg>
+)
+
+// Amber, the app's action color, so the icon reads as pressable rather than as a status marker.
+// Label rather than visible text: this is the slot Google sign-in vacated, and the bar has room
+// for a disc, not a sentence.
+export const InstallIconButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
+  <button
+    aria-label="Add Choosee to your Home Screen"
+    className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#F59E0B]/20 bg-[#F59E0B]/[0.12] text-[#F59E0B] transition-colors hover:bg-[#F59E0B]/20 focus:outline-none"
+    onClick={onPress}
+    title="Add Choosee to your Home Screen"
+    type="button"
+  >
+    <PhonePlus />
+  </button>
+)
+
 export const Brand = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <span className="flex items-center gap-2.5">
     <span className="rounded-[11px] border border-[#F59E0B]/20 bg-[#F59E0B]/[0.12] p-[3px]">
@@ -37,33 +69,4 @@ export const Brand = ({ children }: { children: React.ReactNode }): React.ReactN
     </span>
     <BrandLink>{children}</BrandLink>
   </span>
-)
-
-export const GoogleSignInButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button
-    aria-label="Sign in with Google"
-    className="shrink-0 rounded-full border-white/[0.09] bg-white/[0.05] px-3 text-[#D4D4D4] hover:bg-white/[0.09] sm:px-4"
-    onPress={onPress}
-    size="sm"
-    variant="outline"
-  >
-    <GoogleLogo />
-    <span className="hidden sm:inline">Sign in with Google</span>
-  </Button>
-)
-
-export const UserMenu = ({ name, onSignOut }: { name: string; onSignOut: () => void }): React.ReactNode => (
-  <div className="flex min-w-0 items-center gap-3">
-    <span className="hidden max-w-[120px] truncate text-sm text-[#6B7280] sm:inline">{name}</span>
-    <Button
-      aria-label="Sign out"
-      className="shrink-0 rounded-full border-white/[0.09] bg-white/[0.05] px-3 text-[#6B7280] hover:bg-white/[0.09] sm:px-4"
-      onPress={onSignOut}
-      size="sm"
-      variant="outline"
-    >
-      <LogOut className="h-4 w-4" />
-      <span className="hidden sm:inline">Sign out</span>
-    </Button>
-  </div>
 )

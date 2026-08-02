@@ -6,8 +6,9 @@ import type { AppProps } from 'next/app'
 import React, { useEffect, useState } from 'react'
 
 import '@assets/css/index.css'
-import { AuthProvider } from '@components/auth-context'
 import '@config/amplify'
+import { InstallPromptContext, useInstallPrompt } from '@hooks/useInstallPrompt'
+import { useServiceWorker } from '@hooks/useServiceWorker'
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(
@@ -26,9 +27,16 @@ export default function App({ Component, pageProps }: AppProps) {
     document.documentElement.classList.add('dark')
   }, [])
 
+  useServiceWorker()
+
+  // Mounted here and nowhere else. `beforeinstallprompt` fires once, early, and only if Chromium
+  // considers the app installable — a listener added later never hears it, so every entry point
+  // reads the captured event from this context instead of listening for itself.
+  const installPrompt = useInstallPrompt()
+
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <InstallPromptContext.Provider value={installPrompt}>
         <div className="relative min-h-[100dvh] bg-[#0A0A0B] text-foreground">
           {/* Fixed ambient gradient orbs — Arena background */}
           <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
@@ -57,8 +65,8 @@ export default function App({ Component, pageProps }: AppProps) {
             <Component {...pageProps} />
           </div>
         </div>
-      </AuthProvider>
-      <ToastProvider placement="bottom" />
+        <ToastProvider placement="bottom" />
+      </InstallPromptContext.Provider>
     </QueryClientProvider>
   )
 }

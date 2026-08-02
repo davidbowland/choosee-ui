@@ -14,7 +14,6 @@ const mockPush = jest.fn()
 jest.mock('next/router', () => ({
   useRouter: jest.fn().mockReturnValue({ push: jest.fn(), replace: jest.fn() }),
 }))
-jest.mock('@components/auth-context')
 jest.mock('@services/api')
 
 const renderWithClient = (ui: React.ReactElement) => {

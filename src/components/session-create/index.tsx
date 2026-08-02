@@ -127,7 +127,7 @@ const SessionCreate = (): React.ReactNode => {
   }, [])
 
   // reCAPTCHA v3 scores the first, cold `execute` of a page load low because it has gathered almost
-  // no behavioural signal yet; the next execute, against a warmed session, scores comfortably above
+  // no behavioral signal yet; the next execute, against a warmed session, scores comfortably above
   // the API's threshold. Fire one throwaway token as soon as the visitor touches the form so their
   // real request is never the cold first execute. The token is discarded client-side, so it never
   // reaches siteverify and costs no assessment. Once per mount, and best-effort — a failed warm-up

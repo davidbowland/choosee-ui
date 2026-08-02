@@ -1,6 +1,8 @@
 import { Head, Html, Main, NextScript } from 'next/document'
 import React from 'react'
 
+import { HINT_KEY } from '@utils/joined-sessions'
+
 const description = 'Start a Choosee and vote your way to a restaurant.'
 const ogImage = `${process.env.NEXT_PUBLIC_ORIGIN}/og-image.png`
 
@@ -35,6 +37,19 @@ export default function Document() {
         <script
           dangerouslySetInnerHTML={{
             __html: "document.documentElement.classList.add('dark')",
+          }}
+        />
+        {/* The home page's hero has two sizes, and which one is correct depends on data only the
+            device holds. Deciding it in React would mean painting one and swapping to the other,
+            which is the exact jump the two sizes exist to prevent. One numeric comparison, no
+            parsing: the value is a timestamp, and a stale one is simply in the past. The key is
+            imported rather than written out, so it cannot drift from the code that writes it.
+
+            Wrapped in a function so `u` does not become a global. This runs on every page of the
+            export, so the names it introduces are the whole origin's names. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `!function(){try{var u=+localStorage.getItem('${HINT_KEY}');if(u&&Date.now()<u){document.documentElement.dataset.resume='1'}}catch(e){}}()`,
           }}
         />
         <Main />

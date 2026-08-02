@@ -10,7 +10,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 
-jest.mock('@components/auth-context')
 jest.mock('@services/api')
 
 jest.mock('@heroui/react', () => ({
@@ -57,7 +56,6 @@ const mockSession: SessionData = {
 const mockUser: User = {
   userId: 'user-1',
   name: 'Test User',
-  subscribedRounds: [],
   votes: [[null, null]],
 }
 
@@ -98,7 +96,13 @@ describe('VotingPhase', () => {
 
   it('should display the current matchup restaurants', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.getByTestId('card-Restaurant A')).toBeInTheDocument()
     expect(screen.getByTestId('card-Restaurant B')).toBeInTheDocument()
@@ -110,21 +114,39 @@ describe('VotingPhase', () => {
 
   it('should display round indicator', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(brandText('Round')).toBe('1 / 3')
   })
 
   it('should display matchup progress', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(brandText('Match')).toBe('1 / 2')
   })
 
   it('should display user name with edit icon', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.getAllByText('Test User')[0]).toBeInTheDocument()
   })
@@ -132,7 +154,13 @@ describe('VotingPhase', () => {
   it('should display userId-derived name when user.name is null', () => {
     const noNameUser = { ...mockUser, name: null, userId: 'brave-tiger' }
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={noNameUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={noNameUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.getAllByText('brave tiger')[0]).toBeInTheDocument()
   })
@@ -140,7 +168,13 @@ describe('VotingPhase', () => {
   it('should resume at first unvoted matchup', () => {
     const partialUser = { ...mockUser, votes: [['a', null]] }
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={partialUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={partialUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.getByTestId('card-Restaurant C')).toBeInTheDocument()
     expect(screen.getByTestId('card-Restaurant D')).toBeInTheDocument()
@@ -157,14 +191,26 @@ describe('VotingPhase', () => {
   it('should render nothing when all matchups are voted', () => {
     const allVotedUser = { ...mockUser, votes: [['a', 'c']] }
     const { container } = renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={allVotedUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={allVotedUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(container.innerHTML).toBe('')
   })
 
   it('should display View bracket button', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.getByText(/View bracket/i)).toBeInTheDocument()
   })
@@ -172,17 +218,20 @@ describe('VotingPhase', () => {
   it('should call patchUser with vote when a card is clicked', async () => {
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getByTestId('card-Restaurant A'))
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith(
-        'test-session',
-        'user-1',
-        [{ op: 'replace', path: '/votes/0/0', value: 'a' }],
-        false,
-      )
+      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
+        { op: 'replace', path: '/votes/0/0', value: 'a' },
+      ])
     })
   })
 
@@ -191,7 +240,13 @@ describe('VotingPhase', () => {
   it('should invalidate session query after a successful vote', async () => {
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     const invalidateQueries = jest.spyOn(queryClient, 'invalidateQueries')
     await user.click(screen.getByTestId('card-Restaurant A'))
@@ -207,7 +262,13 @@ describe('VotingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     const spy = jest.spyOn(queryClient, 'invalidateQueries')
 
@@ -226,7 +287,13 @@ describe('VotingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
 
     await user.click(screen.getByTestId('card-Restaurant A'))
@@ -245,7 +312,13 @@ describe('VotingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     const spy = jest.spyOn(queryClient, 'invalidateQueries')
 
@@ -276,7 +349,13 @@ describe('VotingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getByTestId('card-Restaurant A'))
 
@@ -289,7 +368,13 @@ describe('VotingPhase', () => {
   it('should allow inline name editing', async () => {
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getAllByText('Test User')[0])
 
@@ -299,19 +384,22 @@ describe('VotingPhase', () => {
     await user.keyboard('{Enter}')
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith(
-        'test-session',
-        'user-1',
-        [{ op: 'replace', path: '/name', value: 'New Name' }],
-        false,
-      )
+      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
+        { op: 'replace', path: '/name', value: 'New Name' },
+      ])
     })
   })
 
   it('should reset name on Escape during editing', async () => {
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getAllByText('Test User')[0])
 
@@ -327,7 +415,13 @@ describe('VotingPhase', () => {
   it('should reset value on empty commit during name editing', async () => {
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getAllByText('Test User')[0])
 
@@ -345,7 +439,13 @@ describe('VotingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getAllByText('Test User')[0])
 
@@ -365,7 +465,13 @@ describe('VotingPhase', () => {
 
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
 
     await user.click(screen.getAllByText('Test User')[0])
@@ -388,7 +494,13 @@ describe('VotingPhase', () => {
   it('should not save name when it matches current name', async () => {
     const user = userEvent.setup()
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     await user.click(screen.getAllByText('Test User')[0])
 
@@ -401,7 +513,13 @@ describe('VotingPhase', () => {
   it('should render first matchup when votes array is empty (fresh user)', () => {
     const freshUser = { ...mockUser, votes: [[]] }
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={freshUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={freshUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.getByTestId('card-Restaurant A')).toBeInTheDocument()
     expect(screen.getByTestId('card-Restaurant B')).toBeInTheDocument()
@@ -410,24 +528,58 @@ describe('VotingPhase', () => {
   it('should use fallback choice when choice is not in choices map', () => {
     const sparseChoices = { a: mockChoices.a }
     renderWithClient(
-      <VotingPhase choices={sparseChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={sparseChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     // choiceB 'b' is not in sparseChoices, so fallback name should be 'b'
     expect(screen.getByTestId('card-Restaurant A')).toBeInTheDocument()
     expect(screen.getByTestId('card-b')).toBeInTheDocument()
   })
 
-  it('should show solo voter hint when session has a single voter on the first round', () => {
-    const soloSession = { ...mockSession, voterCount: 1 }
+  it('should show solo voter hint when there is a single voter on the first round', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={soloSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={1}
+      />,
     )
     expect(screen.getByText(/You're the only one here/i)).toBeInTheDocument()
   })
 
-  it('should not show solo voter hint when the session has more than one voter', () => {
+  it('should not show solo voter hint when there is more than one voter', () => {
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={mockUser} session={mockSession} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={mockSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
+    )
+    expect(screen.queryByText(/You're the only one here/i)).not.toBeInTheDocument()
+  })
+
+  // The session is fetched once and never polled during voting, so its voterCount is a snapshot
+  // taken before anyone else joined. The person who sent the invite sits on that stale 1 for the
+  // whole round — this is the count that has to win.
+  it('should not show solo voter hint when the live count outgrew the session snapshot', () => {
+    const staleSession = { ...mockSession, voterCount: 1 }
+    renderWithClient(
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={mockUser}
+        session={staleSession}
+        sessionId="test-session"
+        voterCount={2}
+      />,
     )
     expect(screen.queryByText(/You're the only one here/i)).not.toBeInTheDocument()
   })
@@ -441,7 +593,13 @@ describe('VotingPhase', () => {
     }
     const laterUser = { ...mockUser, votes: [['a', 'c'], [null]] }
     renderWithClient(
-      <VotingPhase choices={mockChoices} currentUser={laterUser} session={laterRound} sessionId="test-session" />,
+      <VotingPhase
+        choices={mockChoices}
+        currentUser={laterUser}
+        session={laterRound}
+        sessionId="test-session"
+        voterCount={1}
+      />,
     )
     expect(screen.queryByText(/You're the only one here/i)).not.toBeInTheDocument()
   })

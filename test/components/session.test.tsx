@@ -1,9 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-// @ts-expect-error — mock-only export from __mocks__/index.tsx
-import { mockSetAuthState } from '@components/auth-context'
-import Session from '@components/session'
+import Session, { waitingInterval } from '@components/session'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -11,7 +9,6 @@ import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
-jest.mock('@components/auth-context')
 
 // Mock child phases to keep tests focused on Session orchestration
 jest.mock('@components/session/loading', () => ({
@@ -28,7 +25,11 @@ jest.mock('@components/session/user-select', () => ({
 }))
 jest.mock('@components/session/voting', () => ({
   __esModule: true,
-  default: () => <div data-testid="voting-phase">Voting</div>,
+  default: ({ voterCount }: { voterCount: number }) => (
+    <div data-testid="voting-phase">
+      Voting<span data-testid="voting-voter-count">{voterCount}</span>
+    </div>
+  ),
 }))
 jest.mock('@components/session/waiting', () => ({
   __esModule: true,
@@ -39,11 +40,11 @@ jest.mock('@components/session/winner', () => ({
   default: () => <div data-testid="winner-phase">Winner</div>,
 }))
 
-// Mock cookie hook
+// Mock identity hook
 let mockUserId: string | null = null
 const mockSetUserId = jest.fn()
-jest.mock('@hooks/useSessionCookie', () => ({
-  useSessionCookie: () => ({ userId: mockUserId, setUserId: mockSetUserId }),
+jest.mock('@hooks/useSessionIdentity', () => ({
+  useSessionIdentity: () => ({ setUserId: mockSetUserId, userId: mockUserId }),
 }))
 
 const baseSession: SessionData = {
@@ -70,7 +71,6 @@ const baseSession: SessionData = {
 const mockUser: User = {
   userId: 'user-1',
   name: 'Test User',
-  subscribedRounds: [],
   votes: [[null]],
 }
 
@@ -88,13 +88,42 @@ function renderWithClient(ui: React.ReactElement) {
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
+describe('waitingInterval', () => {
+  it('should poll hard while the session is still being built', () => {
+    expect(waitingInterval('loading', false)).toEqual(2_000)
+  })
+
+  it('should poll every 10s on the waiting screen without a subscription', () => {
+    expect(waitingInterval('waiting', false)).toEqual(10_000)
+  })
+
+  // Push is the backstop, so someone who will be told can afford to find out a little later.
+  it('should back off to 15s once this device holds a subscription', () => {
+    expect(waitingInterval('waiting', true)).toEqual(15_000)
+  })
+
+  // iOS forbids a push that shows no notification, so a foregrounded tab still has to poll —
+  // subscribing relaxes the interval, it never switches polling off.
+  it('should keep polling the waiting screen even when subscribed', () => {
+    expect(waitingInterval('waiting', true)).not.toBe(false)
+  })
+
+  it.each(['voting', 'winner', 'user-select', 'error'] as const)('should not poll during %s', (phase) => {
+    expect(waitingInterval(phase, false)).toBe(false)
+  })
+
+  it('should ignore the subscription outside the waiting screen', () => {
+    expect(waitingInterval('voting', true)).toBe(false)
+  })
+})
+
 describe('Session', () => {
   afterEach(async () => {
     await queryClient?.cancelQueries()
     queryClient?.clear()
   })
 
-  /** Starts each test with no identified user in the cookie. */
+  /** Starts each test with no identified user in the stored record. */
   const setup = (userId: string | null = null): void => {
     mockUserId = userId
   }
@@ -166,6 +195,18 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('voting-phase')).toBeInTheDocument())
   })
 
+  // baseSession carries voterCount 2 while the users query returns one user, so this only passes
+  // if the count comes off the users list — the query that keeps polling once voting starts.
+  it('should give the voting phase the users-list count rather than the session snapshot', async () => {
+    setup('user-1')
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+    renderWithClient(<Session sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByTestId('voting-phase')).toBeInTheDocument())
+    expect(screen.getByTestId('voting-voter-count')).toHaveTextContent('1')
+  })
+
   it('should show waiting phase when user has voted all matchups', async () => {
     setup('user-1')
     const votedUser = { ...mockUser, votes: [['a']] }
@@ -212,7 +253,7 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('loading-phase')).toBeInTheDocument())
   })
 
-  it('should prefer cookie userId over nothing', async () => {
+  it('should prefer the stored userId over nothing', async () => {
     setup('user-1')
     const votedUser = { ...mockUser, votes: [['a']] }
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
@@ -222,13 +263,54 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('waiting-phase')).toBeInTheDocument())
   })
 
-  it('should ignore cookie userId if not in users list', async () => {
+  it('should ignore the stored userId if not in users list', async () => {
     setup('nonexistent-user')
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
+  })
+
+  // A notification opens /s/{id}?id={userId}. consumeQueryParamId strips it on mount, so without
+  // persisting it the identity survives exactly one page load — and on an installed iOS app, whose
+  // storage is separate from the Safari tab the user joined in, every launch would land on the
+  // name picker instead of the vote.
+  it('should remember an identity that arrived in the URL', async () => {
+    setup()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/s/test-session', search: '?id=user-1' },
+      writable: true,
+    })
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+
+    renderWithClient(<Session sessionId="test-session" />)
+
+    await waitFor(() =>
+      expect(mockSetUserId).toHaveBeenCalledWith('user-1', {
+        address: '123 Main St',
+        currentRound: 0,
+        totalRounds: 2,
+      }),
+    )
+  })
+
+  it('should not remember an id that is not a voter in this Choosee', async () => {
+    setup()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/s/test-session', search: '?id=not-a-voter' },
+      writable: true,
+    })
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+
+    renderWithClient(<Session sessionId="test-session" />)
+
+    await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
+    expect(mockSetUserId).not.toHaveBeenCalled()
   })
 
   it('should handle user selection callback', async () => {
@@ -240,53 +322,28 @@ describe('Session', () => {
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
     await user.click(screen.getByText('Select user'))
-    expect(mockSetUserId).toHaveBeenCalledWith('user-1')
+    expect(mockSetUserId).toHaveBeenCalledWith('user-1', {
+      address: '123 Main St',
+      currentRound: 0,
+      totalRounds: 2,
+    })
   })
 
-  // The backfill fires an authenticated PATCH so the server can populate name and googleSub
-  // from the verified JWT. It only runs for a signed-in user whose name is still null.
-  describe('name backfill', () => {
-    const namelessUser: User = { ...mockUser, name: null }
+  // Joining writes a user row, which changes the session's voterCount. The voting screen never
+  // polls, so without refetching here the second person to join reads a pre-join count and gets
+  // told they are the only one in a Choosee they were invited to.
+  it('should refetch the session after a user joins so the voter count is not stale', async () => {
+    setup()
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+    const user = userEvent.setup()
+    renderWithClient(<Session sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
+    const callsBeforeJoin = jest.mocked(api.fetchSession).mock.calls.length
 
-    it('should backfill from the token for a signed-in user with no name', async () => {
-      mockSetAuthState({ isSignedIn: true })
-      setup('user-1')
-      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
-      jest.mocked(api.fetchUsers).mockResolvedValue([namelessUser])
-      jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-      jest.mocked(api.backfillUserFromToken).mockResolvedValue({ ...namelessUser, name: 'Backfilled' })
+    await user.click(screen.getByText('Select user'))
 
-      renderWithClient(<Session sessionId="test-session" />)
-
-      await waitFor(() => expect(api.backfillUserFromToken).toHaveBeenCalledWith('test-session', 'user-1'))
-    })
-
-    it('should not backfill when the user already has a name', async () => {
-      mockSetAuthState({ isSignedIn: true })
-      setup('user-1')
-      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
-      jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
-      jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-
-      renderWithClient(<Session sessionId="test-session" />)
-
-      await waitFor(() => expect(api.fetchUsers).toHaveBeenCalled())
-      expect(api.backfillUserFromToken).not.toHaveBeenCalled()
-    })
-
-    it('should not backfill when the user is signed out', async () => {
-      // Explicit: mockSetAuthState uses mockReturnValue, which clearMocks does not reset,
-      // so a signed-in state set by an earlier test would otherwise leak into this one.
-      mockSetAuthState({ isSignedIn: false })
-      setup('user-1')
-      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
-      jest.mocked(api.fetchUsers).mockResolvedValue([namelessUser])
-      jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-
-      renderWithClient(<Session sessionId="test-session" />)
-
-      await waitFor(() => expect(api.fetchUsers).toHaveBeenCalled())
-      expect(api.backfillUserFromToken).not.toHaveBeenCalled()
-    })
+    await waitFor(() => expect(jest.mocked(api.fetchSession).mock.calls.length).toBeGreaterThan(callsBeforeJoin))
   })
 })

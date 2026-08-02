@@ -8,7 +8,6 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
-jest.mock('@components/auth-context')
 jest.mock('next/router', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
@@ -38,7 +37,6 @@ const mockUsers: User[] = [
   {
     userId: 'user-1',
     name: 'Test User',
-    subscribedRounds: [],
     votes: [[null]],
   },
 ]
@@ -147,9 +145,7 @@ describe('Session phase router', () => {
   it('should render user select phase when no user is identified', async () => {
     setup()
     jest.mocked(api.fetchSession).mockResolvedValue({ ...mockSession, isReady: true })
-    jest
-      .mocked(api.fetchUsers)
-      .mockResolvedValue([{ userId: 'user-1', name: 'Test User', subscribedRounds: [], votes: [[null]] }])
+    jest.mocked(api.fetchUsers).mockResolvedValue([{ userId: 'user-1', name: 'Test User', votes: [[null]] }])
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
     expect(await screen.findByText(/Welcome back/i)).toBeInTheDocument()

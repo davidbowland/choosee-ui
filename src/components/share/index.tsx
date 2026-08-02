@@ -33,7 +33,7 @@ const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode =>
     try {
       await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: sessionUrl })
     } catch {
-      // User cancelled or the share failed; copy and QR remain available.
+      // User canceled or the share failed; copy and QR remain available.
     }
   }
 

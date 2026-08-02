@@ -1,0 +1,445 @@
+import {
+  JoinedSession,
+  dismissSession,
+  findJoinedSession,
+  forgetSession,
+  markWinnerSeen,
+  readJoinedSessions,
+  rememberSession,
+} from '@utils/joined-sessions'
+
+// Version-namespaced on purpose: see the comment on STORAGE_KEY. Spelled out here rather than
+// imported so that renaming the key in the source without meaning to shows up as a failure.
+const KEY = 'choosee.joined.v1'
+
+const NOW = 1_700_000_000_000
+const HOUR = 60 * 60 * 1000
+const now = () => NOW
+
+const entry = (overrides: Partial<JoinedSession> = {}): JoinedSession => ({
+  sessionId: 'abcd',
+  userId: 'user-1',
+  address: '4102 Main St',
+  currentRound: 1,
+  totalRounds: 3,
+  joinedAt: NOW,
+  ...overrides,
+})
+
+const seed = (sessions: JoinedSession[], version = 1): void => {
+  localStorage.setItem(KEY, JSON.stringify({ version, sessions }))
+}
+
+const setup = (): void => {
+  localStorage.clear()
+}
+
+describe('joined-sessions', () => {
+  // clearMocks calls mockClear, not mockRestore, so a Storage.prototype spy would otherwise stay
+  // installed on the prototype for every test that follows it.
+  afterAll(() => {
+    jest.restoreAllMocks()
+  })
+
+  describe('rememberSession', () => {
+    it('round-trips an entry', () => {
+      setup()
+      rememberSession(
+        { sessionId: 'abcd', userId: 'user-1', address: '4102 Main St', currentRound: 1, totalRounds: 3 },
+        now,
+      )
+
+      expect(readJoinedSessions(now)).toEqual([entry()])
+    })
+
+    it('keeps the original joinedAt when rejoining, so returning cannot extend the TTL', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - 5 * HOUR })])
+
+      rememberSession(
+        { sessionId: 'abcd', userId: 'user-1', address: 'New address', currentRound: 2, totalRounds: 3 },
+        now,
+      )
+
+      expect(readJoinedSessions(now)[0]).toEqual(
+        expect.objectContaining({ address: 'New address', currentRound: 2, joinedAt: NOW - 5 * HOUR }),
+      )
+    })
+
+    it('keeps a dismissed flag, so rejoining cannot resurrect a dismissed card', () => {
+      setup()
+      seed([entry({ dismissed: true })])
+
+      rememberSession(
+        { sessionId: 'abcd', userId: 'user-1', address: '4102 Main St', currentRound: 2, totalRounds: 3 },
+        now,
+      )
+
+      expect(readJoinedSessions(now)).toEqual([])
+      expect(findJoinedSession('abcd', now)).toEqual(expect.objectContaining({ userId: 'user-1' }))
+    })
+  })
+
+  describe('readJoinedSessions', () => {
+    it('returns newest first', () => {
+      setup()
+      seed([
+        entry({ sessionId: 'old', joinedAt: NOW - 3 * HOUR }),
+        entry({ sessionId: 'new', joinedAt: NOW - 1 * HOUR }),
+      ])
+
+      expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['new', 'old'])
+    })
+
+    // Seeded oldest-first on purpose: seeded newest-first, a truncating read returns the right
+    // answer even with the sort deleted, and the test would not mean what its name says.
+    //
+    // Uncapped by design. The display cap belongs to ActiveSessions, which owns the control that
+    // reveals what the cap hides and cannot offer it without being handed the dropped entries.
+    it('returns every displayable entry, newest first', () => {
+      setup()
+      seed([5, 4, 3, 2, 1].map((n) => entry({ sessionId: `s${n}`, joinedAt: NOW - n * HOUR })))
+
+      expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['s1', 's2', 's3', 's4', 's5'])
+    })
+
+    // The privacy policy promises the record "clears itself after a day". That is a claim about
+    // deletion, and a TTL that only filters what is displayed does not honor it: the address the
+    // user typed — or that came from their coordinates — would sit in origin-wide storage forever.
+    // Asserting the raw contents is the only way to tell the two apart.
+    it('deletes expired entries from storage, not just from the result', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - 25 * HOUR, sessionId: 'stale' })])
+
+      readJoinedSessions(now)
+
+      expect(JSON.parse(localStorage.getItem(KEY) ?? '{}')).toEqual({ sessions: [], version: 1 })
+    })
+
+    // The *record*, specifically. Such a load may still write the display hint, on a device whose
+    // record predates that key — see 'backfills a record written before the key existed'.
+    it('leaves the record untouched when nothing has expired', () => {
+      setup()
+      seed([entry()])
+      const before = localStorage.getItem(KEY)
+
+      readJoinedSessions(now)
+
+      expect(localStorage.getItem(KEY)).toBe(before)
+    })
+
+    it('drops entries past the 24 hour TTL', () => {
+      setup()
+      seed([
+        entry({ sessionId: 'fresh', joinedAt: NOW - 23 * HOUR }),
+        entry({ sessionId: 'stale', joinedAt: NOW - 25 * HOUR }),
+      ])
+
+      expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['fresh'])
+    })
+
+    it('hides dismissed entries', () => {
+      setup()
+      seed([entry({ dismissed: true })])
+
+      expect(readJoinedSessions(now)).toEqual([])
+    })
+
+    it('hides entries whose winner has been seen', () => {
+      setup()
+      seed([entry({ winnerSeen: true })])
+
+      expect(readJoinedSessions(now)).toEqual([])
+    })
+
+    it('returns empty for unparseable JSON', () => {
+      setup()
+      localStorage.setItem(KEY, 'not json {{{')
+
+      expect(readJoinedSessions(now)).toEqual([])
+    })
+
+    // Only reachable now by corruption or a hand-edited record, since each app version owns its own
+    // key. Recovery matters more than preservation here: returning [] lets the next write replace
+    // the bad record rather than the app being stuck on it.
+    it('returns empty for a record whose envelope version does not match its key', () => {
+      setup()
+      seed([entry()], 99)
+
+      expect(readJoinedSessions(now)).toEqual([])
+    })
+
+    it('recovers from a corrupted record by writing over it', () => {
+      setup()
+      seed([entry()], 99)
+
+      rememberSession(
+        { address: '18th & Vine', currentRound: 0, sessionId: 'abcd', totalRounds: 2, userId: 'user-9' },
+        now,
+      )
+
+      expect(readJoinedSessions(now)).toEqual([
+        entry({ address: '18th & Vine', currentRound: 0, totalRounds: 2, userId: 'user-9' }),
+      ])
+    })
+
+    // The property the version-namespaced key buys, and the reason the old single-key design had to
+    // go. A device that ran a later version of the app and was then rolled back must find its own
+    // record intact and keep working. Under one shared key the two versions deadlocked: reads bailed
+    // on the unrecognized version and writes refused to overwrite it, so findJoinedSession returned
+    // undefined forever and every visit to every Choosee met the name picker, with nothing in the
+    // app able to clear it.
+    it("leaves another version's record alone and keeps working from its own", () => {
+      setup()
+      localStorage.setItem(
+        'choosee.joined.v2',
+        JSON.stringify({ sessions: [{ shape: 'whatever version 2 stores' }], version: 2 }),
+      )
+      seed([entry()])
+
+      rememberSession(
+        { address: '18th & Vine', currentRound: 0, sessionId: 'other', totalRounds: 2, userId: 'user-9' },
+        now,
+      )
+
+      expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['other', 'abcd'])
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+      expect(JSON.parse(localStorage.getItem('choosee.joined.v2') ?? '{}')).toEqual({
+        sessions: [{ shape: 'whatever version 2 stores' }],
+        version: 2,
+      })
+    })
+
+    // Must carry a live joinedAt. An entry without one fails the TTL filter anyway (NaN < TTL is
+    // false), so seeding it would measure the TTL rather than the validator and pass with the
+    // validator deleted outright.
+    it('drops an otherwise-live entry that is missing required fields', () => {
+      setup()
+      localStorage.setItem(KEY, JSON.stringify({ sessions: [{ joinedAt: NOW, sessionId: 'abcd' }], version: 1 }))
+
+      expect(readJoinedSessions(now)).toEqual([])
+      expect(findJoinedSession('abcd', now)).toBeUndefined()
+    })
+
+    it('returns empty when storage throws', () => {
+      setup()
+      jest.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+        throw new Error('SecurityError')
+      })
+
+      expect(readJoinedSessions(now)).toEqual([])
+    })
+  })
+
+  describe('findJoinedSession', () => {
+    it('finds an entry by session id', () => {
+      setup()
+      seed([entry()])
+
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+    })
+
+    // The assertion standing between this design and silently logging people out of
+    // Choosees they dismissed. A flag hides a card; it does not revoke who you are.
+    it('still returns a dismissed entry, so dismissing a card never costs you your identity', () => {
+      setup()
+      seed([entry({ dismissed: true })])
+
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+    })
+
+    it('still returns an entry whose winner has been seen', () => {
+      setup()
+      seed([entry({ winnerSeen: true })])
+
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+    })
+
+    it('does not return an entry past the TTL', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - 25 * HOUR })])
+
+      expect(findJoinedSession('abcd', now)).toBeUndefined()
+    })
+
+    it('returns undefined for an unknown session', () => {
+      setup()
+      seed([entry()])
+
+      expect(findJoinedSession('nope', now)).toBeUndefined()
+    })
+  })
+
+  describe('flags and deletion', () => {
+    // Both flag tests go through the real writer AND assert the identity survives. Asserting only
+    // that the card disappears would pass just as happily if dismissSession deleted the record —
+    // and a delete is a plausible "simplification", since `dismissed` reads like a tombstone. The
+    // production consequence is silent: dismiss a card, reopen the link from a text message, land
+    // on the name picker, and vote as a second identity that forks your votes.
+    it('dismissSession hides the card but keeps the identity', () => {
+      setup()
+      seed([entry()])
+
+      dismissSession('abcd', now)
+
+      expect(readJoinedSessions(now)).toEqual([])
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+    })
+
+    it('markWinnerSeen hides the card but keeps the identity', () => {
+      setup()
+      seed([entry()])
+
+      markWinnerSeen('abcd', now)
+
+      expect(readJoinedSessions(now)).toEqual([])
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+    })
+
+    it('forgetSession removes exactly one entry, identity and all', () => {
+      setup()
+      seed([entry({ sessionId: 'keep' }), entry({ sessionId: 'drop' })])
+
+      forgetSession('drop', now)
+
+      expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['keep'])
+      expect(findJoinedSession('drop', now)).toBeUndefined()
+    })
+
+    it('swallows a write that storage refuses, leaving what was there intact', () => {
+      setup()
+      seed([entry()])
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new Error('QuotaExceededError')
+      })
+
+      expect(() => dismissSession('abcd', now)).not.toThrow()
+      // Without this the test would pass even if writeAll were never reached.
+      expect(readJoinedSessions(now)).toEqual([entry()])
+    })
+
+    // A mutator that read through the unfiltered record would carry expired entries forward on
+    // every write, so the record would never actually shrink no matter how long it sat.
+    it('does not carry expired entries forward when something else is written', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - 25 * HOUR, sessionId: 'stale' }), entry({ sessionId: 'live' })])
+
+      dismissSession('live', now)
+
+      expect(JSON.parse(localStorage.getItem(KEY) ?? '{}').sessions).toEqual([
+        entry({ dismissed: true, sessionId: 'live' }),
+      ])
+    })
+
+    it('keeps the most recent identities when the storage ceiling is reached', () => {
+      setup()
+      const many = Array.from({ length: 21 }, (_, index) => ({
+        address: '4102 Main St',
+        currentRound: 1,
+        sessionId: `s${index}`,
+        totalRounds: 3,
+        userId: `user-${index}`,
+      }))
+      many.forEach((session) => rememberSession(session, now))
+
+      expect(findJoinedSession('s20', now)?.userId).toBe('user-20')
+      expect(findJoinedSession('s0', now)).toBeUndefined()
+    })
+  })
+
+  // Spelled out rather than imported, for the same reason as KEY: renaming it in the source without
+  // meaning to must show up here as a failure, because an inline script in _document reads this
+  // literal string before any module has loaded and cannot be refactored along with it.
+  describe('the display hint', () => {
+    const HINT = 'choosee.joined.v1.until'
+
+    it('records the latest expiry among entries that would display', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - HOUR, sessionId: 'a' }), entry({ joinedAt: NOW, sessionId: 'b' })])
+
+      readJoinedSessions(now)
+
+      expect(localStorage.getItem(HINT)).toEqual(String(NOW + 24 * HOUR))
+    })
+
+    // The whole value of the key is that it answers the same question the page does. A hint that
+    // counted hidden entries would paint the resume layout for a device with nothing to resume.
+    it('ignores entries that would not display', () => {
+      setup()
+      seed([entry({ dismissed: true, sessionId: 'a' }), entry({ sessionId: 'b', winnerSeen: true })])
+
+      readJoinedSessions(now)
+
+      expect(localStorage.getItem(HINT)).toBeNull()
+    })
+
+    // The path the whole key exists to serve, and the one nothing else covers. Joining happens on a
+    // session page; the very next home visit reads the hint before any module has loaded. Drop the
+    // sync from writeAll and leave it only in readJoinedSessions and the flash comes back on exactly
+    // that journey — with every other test in this block still green, because they all arrange by
+    // seeding storage directly rather than by joining.
+    it('is set by joining, so the first home visit after a join already knows', () => {
+      setup()
+
+      rememberSession(
+        { address: '4102 Main St', currentRound: 1, sessionId: 'a', totalRounds: 3, userId: 'user-1' },
+        now,
+      )
+
+      expect(localStorage.getItem(HINT)).toEqual(String(NOW + 24 * HOUR))
+    })
+
+    it('clears itself when the last displayable entry is dismissed', () => {
+      setup()
+      seed([entry({ sessionId: 'a' })])
+      readJoinedSessions(now)
+
+      dismissSession('a', now)
+
+      expect(localStorage.getItem(HINT)).toBeNull()
+    })
+
+    // Every device that has already joined a Choosee holds a record written before this key existed.
+    // Healing on the next read, rather than the next join, is what keeps those devices from getting
+    // the first-visit hero and a correction — the exact jump this key exists to remove.
+    it('backfills a record written before the key existed', () => {
+      setup()
+      seed([entry({ sessionId: 'a' })])
+
+      readJoinedSessions(now)
+
+      expect(localStorage.getItem(HINT)).toEqual(String(NOW + 24 * HOUR))
+    })
+
+    // The counterweight to the backfill. Backfilling is a one-time repair, not a per-load write: a
+    // correct key is the steady state, and from then on the common load touches nothing at all.
+    it('leaves storage alone when the key already agrees', () => {
+      setup()
+      seed([entry({ sessionId: 'a' })])
+      readJoinedSessions(now)
+      // An earlier test's Storage spy is still on the prototype — see the afterAll above — so it has
+      // already recorded this test's own seeding and backfill. Restoring first is what makes the
+      // assertion below about the read, rather than about the arrangement that set it up.
+      jest.restoreAllMocks()
+      const setItem = jest.spyOn(Storage.prototype, 'setItem')
+
+      readJoinedSessions(now)
+
+      expect(setItem).not.toHaveBeenCalled()
+    })
+
+    // Storage that refuses reads refuses writes too. The hint simply never appears, the inline
+    // script finds nothing, and the page renders as it does for a first-time visitor.
+    it('swallows a hint write that storage refuses', () => {
+      setup()
+      seed([entry({ sessionId: 'a' })])
+      // Nothing has expired, so the hint is the only write this read attempts, and Once is enough.
+      jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new Error('QuotaExceededError')
+      })
+
+      expect(() => readJoinedSessions(now)).not.toThrow()
+      expect(localStorage.getItem(HINT)).toBeNull()
+    })
+  })
+})

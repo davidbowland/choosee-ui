@@ -1,15 +1,19 @@
 import React from 'react'
 
 import WinnerPhase from '@components/session/winner'
+import { InstallPromptContext } from '@hooks/useInstallPrompt'
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData } from '@types'
+import * as joinedSessions from '@utils/joined-sessions'
 
 const mockPush = jest.fn()
 jest.mock('next/router', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
+
+jest.mock('@utils/joined-sessions')
 
 // Mock BracketView to verify open/close
 jest.mock('@components/bracket-view', () => ({
@@ -50,6 +54,23 @@ const mockChoices: ChoicesMap = {
 }
 
 describe('WinnerPhase', () => {
+  const mockPromptInstall = jest.fn()
+  const installLabel = 'Add Choosee to your Home Screen'
+
+  // jsdom is neither iOS nor Firefox for Android, so a captured prompt is the only thing that makes
+  // resolveInstallMethod offer anything here.
+  const renderWithCapturedPrompt = (): void => {
+    render(
+      <InstallPromptContext.Provider value={{ hasInstallPrompt: true, promptInstall: mockPromptInstall }}>
+        <WinnerPhase choices={mockChoices} session={mockSession} />
+      </InstallPromptContext.Provider>,
+    )
+  }
+
+  beforeAll(() => {
+    mockPromptInstall.mockResolvedValue(undefined)
+  })
+
   it('should display the winning restaurant name', () => {
     render(<WinnerPhase choices={mockChoices} session={mockSession} />)
     expect(screen.getByText('Winner Restaurant')).toBeInTheDocument()
@@ -101,5 +122,43 @@ describe('WinnerPhase', () => {
   it('should not show filter badge when filterClosingSoon is false', () => {
     render(<WinnerPhase choices={mockChoices} session={mockSession} />)
     expect(screen.queryByText(/Closing soon hidden/i)).not.toBeInTheDocument()
+  })
+
+  it('should not offer install when the browser cannot install', () => {
+    render(<WinnerPhase choices={mockChoices} session={mockSession} />)
+    expect(screen.queryByRole('button', { name: installLabel })).not.toBeInTheDocument()
+  })
+
+  it('should offer install once the browser has captured a prompt', () => {
+    renderWithCapturedPrompt()
+    expect(screen.getByRole('button', { name: installLabel })).toBeInTheDocument()
+  })
+
+  it('should open the install dialog from the link', async () => {
+    const user = userEvent.setup()
+    renderWithCapturedPrompt()
+    await user.click(screen.getByRole('button', { name: installLabel }))
+    expect(screen.getByText('Put Choosee on your Home Screen')).toBeInTheDocument()
+  })
+
+  it('should close the install dialog on Not now', async () => {
+    const user = userEvent.setup()
+    renderWithCapturedPrompt()
+    await user.click(screen.getByRole('button', { name: installLabel }))
+    await user.click(screen.getByRole('button', { name: 'Not now' }))
+    expect(screen.queryByText('Put Choosee on your Home Screen')).not.toBeInTheDocument()
+  })
+
+  it('marks the joined-sessions record seen, so the home page retires the card', () => {
+    render(<WinnerPhase choices={mockChoices} session={{ ...mockSession, sessionId: 'abcd' }} />)
+    expect(joinedSessions.markWinnerSeen).toHaveBeenCalledWith('abcd')
+  })
+
+  // fetchChoices and fetchSession resolve independently, so the winner's choice can still be missing
+  // when this renders. The effect has to run on that path too, or arriving by push notification
+  // while choices are in flight would leave the card on the home page forever.
+  it('marks the record seen even while the winning choice is still loading', () => {
+    render(<WinnerPhase choices={{}} session={{ ...mockSession, sessionId: 'abcd' }} />)
+    expect(joinedSessions.markWinnerSeen).toHaveBeenCalledWith('abcd')
   })
 })

@@ -1,7 +1,6 @@
-import { ApiError, get, patch, post } from 'aws-amplify/api'
-import { fetchAuthSession } from 'aws-amplify/auth'
+import { ApiError, del, get, patch, post } from 'aws-amplify/api'
 
-import { apiName, apiNameUnauthenticated } from '@config/amplify'
+import { apiNameUnauthenticated } from '@config/amplify'
 import {
   AddressResult,
   ChoicesMap,
@@ -15,23 +14,6 @@ import {
 
 type AnyBody = any
 
-// --- Auth ---
-
-async function authHeaders(): Promise<Record<string, string>> {
-  try {
-    const session = await fetchAuthSession()
-    const token = session.tokens?.idToken?.toString()
-    if (token) return { Authorization: `Bearer ${token}` }
-  } catch {
-    // Not signed in
-  }
-  return {}
-}
-
-function endpointFor(authenticated: boolean): string {
-  return authenticated ? apiName : apiNameUnauthenticated
-}
-
 // --- Helpers ---
 
 async function apiGet<T>(
@@ -43,27 +25,20 @@ async function apiGet<T>(
   return body.json() as Promise<T>
 }
 
-async function apiPost<T>(
-  path: string,
-  authenticated: boolean,
-  reqBody?: AnyBody,
-  extraHeaders?: Record<string, string>,
-): Promise<T> {
-  const headers = authenticated ? { ...(await authHeaders()), ...extraHeaders } : extraHeaders
+async function apiPost<T>(path: string, reqBody?: AnyBody, headers?: Record<string, string>): Promise<T> {
   const { body } = await post({
-    apiName: endpointFor(authenticated),
+    apiName: apiNameUnauthenticated,
     path,
     options: { headers, body: reqBody },
   }).response
   return body.json() as Promise<T>
 }
 
-async function apiPatch<T>(path: string, authenticated: boolean, reqBody?: AnyBody): Promise<T> {
-  const headers = authenticated ? await authHeaders() : undefined
+async function apiPatch<T>(path: string, reqBody?: AnyBody): Promise<T> {
   const { body } = await patch({
-    apiName: endpointFor(authenticated),
+    apiName: apiNameUnauthenticated,
     path,
-    options: { headers, body: reqBody },
+    options: { body: reqBody },
   }).response
   return body.json() as Promise<T>
 }
@@ -80,7 +55,7 @@ export const fetchAddress = (latitude: number, longitude: number, token: string)
 export const fetchSessionConfig = (): Promise<SessionConfig> => apiGet('/sessions/config')
 
 export const createSession = (session: NewSessionRequest, token: string): Promise<{ sessionId: string }> =>
-  apiPost('/sessions', false, session, { 'x-recaptcha-token': token })
+  apiPost('/sessions', session, { 'x-recaptcha-token': token })
 
 export const fetchSession = (sessionId: string): Promise<SessionData> =>
   apiGet(`/sessions/${encodeURIComponent(sessionId)}`)
@@ -91,66 +66,40 @@ export const fetchChoices = (sessionId: string): Promise<ChoicesMap> =>
 export const fetchUsers = (sessionId: string): Promise<User[]> =>
   apiGet(`/sessions/${encodeURIComponent(sessionId)}/users`)
 
-export const createUser = async (sessionId: string, authenticated: boolean): Promise<User> => {
-  const encodedId = encodeURIComponent(sessionId)
-  if (!authenticated) {
-    return apiPost(`/sessions/${encodedId}/users`, false, {})
-  }
-  try {
-    return await apiPost<User>(`/sessions/${encodedId}/users/authed`, true, {})
-  } catch (err) {
-    if (err instanceof ApiError && err.response) {
-      if (err.response.statusCode === 401) {
-        // Token may be expired — force refresh and retry once
-        try {
-          await fetchAuthSession({ forceRefresh: true })
-        } catch {
-          // Refresh failed — fall back to unauthenticated
-          return apiPost(`/sessions/${encodedId}/users`, false, {})
-        }
-        try {
-          return await apiPost<User>(`/sessions/${encodedId}/users/authed`, true, {})
-        } catch (retryErr) {
-          if (
-            retryErr instanceof ApiError &&
-            retryErr.response &&
-            (retryErr.response.statusCode === 401 || retryErr.response.statusCode === 403)
-          ) {
-            return apiPost(`/sessions/${encodedId}/users`, false, {})
-          }
-          throw retryErr
-        }
-      }
-      if (err.response.statusCode === 403) {
-        return apiPost(`/sessions/${encodedId}/users`, false, {})
-      }
-    }
-    throw err
-  }
-}
+export const createUser = (sessionId: string): Promise<User> =>
+  apiPost(`/sessions/${encodeURIComponent(sessionId)}/users`, {})
 
-export const patchUser = (
-  sessionId: string,
-  userId: string,
-  operations: PatchOperation[],
-  authenticated: boolean,
-): Promise<User> =>
-  apiPatch(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`, authenticated, operations)
-
-// Empty patch against the authed route: the server backfills name and googleSub from the
-// verified JWT when those fields are still null. It deliberately does NOT write email here
-// — this call fires automatically, so doing so would store an address with no opt-in, and on
-// a record claimed by another account it would misdirect that account's reminders. Email is
-// written only by post-user and by subscribe (ownership-guarded, on explicit opt-in).
-// Do not "restore" an email backfill in patch-user to match an older comment.
-export const backfillUserFromToken = (sessionId: string, userId: string): Promise<User> =>
-  apiPatch(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/authed`, true, [])
+export const patchUser = (sessionId: string, userId: string, operations: PatchOperation[]): Promise<User> =>
+  apiPatch(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`, operations)
 
 export const closeRound = (sessionId: string, roundId: number): Promise<SessionData> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`, false)
+  apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`)
 
-export const subscribeToRound = (sessionId: string, roundId: number, userId: string): Promise<User> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/subscribe/authed`, true, { userId, roundId })
+export const fetchVapidPublicKey = (): Promise<{ publicKey: string }> => apiGet('/push/vapid-public-key')
+
+export const postPushSubscription = async (
+  sessionId: string,
+  userId: string,
+  subscription: PushSubscriptionJSON,
+): Promise<void> => {
+  // The endpoint answers 204, so there is no body to parse — awaiting the raw response avoids
+  // apiPost's body.json(), which would reject on an empty payload.
+  await post({
+    apiName: apiNameUnauthenticated,
+    path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+    options: { body: subscription as AnyBody },
+  }).response
+}
+
+// The endpoint travels as a query parameter, not a body: a body on DELETE is legal but poorly
+// supported across proxies and clients.
+export const deletePushSubscription = async (sessionId: string, userId: string, endpoint: string): Promise<void> => {
+  await del({
+    apiName: apiNameUnauthenticated,
+    path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+    options: { queryParams: { endpoint } },
+  }).response
+}
 
 export function parseApiMessage(body: string | undefined, fallback: string): string {
   return parseBodyField(body, 'message') ?? fallback

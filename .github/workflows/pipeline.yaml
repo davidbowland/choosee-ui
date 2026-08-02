@@ -82,7 +82,15 @@ jobs:
             --capabilities CAPABILITY_NAMED_IAM \
             --parameter-overrides 'Environment=test'
       - name: Copy static site to test S3 bucket
-        run: ./scripts/copyToS3.sh ${{ env.TESTING_S3_BUCKET }}
+        # The distribution ID is the second argument, and without it copyToS3.sh skips the
+        # CloudFront invalidation. sw.js is served no-cache, but an edge copy with older headers
+        # keeps being served until it expires — so a broken service worker would have no remote fix.
+        run: |
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.TESTING_STACK_NAME }} --region ${{ env.TESTING_REGION }} \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
+            --output text 2>/dev/null || true)
+          ./scripts/copyToS3.sh ${{ env.TESTING_S3_BUCKET }} "$DISTRIBUTION_ID"
 
   deploy-production:
     name: Deploy to production
@@ -123,7 +131,15 @@ jobs:
             --role-arn ${{ env.PROD_CLOUDFORMATION_EXECUTION_ROLE }} \
             --capabilities CAPABILITY_NAMED_IAM
       - name: Copy static site to production S3 bucket
-        run: ./scripts/copyToS3.sh ${{ env.PROD_S3_BUCKET }}
+        # See the test job: without the distribution ID there is no invalidation, and the kill
+        # switch in scripts/sw-killswitch.js has no way to reach a browser that already fetched a
+        # broken worker.
+        run: |
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.PROD_STACK_NAME }} --region ${{ env.PROD_REGION }} \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
+            --output text 2>/dev/null || true)
+          ./scripts/copyToS3.sh ${{ env.PROD_S3_BUCKET }} "$DISTRIBUTION_ID"
 
   bump:
     name: Bump the version number and tag the commit

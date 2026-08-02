@@ -8,14 +8,35 @@ import UserSelectPhase from './user-select'
 import VotingPhase from './voting'
 import WaitingPhase from './waiting'
 import WinnerPhase from './winner'
-import { useAuthContext } from '@components/auth-context'
 import ErrorBoundary from '@components/error-boundary'
-import { useSessionCookie } from '@hooks/useSessionCookie'
-import { backfillUserFromToken, fetchChoices, fetchSession, fetchUsers } from '@services/api'
+import { usePushResubscribe } from '@hooks/usePushResubscribe'
+import { useSessionIdentity } from '@hooks/useSessionIdentity'
+import { useSessionRefresh } from '@hooks/useSessionRefresh'
+import { fetchChoices, fetchSession, fetchUsers } from '@services/api'
+import { isSubscribedToPush } from '@services/push'
 import { ChoicesMap, SessionData, User } from '@types'
 import { isClosingSoonError } from '@utils/session'
 
 type Phase = 'loading' | 'error' | 'winner' | 'user-select' | 'voting' | 'waiting'
+
+// How hard to poll the session, by phase.
+//
+// Push is a backstop, not a replacement: iOS forbids a push that shows no notification, so we
+// cannot silently refresh a foregrounded tab and it still has to poll to advance on its own. What
+// subscribing buys is permission to poll LESS, because someone who will be told can afford to
+// find out a few seconds later. The real saving is behavioral — people can close the app instead
+// of babysitting it.
+export const waitingInterval = (phase: Phase, isSubscribed: boolean): number | false => {
+  switch (phase) {
+    case 'loading':
+      // Session creation is a live wait with a spinner on screen; leave it alone.
+      return 2_000
+    case 'waiting':
+      return isSubscribed ? 15_000 : 10_000
+    default:
+      return false
+  }
+}
 
 function derivePhase(
   session: SessionData | undefined,
@@ -59,8 +80,7 @@ export interface SessionProps {
 
 const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { isSignedIn } = useAuthContext()
-  const { userId, setUserId } = useSessionCookie(sessionId)
+  const { userId, setUserId } = useSessionIdentity(sessionId)
 
   // Read and strip ?id= from URL once on mount so the URL stays clean
   const queryParamId = useMemo(() => consumeQueryParamId(), [])
@@ -69,19 +89,29 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   // without duplicating phase logic or needing access to users state.
   const phaseRef = useRef<Phase>('loading')
 
+  // Same trick for the subscription: refetchInterval is called by React Query outside the render
+  // cycle, so it reads a ref rather than state.
+  const subscribedRef = useRef(false)
+  useEffect(() => {
+    let canceled = false
+    // A read that never prompts — see services/push.ts. Resolving it once on mount is enough:
+    // subscribing later only ever relaxes the interval, and the next poll picks that up.
+    void isSubscribedToPush()
+      .then((isSubscribed) => {
+        if (!canceled) {
+          subscribedRef.current = isSubscribed
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      canceled = true
+    }
+  }, [])
+
   const { data: session, error: sessionError } = useQuery<SessionData>({
     queryKey: ['session', sessionId],
     queryFn: () => fetchSession(sessionId),
-    refetchInterval: () => {
-      switch (phaseRef.current) {
-        case 'loading':
-          return 2_000
-        case 'waiting':
-          return 5_000
-        default:
-          return false
-      }
-    },
+    refetchInterval: () => waitingInterval(phaseRef.current, subscribedRef.current),
   })
 
   const { data: users } = useQuery<User[]>({
@@ -100,7 +130,8 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
 
   const usersLoaded = session?.isReady === true && users !== undefined
 
-  // Resolve user: query param > cookie > nothing. Only accept IDs present in the users list.
+  // Resolve user: query param > remembered identity > nothing. Only accept IDs present in the users
+  // list.
   const effectiveUserId = useMemo(() => {
     if (!users) return undefined
     if (queryParamId && users.some((u) => u.userId === queryParamId)) return queryParamId
@@ -110,40 +141,50 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
 
   const currentUser = useMemo(() => users?.find((u) => u.userId === effectiveUserId), [users, effectiveUserId])
 
-  // When a signed-in user has a null name, send an empty PATCH so the backend
-  // auto-populates the name from their Google profile.
-  const namePatchFired = useRef(false)
-  // Reset the guard when auth state changes so re-sign-in triggers a new attempt
+  // Persist an identity that arrived in the URL. `consumeQueryParamId` strips `?id=` on mount, so
+  // without this it survives exactly one page load — and a notification tap is the case that
+  // matters: on an installed iOS app, which has its own storage separate from the Safari tab the
+  // user joined in, every launch would otherwise land them on "Back again? Choose your name". The
+  // spec treats that picker as a one-time recovery path for the install transition, not a thing to
+  // meet on every notification.
+  //
+  // `session` in the guard narrows the type rather than gating the effect: effectiveUserId is only
+  // ever set once the users query has resolved, which is itself gated on session.isReady.
   useEffect(() => {
-    namePatchFired.current = false
-  }, [isSignedIn])
-
-  const currentUserId = currentUser?.userId
-  const currentUserName = currentUser?.name
-  useEffect(() => {
-    if (isSignedIn && currentUserId && currentUserName === null && !namePatchFired.current) {
-      namePatchFired.current = true
-      backfillUserFromToken(sessionId, currentUserId)
-        .then((updated) => {
-          if (updated.name) {
-            queryClient.setQueryData<User[]>(['users', sessionId], (old) =>
-              old?.map((u) => (u.userId === updated.userId ? { ...u, name: updated.name } : u)),
-            )
-          }
-        })
-        .catch(() => {
-          // Graceful degradation — the guard resets so the next load retries the backfill
-          namePatchFired.current = false
-        })
+    if (queryParamId && queryParamId === effectiveUserId && userId !== queryParamId && session) {
+      setUserId(queryParamId, {
+        address: session.address,
+        currentRound: session.currentRound,
+        totalRounds: session.totalRounds,
+      })
     }
-  }, [isSignedIn, currentUserId, currentUserName, sessionId, queryClient])
+  }, [queryParamId, effectiveUserId, userId, setUserId, session])
+
+  // A browser can rotate this device's push subscription at any time. Only the page knows which
+  // session and user it belongs to, so the worker hands the replacement here to be re-registered.
+  usePushResubscribe(sessionId, effectiveUserId)
+
+  // Tapping a notification for a session already open here only focuses the window. This is what
+  // turns that focus into a refresh, so the round the notification announced is the round on screen.
+  useSessionRefresh(sessionId)
 
   const phase = derivePhase(session, currentUser, effectiveUserId != null, usersLoaded, sessionError)
   phaseRef.current = phase
 
   const handleUserSelected = (newUserId: string): void => {
-    setUserId(newUserId)
+    // `session` is non-null here: this callback only reaches the DOM through UserSelectPhase, which
+    // renders only when usersLoaded is true, which requires session.isReady.
+    setUserId(newUserId, {
+      address: session!.address,
+      currentRound: session!.currentRound,
+      totalRounds: session!.totalRounds,
+    })
     void queryClient.invalidateQueries({ queryKey: ['users', sessionId] })
+    // The session too, not just the users list: joining wrote a user row, and voterCount is derived
+    // from those rows. The next phase is 'voting', which does not poll (see waitingInterval), so a
+    // count read before this join is the one that stays on screen — which is how the second person
+    // to join ended up being told they were the only one here.
+    void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
   }
 
   const renderPhase = (): React.ReactNode => {
@@ -163,7 +204,15 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
         return <UserSelectPhase onUserSelected={handleUserSelected} sessionId={sessionId} users={users ?? []} />
       case 'voting':
         return (
-          <VotingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
+          <VotingPhase
+            choices={choices ?? {}}
+            currentUser={currentUser!}
+            session={session!}
+            sessionId={sessionId}
+            // The users query keeps polling through the round; the session query does not. Reaching
+            // this phase already required a loaded users list, so this is never an empty stand-in.
+            voterCount={users!.length}
+          />
         )
       case 'waiting':
         return (

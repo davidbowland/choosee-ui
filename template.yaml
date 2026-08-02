@@ -172,3 +172,11 @@ Resources:
       HostedZoneId: !FindInMap [EnvironmentMap, !Ref Environment, zoneId]
       Name: !FindInMap [EnvironmentMap, !Ref Environment, domain]
       Type: A
+
+Outputs:
+  # Consumed by scripts/deploy.sh, which passes it to copyToS3.sh so a deploy can invalidate
+  # /sw.js. Without an invalidation a service-worker fix reaches browsers only once the edge
+  # copy happens to expire — which is exactly when a fix is most urgent.
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID, used to invalidate /sw.js on deploy
+    Value: !Ref UiCloudfrontDistribution

@@ -1,24 +1,31 @@
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
 
-import { Brand, GoogleSignInButton, NavContainer, UserMenu } from './elements'
-import { useAuthContext } from '@components/auth-context'
+import { Brand, InstallIconButton, NavContainer } from './elements'
+import InstallDialog from '@components/install-dialog'
+import { canOfferInstall, useInstallMethod, useInstallPromptContext } from '@hooks/useInstallPrompt'
 
 const AppBar = (): React.ReactNode => {
-  const { isSignedIn, isLoading, user, handleSignIn, handleSignOut } = useAuthContext()
+  const method = useInstallMethod()
+  const { promptInstall } = useInstallPromptContext()
+  const [installOpen, setInstallOpen] = useState(false)
 
   return (
     <NavContainer>
       <Link href="/">
         <Brand>Choosee</Brand>
       </Link>
-      {!isLoading && (
+      {/* Hidden outright when the browser is already standalone or cannot install at all. An icon
+          that opens a dialog with nothing to offer is worse than an empty slot. */}
+      {canOfferInstall(method) && (
         <>
-          {isSignedIn ? (
-            <UserMenu name={user?.name ?? 'User'} onSignOut={handleSignOut} />
-          ) : (
-            <GoogleSignInButton onPress={handleSignIn} />
-          )}
+          <InstallIconButton onPress={() => setInstallOpen(true)} />
+          <InstallDialog
+            method={method}
+            onClose={() => setInstallOpen(false)}
+            open={installOpen}
+            promptInstall={promptInstall}
+          />
         </>
       )}
     </NavContainer>
