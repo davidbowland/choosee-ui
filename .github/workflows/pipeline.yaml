@@ -29,15 +29,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Node 24
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
       - name: Install and audit packages
-        # TODO: restore `&& npm audit --audit-level=critical` once the npm advisory
-        # endpoint stops returning gzip without a Content-Encoding header
-        run: npm ci
+        run: npm ci && npm audit --audit-level=critical
         env:
           NODE_ENV: test
       - name: Run tests
@@ -49,9 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Node 24
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
       - name: Build Next.js site
@@ -59,11 +57,11 @@ jobs:
         env:
           DEVELOPMENT: true
       - name: Install Python 3
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install AWS SAM
-        uses: aws-actions/setup-sam@v2
+        uses: aws-actions/setup-sam@v3
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -93,19 +91,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Node 24
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
       - name: Build Next.js site
         run: npm run build
       - name: Install Python 3
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install AWS SAM
-        uses: aws-actions/setup-sam@v2
+        uses: aws-actions/setup-sam@v3
       - name: Assume the production pipeline user role
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -135,9 +133,9 @@ jobs:
       contents: write
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Node 24
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
       - name: Set git name and email
