@@ -93,7 +93,7 @@ const PrivacyPolicy = (): React.ReactNode => {
 
       <Section title="Data Retention">
         <p>
-          Server logs are kept for up to 90 days, then deleted. Restaurant Choosee data is deleted when your Choosee
+          Server logs are deleted automatically after 30 days. Restaurant Choosee data is deleted when your Choosee
           expires — typically 24 hours. If you sign in, the email address from your Google account is stored alongside
           that Choosee and is deleted when it expires — whether or not you turn on reminders. If you create an account,
           your login information is stored until you delete it.
@@ -116,13 +116,8 @@ const PrivacyPolicy = (): React.ReactNode => {
           Questions about this policy? Email{' '}
           <Link className="text-[#F59E0B] underline hover:text-amber-400" href="mailto:privacy@dbowland.com">
             privacy@dbowland.com
-          </Link>{' '}
-          or write to:
-        </p>
-        <p>
-          Choosee Privacy
-          <br />
-          P.O. Box 81226, Seattle, WA 98108-1226
+          </Link>
+          .
         </p>
       </Section>
 
