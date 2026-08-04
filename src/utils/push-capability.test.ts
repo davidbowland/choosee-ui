@@ -89,6 +89,38 @@ describe('push-capability', () => {
     })
   })
 
+  // These two cases exist because the two resolvers must agree about the same device. An earlier
+  // ordering returned `needs-install` here while resolveInstallMethod returned `none`, so the UI
+  // promised an Add-to-Home-Screen path and then rendered no way to take it.
+  describe('agreement with resolveInstallMethod', () => {
+    const instagramOnIphone = envOf({
+      hasPushManager: false,
+      isIos: true,
+      permission: null,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Instagram 300.0.0.0',
+    })
+
+    it('should report an iOS in-app webview as unsupported, not as one install away', () => {
+      expect(resolvePushCapability(instagramOnIphone, false)).toEqual('unsupported')
+    })
+
+    it('should not offer an install method for the device it just called unsupported', () => {
+      expect(resolveInstallMethod(instagramOnIphone, false)).toEqual('none')
+    })
+
+    it('should still report a plain iOS Safari tab as one install away', () => {
+      const safariOnIphone = envOf({
+        hasPushManager: false,
+        isIos: true,
+        permission: null,
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Safari',
+      })
+
+      expect(resolvePushCapability(safariOnIphone, false)).toEqual('needs-install')
+      expect(resolveInstallMethod(safariOnIphone, false)).toEqual('ios-share')
+    })
+  })
+
   describe('resolveInstallMethod', () => {
     it('should report installed when already running standalone', () => {
       expect(resolveInstallMethod(envOf({ isStandalone: true }), true)).toEqual('installed')

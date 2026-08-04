@@ -41,9 +41,18 @@ export const resolvePushCapability = (env: CapabilityEnv, isSubscribed: boolean)
   if (isSubscribed) {
     return 'subscribed'
   }
-  // Ordered before the support checks: on iOS Safari outside standalone there is no PushManager and
-  // no Notification at all, so a support check first would report `unsupported` and tell an iPhone
-  // user their browser can't do something it can — one Add to Home Screen away.
+  // BEFORE the iOS branch, and that order is the fix for a real contradiction. An in-app webview is
+  // a dead end on every platform: it can neither push nor install. With the iOS check first, an
+  // iPhone inside Instagram resolved to `needs-install` — so we showed "iPhone needs one more step"
+  // and three Add-to-Home-Screen instructions, while resolveInstallMethod independently returned
+  // `none` because a webview cannot install. The user was told a path existed and then shown no
+  // path. These two functions must agree about this device.
+  if (IN_APP_PATTERN.test(env.userAgent)) {
+    return 'unsupported'
+  }
+  // Ordered before the remaining support checks: on iOS Safari outside standalone there is no
+  // PushManager and no Notification at all, so a support check first would report `unsupported` and
+  // tell an iPhone user their browser can't do something it can — one Add to Home Screen away.
   if (env.isIos && !env.isStandalone) {
     return 'needs-install'
   }
