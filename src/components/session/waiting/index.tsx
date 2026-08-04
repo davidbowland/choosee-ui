@@ -80,13 +80,24 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       return
     }
     if (capability === 'subscribed') {
-      setCapability('ready')
-      await unsubscribeFromPush(sessionId, currentUser.userId)
+      // Flip only after the browser has actually let go. Setting it first meant a rejecting
+      // unsubscribe left the UI claiming notifications were off while the device stayed subscribed
+      // — the one lie this screen must not tell.
+      try {
+        await unsubscribeFromPush(sessionId, currentUser.userId)
+        setCapability('ready')
+      } catch {
+        setNotifyStatus('failed')
+      }
       return
     }
 
     setNotifyStatus('saving')
-    const result = await subscribeToPush(sessionId, currentUser.userId)
+    // Every step inside subscribeToPush can reject — the VAPID fetch, pushManager.subscribe (Chrome
+    // throws InvalidStateError when an existing subscription carries a different applicationServerKey),
+    // and the POST. Without this the switch sits disabled on "Turning on notifications…" forever,
+    // which is precisely the dead end READY_TIMEOUT_MS exists to prevent.
+    const result = await subscribeToPush(sessionId, currentUser.userId).catch(() => 'unready' as const)
     if (result === 'subscribed') {
       setNotifyStatus('idle')
       setCapability('subscribed')

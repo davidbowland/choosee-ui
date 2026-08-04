@@ -11,14 +11,17 @@ describe('PrivacyPolicy content', () => {
 
   // useSessionCookie writes one cookie per Choosee: name `choosee_user_<sessionId>`, path
   // `/s/<sessionId>`, expires in 1 day. The policy has to describe that cookie, not a vaguer one.
-  // Guards the CLAIM, not the wording. Naming the cookie and explaining cookie scoping was
-  // implementation detail that helped no reader decide anything; what has to survive a rewrite is
-  // that something remembers who you are, holds nothing else, and expires.
-  it('says a marker remembers which voter you are and expires', () => {
+  // Guards the CLAIM, not the wording. Explaining path scoping and how browsers decide when to send
+  // a cookie back was implementation detail that helped no reader decide anything — but the WORD
+  // "cookie" has to stay: disclosure regimes expect cookies named as such, and dropping it traded a
+  // precise true statement for a vague one.
+  it('identifies the cookie, what it holds, and when it expires', () => {
     setup()
 
+    expect(screen.getByText(/We set one cookie/i)).toBeInTheDocument()
     expect(screen.getByText(/remembers which voter you are/i)).toBeInTheDocument()
     expect(screen.getByText(/expires after a day/i)).toBeInTheDocument()
+    expect(screen.getByText(/no other cookies/i)).toBeInTheDocument()
   })
 
   // pushManager.subscribe() mints a URL bound to one browser on one device. Nothing in
@@ -46,13 +49,15 @@ describe('PrivacyPolicy content', () => {
 
   // GET /reverse-geocode takes latitude and longitude as query parameters, and redactEvent keeps
   // query parameters. Only the resolved address is stored, but the coordinates are logged.
-  // The claim changed because the CODE changed: redactEvent now strips latitude/longitude from the
-  // request log. What must not drift is that the address is stored and the coordinates are not, and
-  // that typing the address avoids sending them at all.
+  // The claim changed because the CODE changed: redactEvent strips latitude/longitude from the
+  // request log, and scrubGoogleError keeps them out of the axios error thrown on a failed geocode.
+  // Both had to be true before this sentence could be. The disclosure that Google still receives
+  // them must not be dropped — that is the part a reader cannot infer.
   it('says the address is stored rather than the coordinates, and offers the opt-out', () => {
     setup()
 
-    expect(screen.getByText(/We store the address on the Choosee, not the coordinates/i)).toBeInTheDocument()
+    expect(screen.getByText(/We store the address on the Choosee/i)).toBeInTheDocument()
+    expect(screen.getByText(/Google still receives them/i)).toBeInTheDocument()
     expect(screen.getByText(/Type the address instead/i)).toBeInTheDocument()
   })
 

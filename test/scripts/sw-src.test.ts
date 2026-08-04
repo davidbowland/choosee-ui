@@ -41,6 +41,21 @@ describe('sw-src', () => {
       ).toEqual({ body: 'Tap to vote.', title: 'Round 3 of 4 is open' })
     })
 
+    // `typeof 0 === 'number'`, so a naive guard renders "Round 2 of 0 is open" whenever a caller
+    // omits totalRounds — and the API's default for it is 0.
+    it('should drop the bracket length rather than announce a round of zero', () => {
+      expect(
+        buildNotification({ round: 2, sessionId: 'fuzzy-penguin', totalRounds: 0, userId: 'brave-tiger' }),
+      ).toEqual({ body: 'Tap to vote.', title: 'Round 2 is open' })
+    })
+
+    it('should drop the bracket length when it is missing entirely', () => {
+      expect(buildNotification({ round: 2, sessionId: 'fuzzy-penguin', userId: 'brave-tiger' })).toEqual({
+        body: 'Tap to vote.',
+        title: 'Round 2 is open',
+      })
+    })
+
     it('should announce a winner by name', () => {
       expect(
         buildNotification({ sessionId: 'fuzzy-penguin', userId: 'brave-tiger', winnerName: "Kim's Diner" }),
@@ -81,5 +96,29 @@ describe('sw-src', () => {
     it('should fall back to the home page without a session', () => {
       expect(targetPathFor({})).toEqual('/')
     })
+  })
+})
+
+// The kill switch exists to disable caching WITHOUT disabling notifications, so its push handlers
+// must stay identical to the real worker's. Nothing enforced that — it was verified by hand once
+// and would drift silently on the next edit to either file.
+describe('sw-killswitch', () => {
+  const sliceFrom = (file: string, marker: string): string => {
+    const source = fs.readFileSync(path.join(__dirname, '../../scripts', file), 'utf8')
+    const index = source.indexOf(marker)
+    expect(index).toBeGreaterThan(-1)
+    return source.slice(index)
+  }
+
+  const MARKER = '// The payload carries FACTS'
+
+  it('should share its notification handlers with the real worker byte for byte', () => {
+    expect(sliceFrom('sw-killswitch.js', MARKER)).toEqual(sliceFrom('sw-src.js', MARKER))
+  })
+
+  it('should register no fetch handler, so nothing is cached', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../scripts/sw-killswitch.js'), 'utf8')
+
+    expect(source).not.toContain("addEventListener('fetch'")
   })
 })

@@ -380,6 +380,30 @@ describe('WaitingPhase', () => {
 
     // notifications were blocked and left them no way back short of a reload.
 
+    // A rejection anywhere inside subscribeToPush used to leave the switch disabled on
+    // "Turning on notifications…" forever — no error, no retry, nothing short of a reload.
+    it('should offer a retry when the subscribe attempt rejects outright', async () => {
+      jest.mocked(subscribeToPush).mockRejectedValueOnce(new Error('vapid key fetch failed'))
+      renderNotify()
+
+      await userEvent.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText("Couldn't turn on notifications. Please try again.")).toBeInTheDocument()
+    })
+
+    // Flipping the UI before the browser let go meant a failed unsubscribe claimed notifications
+    // were off while the device was still subscribed.
+    it('should not claim notifications are off when unsubscribing fails', async () => {
+      jest.mocked(isSubscribedToPush).mockResolvedValueOnce(true)
+      jest.mocked(unsubscribeFromPush).mockRejectedValueOnce(new Error('offline'))
+      renderNotify()
+
+      await userEvent.click(await screen.findByText('Turn off'))
+
+      expect(await screen.findByText("Couldn't turn on notifications. Please try again.")).toBeInTheDocument()
+      expect(screen.queryByText('Notify me when the next round opens')).not.toBeInTheDocument()
+    })
+
     it('should keep the control offered when the permission prompt is dismissed', async () => {
       jest.mocked(subscribeToPush).mockResolvedValueOnce('dismissed')
 

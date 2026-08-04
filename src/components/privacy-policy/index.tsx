@@ -36,13 +36,16 @@ const PrivacyPolicy = (): React.ReactNode => {
           name you type if you set one. A name is optional, and we don&apos;t check it against anything.
         </p>
         <p>
-          Your browser keeps a small marker so a Choosee remembers which voter you are. It holds nothing but that, it
-          works only on that one Choosee, and it expires after a day.
+          We set one cookie, so a Choosee remembers which voter you are. It holds nothing but that, it works only on
+          that one Choosee, and it expires after a day. We use no other cookies and nothing for analytics or
+          advertising.
         </p>
         <p>
           If you tap Use my location, your browser sends us your coordinates and we pass them to Google to get a street
-          address back. We store the address on the Choosee, not the coordinates. Type the address instead if you&apos;d
-          rather not send them at all; nothing else about the Choosee changes.
+          address back. We store the address on the Choosee and we don&apos;t keep the coordinates — they&apos;re
+          stripped out of our logs and out of anything we record when a request fails. Google still receives them, which
+          is how the address comes back. Type the address instead if you&apos;d rather not send them at all; nothing
+          else about the Choosee changes.
         </p>
         <p>
           If you turn on notifications, your browser gives us an address to send them to. It identifies that browser on

@@ -46,8 +46,16 @@ const buildNotification = (payload) => {
   if (payload && typeof payload.winnerName === 'string' && payload.winnerName.length > 0) {
     return { body: "Tap to see where you're eating.", title: `${payload.winnerName} wins` }
   }
-  if (payload && typeof payload.round === 'number' && typeof payload.totalRounds === 'number') {
-    return { body: 'Tap to vote.', title: `Round ${payload.round} of ${payload.totalRounds} is open` }
+  if (payload && typeof payload.round === 'number') {
+    // "of N" only when N is a real bracket length. `typeof 0 === 'number'` passes a naive guard, so
+    // a caller that omits totalRounds — and the API's default for it is 0 — would otherwise render
+    // "Round 2 of 0 is open". Dropping the clause degrades to a sentence that is merely less
+    // informative rather than one that is visibly broken.
+    const total = typeof payload.totalRounds === 'number' && payload.totalRounds > 0 ? payload.totalRounds : null
+    return {
+      body: 'Tap to vote.',
+      title: total ? `Round ${payload.round} of ${total} is open` : `Round ${payload.round} is open`,
+    }
   }
   // A malformed or unreadable payload lands here. iOS revokes the push permission of a worker that
   // receives a push without showing a notification, so there must always be something to draw.
