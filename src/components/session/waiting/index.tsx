@@ -1,40 +1,104 @@
 import { toast } from '@heroui/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
+import { isFinalRound } from '../helpers'
 import {
   ActionRow,
   BracketButton,
   ConfirmDialog,
   ForceRoundButton,
+  IosNotifySheet,
+  NotifyBlocked,
+  NotifyCheckbox,
+  NotifyRetryMessage,
   NotifySection,
   ProgressText,
   SegmentDivider,
   SegmentedActions,
+  TurnOffLink,
   WaitingContainer,
 } from './elements'
 import BracketView from '@components/bracket-view'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
 import { closeRound, hasErrorCode, hasStatusCode } from '@services/api'
+import { isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from '@services/push'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
+import { PushCapability, readCapabilityEnv, resolvePushCapability } from '@utils/push-capability'
 import { isSoloVoter } from '@utils/users'
 
 export interface WaitingPhaseProps {
   sessionId: string
   session: SessionData
-  // Unread until the push notify control lands here; the parent already supplies it.
   currentUser: User
   choices: ChoicesMap
 }
 
-const WaitingPhase = ({ sessionId, session, choices }: WaitingPhaseProps): React.ReactNode => {
+const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhaseProps): React.ReactNode => {
   const queryClient = useQueryClient()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [hasShared, setHasShared] = useState(false)
+  // null until the device has been resolved. Nothing is rendered in the meantime: `isSubscribedToPush`
+  // waits on the service worker, and guessing a state before that answer arrives would flash a
+  // sentence — most likely "This browser can't send notifications" — that is wrong for most devices.
+  const [capability, setCapability] = useState<PushCapability | null>(null)
+  const [isIos, setIsIos] = useState(false)
+  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'failed'>('idle')
+  const [iosSheetOpen, setIosSheetOpen] = useState(false)
 
   const currentRound = session.currentRound
+  const reminderEvent = isFinalRound(session) ? 'a winner is chosen' : 'the next round opens'
+
+  // Resolved on mount, and never prompting: isSubscribedToPush only reads. A permission prompt on
+  // load is iOS-hostile and trains people to deny before they know what they are being offered.
+  useEffect(() => {
+    let cancelled = false
+    const env = readCapabilityEnv()
+    void isSubscribedToPush()
+      // A read that throws is not proof of a subscription, and the honest answer to "do you already
+      // hold one?" under uncertainty is no — which is also what the caller assumed before asking.
+      .catch(() => false)
+      .then((isSubscribed) => {
+        if (!cancelled) {
+          setIsIos(env.isIos)
+          setCapability(resolvePushCapability(env, isSubscribed))
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleNotifyToggle = async (): Promise<void> => {
+    // iOS Safari outside standalone cannot be asked at all — Notification.requestPermission does not
+    // exist there — so pressing through would do precisely nothing. Intercepting here is what turns
+    // a dead switch into the one instruction that helps.
+    if (capability === 'needs-install') {
+      setIosSheetOpen(true)
+      return
+    }
+    if (capability === 'subscribed') {
+      setCapability('ready')
+      await unsubscribeFromPush(sessionId, currentUser.userId)
+      return
+    }
+
+    setNotifyStatus('saving')
+    const result = await subscribeToPush(sessionId, currentUser.userId)
+    if (result === 'subscribed') {
+      setNotifyStatus('idle')
+      setCapability('subscribed')
+      return
+    }
+    // 'denied' is terminal and 'unsupported' means the browser cannot, so both become the capability
+    // itself — a static explanation with no control. Only 'unready' is worth retrying.
+    setNotifyStatus(result === 'unready' ? 'failed' : 'idle')
+    if (result !== 'unready') {
+      setCapability(result)
+    }
+  }
 
   const closeMutation = useMutation({
     mutationFn: () => closeRound(sessionId, currentRound),
@@ -76,8 +140,37 @@ const WaitingPhase = ({ sessionId, session, choices }: WaitingPhaseProps): React
         total={session.voterCount}
       />
 
-      {/* Notification opt-in grouped together — filled in when push lands */}
-      <NotifySection>{null}</NotifySection>
+      {/* Notification opt-in grouped together */}
+      {capability !== null && (
+        <NotifySection>
+          {capability === 'denied' && (
+            <NotifyBlocked body="Turn them back on in your browser settings." title="Notifications are blocked" />
+          )}
+          {capability === 'unsupported' && (
+            <NotifyBlocked
+              // Naming the browser this device actually has is the whole value of the line. Safari
+              // is the only one that can push on iOS; Chrome is the safe answer everywhere else.
+              body={`Open Choosee in ${isIos ? 'Safari' : 'Chrome'} to turn them on.`}
+              title="This browser can't send notifications"
+            />
+          )}
+          {capability !== 'denied' && capability !== 'unsupported' && (
+            <>
+              <NotifyCheckbox
+                disabled={notifyStatus === 'saving'}
+                isSaving={notifyStatus === 'saving'}
+                onChange={() => void handleNotifyToggle()}
+                reminderEvent={reminderEvent}
+                subscribed={capability === 'subscribed'}
+              />
+              {capability === 'subscribed' && <TurnOffLink onPress={() => void handleNotifyToggle()} />}
+              {notifyStatus === 'failed' && <NotifyRetryMessage />}
+            </>
+          )}
+        </NotifySection>
+      )}
+
+      <IosNotifySheet onClose={() => setIosSheetOpen(false)} open={iosSheetOpen} />
 
       {/* Tools grouped in a pill; the consequential skip sits apart as a quiet link */}
       <ActionRow>

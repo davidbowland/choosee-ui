@@ -4,12 +4,22 @@ import React from 'react'
 
 import WaitingPhase from '@components/session/waiting'
 import * as api from '@services/api'
+import { isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from '@services/push'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
+import { CapabilityEnv, readCapabilityEnv } from '@utils/push-capability'
 
 jest.mock('@services/api')
+jest.mock('@services/push')
+
+// resolvePushCapability stays real: the point of these tests is that the screen renders whatever
+// that function decides, so stubbing it would only assert the component against itself.
+jest.mock('@utils/push-capability', () => ({
+  ...jest.requireActual('@utils/push-capability'),
+  readCapabilityEnv: jest.fn(),
+}))
 
 jest.mock('@heroui/react', () => ({
   ...jest.requireActual('@heroui/react'),
@@ -75,42 +85,68 @@ const defaultProps = {
   sessionId: 'test-session',
 }
 
+// A device that can push and has not been asked yet.
+const capableEnv: CapabilityEnv = {
+  hasPushManager: true,
+  hasServiceWorker: true,
+  isIos: false,
+  isStandalone: false,
+  permission: 'default',
+  userAgent: 'Mozilla/5.0 Chrome/120',
+}
+
+// The notify control resolves the device asynchronously on mount, so a test that only asserts on
+// the synchronous parts of the screen still has to let that land — otherwise the state update
+// arrives after the test body has finished and React logs an act() warning for it.
+const settleNotifyControl = async (): Promise<void> => {
+  await screen.findByRole('switch')
+}
+
 describe('WaitingPhase', () => {
   beforeAll(() => {
     jest.mocked(api.closeRound).mockResolvedValue(mockSession)
     jest.mocked(api.hasErrorCode).mockReturnValue(false)
     jest.mocked(api.hasStatusCode).mockReturnValue(false)
+    jest.mocked(readCapabilityEnv).mockReturnValue(capableEnv)
+    jest.mocked(isSubscribedToPush).mockResolvedValue(false)
+    jest.mocked(subscribeToPush).mockResolvedValue('subscribed')
+    jest.mocked(unsubscribeFromPush).mockResolvedValue()
   })
 
-  it('should display voting progress', () => {
+  it('should display voting progress', async () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     expect(screen.getByText(/Voted/i)).toBeInTheDocument()
     expect(screen.getByText(/1/)).toBeInTheDocument()
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
+    await settleNotifyControl()
   })
 
-  it('should display voter progress from session payload', () => {
+  it('should display voter progress from session payload', async () => {
     const session = { ...mockSession, voterCount: 3, votersSubmitted: 1 }
     renderWithClient(<WaitingPhase {...defaultProps} session={session} />)
     expect(screen.getByText(/1/)).toBeInTheDocument()
     expect(screen.getByText(/3/)).toBeInTheDocument()
+    await settleNotifyControl()
   })
 
-  it('should handle session with no bracket for current round', () => {
+  it('should handle session with no bracket for current round', async () => {
     const sessionNoBracket = { ...mockSession, bracket: [] as [string, string][][] }
     renderWithClient(<WaitingPhase {...defaultProps} session={sessionNoBracket} />)
     expect(screen.getByText(/Voted/i)).toBeInTheDocument()
+    await settleNotifyControl()
   })
 
-  it('should display the skip-ahead link', () => {
+  it('should display the skip-ahead link', async () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     expect(screen.getByText(/Skip ahead without them/i)).toBeInTheDocument()
+    await settleNotifyControl()
   })
 
-  it('should not show the skip-ahead link for a solo voter', () => {
+  it('should not show the skip-ahead link for a solo voter', async () => {
     const soloSession = { ...mockSession, users: ['user-1'], voterCount: 1, votersSubmitted: 0 }
     renderWithClient(<WaitingPhase {...defaultProps} session={soloSession} />)
     expect(screen.queryByText(/Skip ahead/i)).not.toBeInTheDocument()
+    await settleNotifyControl()
   })
 
   it('should show the confirmation dialog when the skip-ahead link is clicked', async () => {
@@ -236,9 +272,10 @@ describe('WaitingPhase', () => {
     })
   })
 
-  it('should display View bracket button', () => {
+  it('should display View bracket button', async () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     expect(screen.getByText(/View bracket/i)).toBeInTheDocument()
+    await settleNotifyControl()
   })
 
   it('should open and close bracket view', async () => {
@@ -250,24 +287,192 @@ describe('WaitingPhase', () => {
     expect(screen.queryByTestId('bracket-view')).not.toBeInTheDocument()
   })
 
-  it('should show solo voter hint and "Wrapping up this round" when voterCount <= 1 on first round', () => {
+  it('should show solo voter hint and "Wrapping up this round" when voterCount <= 1 on first round', async () => {
     const soloSession = { ...mockSession, voterCount: 1, votersSubmitted: 1 }
     renderWithClient(<WaitingPhase {...defaultProps} session={soloSession} />)
     expect(screen.getByText(/You're the only one here/i)).toBeInTheDocument()
     expect(screen.getByText(/Wrapping up this round/i)).toBeInTheDocument()
     expect(screen.queryByText(/Waiting for others to finish voting/i)).not.toBeInTheDocument()
+    await settleNotifyControl()
   })
 
-  it('should show "Waiting for others" when voterCount > 1', () => {
+  it('should show "Waiting for others" when voterCount > 1', async () => {
     renderWithClient(<WaitingPhase {...defaultProps} />)
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
     expect(screen.queryByText(/Wrapping up this round/i)).not.toBeInTheDocument()
+    await settleNotifyControl()
   })
 
-  it('should not show solo voter hint after first round', () => {
+  it('should not show solo voter hint after first round', async () => {
     const laterSession = { ...mockSession, voterCount: 1, currentRound: 1 }
     renderWithClient(<WaitingPhase {...defaultProps} session={laterSession} />)
     expect(screen.queryByText(/You're the only one here/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
+    await settleNotifyControl()
+  })
+
+  describe('notify control', () => {
+    const renderNotify = (env?: Partial<CapabilityEnv>, session: SessionData = mockSession) => {
+      jest.mocked(readCapabilityEnv).mockReturnValueOnce({ ...capableEnv, ...env })
+      return renderWithClient(<WaitingPhase {...defaultProps} session={session} />)
+    }
+
+    it('should offer notifications for the next round', async () => {
+      renderNotify()
+
+      expect(await screen.findByText('Notify me when the next round opens')).toBeInTheDocument()
+      expect(screen.getByText('One notification — nothing else.')).toBeInTheDocument()
+    })
+
+    // The last round has no next round to promise, so the sentence has to change with it.
+    it('should promise a winner instead on the final round', async () => {
+      renderNotify(undefined, { ...mockSession, currentRound: 2, totalRounds: 3 })
+
+      expect(await screen.findByText('Notify me when a winner is chosen')).toBeInTheDocument()
+    })
+
+    it('should never prompt for permission on mount', async () => {
+      renderNotify()
+      await screen.findByText('Notify me when the next round opens')
+
+      expect(isSubscribedToPush).toHaveBeenCalled()
+      expect(subscribeToPush).not.toHaveBeenCalled()
+    })
+
+    it('should still offer the control when the subscription read fails', async () => {
+      jest.mocked(isSubscribedToPush).mockRejectedValueOnce(new Error('worker exploded'))
+      renderNotify()
+
+      expect(await screen.findByText('Notify me when the next round opens')).toBeInTheDocument()
+    })
+
+    it('should subscribe when the switch is pressed', async () => {
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      await waitFor(() => expect(subscribeToPush).toHaveBeenCalledWith('test-session', 'user-1'))
+    })
+
+    it('should confirm once subscribed', async () => {
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText("We'll notify you!")).toBeInTheDocument()
+      expect(screen.getByText('One notification when the next round opens.')).toBeInTheDocument()
+    })
+
+    it('should say it is working while the subscribe is in flight', async () => {
+      let release: (result: 'subscribed') => void = () => undefined
+      jest.mocked(subscribeToPush).mockReturnValueOnce(new Promise((resolve) => (release = resolve)))
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText('Turning on notifications…')).toBeInTheDocument()
+
+      release('subscribed')
+      expect(await screen.findByText("We'll notify you!")).toBeInTheDocument()
+    })
+
+    it('should show the retry line when the worker never became ready', async () => {
+      jest.mocked(subscribeToPush).mockResolvedValueOnce('unready')
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText("Couldn't turn on notifications. Please try again.")).toBeInTheDocument()
+      // Retryable, so the control stays armed.
+      expect(screen.getByRole('switch')).toBeInTheDocument()
+    })
+
+    it('should replace the control with an explanation when permission is refused at the prompt', async () => {
+      jest.mocked(subscribeToPush).mockResolvedValueOnce('denied')
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText('Notifications are blocked')).toBeInTheDocument()
+      expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    })
+
+    it('should replace the control with an explanation when the browser turns out unable', async () => {
+      jest.mocked(subscribeToPush).mockResolvedValueOnce('unsupported')
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText("This browser can't send notifications")).toBeInTheDocument()
+      expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    })
+
+    it('should explain a blocked permission with no control to press', async () => {
+      renderNotify({ permission: 'denied' })
+
+      expect(await screen.findByText('Notifications are blocked')).toBeInTheDocument()
+      expect(screen.getByText('Turn them back on in your browser settings.')).toBeInTheDocument()
+      expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    })
+
+    it('should name Safari on an unsupported iOS browser', async () => {
+      renderNotify({ hasPushManager: false, isIos: true, isStandalone: true, permission: null })
+
+      expect(await screen.findByText("This browser can't send notifications")).toBeInTheDocument()
+      expect(screen.getByText('Open Choosee in Safari to turn them on.')).toBeInTheDocument()
+    })
+
+    it('should name Chrome on an unsupported non-iOS browser', async () => {
+      renderNotify({ hasPushManager: false })
+
+      expect(await screen.findByText('Open Choosee in Chrome to turn them on.')).toBeInTheDocument()
+      expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    })
+
+    it('should open the install sheet rather than subscribing on iOS Safari', async () => {
+      const user = userEvent.setup()
+      renderNotify({ isIos: true, permission: null })
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText('iPhone needs one more step')).toBeInTheDocument()
+      expect(screen.getByText('Safari only sends notifications from an app on your Home Screen.')).toBeInTheDocument()
+      expect(screen.getByText('2. Tap Add to Home Screen')).toBeInTheDocument()
+      expect(subscribeToPush).not.toHaveBeenCalled()
+    })
+
+    it('should dismiss the install sheet without installing', async () => {
+      const user = userEvent.setup()
+      renderNotify({ isIos: true, permission: null })
+      await user.click(await screen.findByText('Notify me when the next round opens'))
+      await user.click(await screen.findByRole('button', { name: 'Not now' }))
+
+      await waitFor(() => expect(screen.queryByText('iPhone needs one more step')).not.toBeInTheDocument())
+    })
+
+    it('should confirm straight away for a device that already holds a subscription', async () => {
+      jest.mocked(isSubscribedToPush).mockResolvedValueOnce(true)
+      renderNotify()
+
+      expect(await screen.findByText("We'll notify you!")).toBeInTheDocument()
+    })
+
+    it('should offer a way to turn notifications back off', async () => {
+      jest.mocked(isSubscribedToPush).mockResolvedValueOnce(true)
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText('Turn off'))
+
+      await waitFor(() => expect(unsubscribeFromPush).toHaveBeenCalledWith('test-session', 'user-1'))
+      expect(await screen.findByText('Notify me when the next round opens')).toBeInTheDocument()
+    })
+
+    it('should turn notifications off from the switch as well as the link', async () => {
+      jest.mocked(isSubscribedToPush).mockResolvedValueOnce(true)
+      const user = userEvent.setup()
+      renderNotify()
+      await user.click(await screen.findByText("We'll notify you!"))
+
+      await waitFor(() => expect(unsubscribeFromPush).toHaveBeenCalledWith('test-session', 'user-1'))
+    })
   })
 })
