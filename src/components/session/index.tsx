@@ -161,6 +161,11 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const handleUserSelected = (newUserId: string): void => {
     setUserId(newUserId)
     void queryClient.invalidateQueries({ queryKey: ['users', sessionId] })
+    // The session too, not just the users list: joining wrote a user row, and voterCount is derived
+    // from those rows. The next phase is 'voting', which does not poll (see waitingInterval), so a
+    // count read before this join is the one that stays on screen — which is how the second person
+    // to join ended up being told they were the only one here.
+    void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
   }
 
   const renderPhase = (): React.ReactNode => {

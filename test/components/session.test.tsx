@@ -302,4 +302,22 @@ describe('Session', () => {
     await user.click(screen.getByText('Select user'))
     expect(mockSetUserId).toHaveBeenCalledWith('user-1')
   })
+
+  // Joining writes a user row, which changes the session's voterCount. The voting screen never
+  // polls, so without refetching here the second person to join reads a pre-join count and gets
+  // told they are the only one in a Choosee they were invited to.
+  it('should refetch the session after a user joins so the voter count is not stale', async () => {
+    setup()
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+    const user = userEvent.setup()
+    renderWithClient(<Session sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
+    const callsBeforeJoin = jest.mocked(api.fetchSession).mock.calls.length
+
+    await user.click(screen.getByText('Select user'))
+
+    await waitFor(() => expect(jest.mocked(api.fetchSession).mock.calls.length).toBeGreaterThan(callsBeforeJoin))
+  })
 })
