@@ -9,6 +9,7 @@ import VotingPhase from './voting'
 import WaitingPhase from './waiting'
 import WinnerPhase from './winner'
 import ErrorBoundary from '@components/error-boundary'
+import { usePushResubscribe } from '@hooks/usePushResubscribe'
 import { useSessionCookie } from '@hooks/useSessionCookie'
 import { fetchChoices, fetchSession, fetchUsers } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
@@ -107,6 +108,10 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   }, [queryParamId, userId, users])
 
   const currentUser = useMemo(() => users?.find((u) => u.userId === effectiveUserId), [users, effectiveUserId])
+
+  // A browser can rotate this device's push subscription at any time. Only the page knows which
+  // session and user it belongs to, so the worker hands the replacement here to be re-registered.
+  usePushResubscribe(sessionId, effectiveUserId)
 
   const phase = derivePhase(session, currentUser, effectiveUserId != null, usersLoaded, sessionError)
   phaseRef.current = phase

@@ -1,4 +1,4 @@
-import { ApiError, get, patch, post } from 'aws-amplify/api'
+import { ApiError, del, get, patch, post } from 'aws-amplify/api'
 
 import { apiNameUnauthenticated } from '@config/amplify'
 import {
@@ -74,6 +74,32 @@ export const patchUser = (sessionId: string, userId: string, operations: PatchOp
 
 export const closeRound = (sessionId: string, roundId: number): Promise<SessionData> =>
   apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`)
+
+export const fetchVapidPublicKey = (): Promise<{ publicKey: string }> => apiGet('/push/vapid-public-key')
+
+export const postPushSubscription = async (
+  sessionId: string,
+  userId: string,
+  subscription: PushSubscriptionJSON,
+): Promise<void> => {
+  // The endpoint answers 204, so there is no body to parse — awaiting the raw response avoids
+  // apiPost's body.json(), which would reject on an empty payload.
+  await post({
+    apiName: apiNameUnauthenticated,
+    path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+    options: { body: subscription as AnyBody },
+  }).response
+}
+
+// The endpoint travels as a query parameter, not a body: a body on DELETE is legal but poorly
+// supported across proxies and clients.
+export const deletePushSubscription = async (sessionId: string, userId: string, endpoint: string): Promise<void> => {
+  await del({
+    apiName: apiNameUnauthenticated,
+    path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+    options: { queryParams: { endpoint } },
+  }).response
+}
 
 export function parseApiMessage(body: string | undefined, fallback: string): string {
   return parseBodyField(body, 'message') ?? fallback

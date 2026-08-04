@@ -1,17 +1,20 @@
-import { ApiError, get, patch, post } from 'aws-amplify/api'
+import { ApiError, del, get, patch, post } from 'aws-amplify/api'
 
 import {
   closeRound,
   createSession,
   createUser,
+  deletePushSubscription,
   fetchAddress,
   fetchChoices,
   fetchSessionConfig,
   fetchSession,
   fetchUsers,
+  fetchVapidPublicKey,
   hasStatusCode,
   parseApiMessage,
   patchUser,
+  postPushSubscription,
 } from './api'
 
 jest.mock('aws-amplify/api')
@@ -22,6 +25,7 @@ jest.mock('@config/amplify', () => ({
 const mockGet = jest.mocked(get)
 const mockPost = jest.mocked(post)
 const mockPatch = jest.mocked(patch)
+const mockDel = jest.mocked(del)
 
 const sessionId = 'fuzzy-penguin'
 const userId = 'brave-tiger'
@@ -165,6 +169,55 @@ describe('API service', () => {
         options: { headers: undefined, body: undefined },
       })
       expect(result).toEqual(updatedSession)
+    })
+  })
+
+  describe('fetchVapidPublicKey', () => {
+    it('should fetch the VAPID public key', async () => {
+      mockGet.mockReturnValue(mockResponse({ publicKey: 'BFakePublicKey' }))
+      const result = await fetchVapidPublicKey()
+      expect(mockGet).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPIUnauthenticated',
+        path: '/push/vapid-public-key',
+        options: { headers: undefined, queryParams: undefined },
+      })
+      expect(result).toEqual({ publicKey: 'BFakePublicKey' })
+    })
+  })
+
+  describe('postPushSubscription', () => {
+    const subscription = {
+      endpoint: 'https://fcm.googleapis.com/send/abc',
+      keys: { auth: 'auth-key', p256dh: 'p256dh-key' },
+    }
+
+    it('should post the subscription to the push-subscription endpoint', async () => {
+      mockPost.mockReturnValue(mockResponse(undefined))
+      await postPushSubscription(sessionId, userId, subscription)
+      expect(mockPost).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPIUnauthenticated',
+        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+        options: { body: subscription },
+      })
+    })
+
+    it('should resolve without reading a body, since the endpoint answers 204', async () => {
+      mockPost.mockReturnValue({ response: Promise.resolve({}) } as any)
+      await expect(postPushSubscription(sessionId, userId, subscription)).resolves.toBeUndefined()
+    })
+  })
+
+  describe('deletePushSubscription', () => {
+    const endpoint = 'https://fcm.googleapis.com/send/abc'
+
+    it('should send the endpoint as a query parameter rather than a body', async () => {
+      mockDel.mockReturnValue({ response: Promise.resolve({}) } as any)
+      await deletePushSubscription(sessionId, userId, endpoint)
+      expect(mockDel).toHaveBeenCalledWith({
+        apiName: 'ChooseeAPIUnauthenticated',
+        path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+        options: { queryParams: { endpoint } },
+      })
     })
   })
 
