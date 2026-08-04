@@ -1,5 +1,5 @@
-import { AlertDialog, Button, ProgressBar, Spinner } from '@heroui/react'
-import { BellRing, Check, Eye } from 'lucide-react'
+import { AlertDialog, Button, Modal, ProgressBar, Spinner } from '@heroui/react'
+import { BellOff, BellRing, Check, Eye } from 'lucide-react'
 import React from 'react'
 
 export const WaitingContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
@@ -112,15 +112,16 @@ export const ConfirmDialog = ({
   </AlertDialog>
 )
 
+// The switch survives the move from email to push deliberately. A pill was rejected because this
+// app already uses non-interactive pill badges (FilterClosingSoonBadge, SoloVoterHint), so a pill
+// does not reliably read as something you can press. A switch does.
 export const NotifyCheckbox = ({
-  checked,
   disabled,
   isSaving,
   onChange,
   reminderEvent,
   subscribed,
 }: {
-  checked: boolean
   disabled: boolean
   isSaving?: boolean
   onChange: () => void
@@ -128,7 +129,7 @@ export const NotifyCheckbox = ({
   subscribed: boolean
 }): React.ReactNode => (
   <button
-    aria-checked={checked || subscribed}
+    aria-checked={subscribed}
     aria-live="polite"
     className={`flex w-full items-center gap-3 rounded-lg text-left ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
     disabled={disabled}
@@ -151,28 +152,98 @@ export const NotifyCheckbox = ({
     </div>
     <div className="min-w-0 flex-1">
       <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-[#D4D4D4]'}`}>
-        {subscribed ? "We'll email you!" : `Email me when ${reminderEvent}`}
+        {subscribed ? "We'll notify you!" : `Notify me when ${reminderEvent}`}
       </p>
       <p className="text-xs text-[#4B5563]">
         {isSaving
-          ? 'Turning on reminders…'
+          ? 'Turning on notifications…'
           : subscribed
-            ? `One email when ${reminderEvent}.`
-            : 'One email — nothing else.'}
+            ? `One notification when ${reminderEvent}.`
+            : 'One notification — nothing else.'}
       </p>
     </div>
     <div
       className={`relative h-6 w-11 flex-shrink-0 rounded-full border transition-colors duration-200 ${
-        checked || subscribed ? 'border-[#F59E0B] bg-[#F59E0B]' : 'border-white/[0.15] bg-white/[0.05]'
+        subscribed ? 'border-[#F59E0B] bg-[#F59E0B]' : 'border-white/[0.15] bg-white/[0.05]'
       }`}
     >
       <div
         className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          checked || subscribed ? 'translate-x-6' : 'translate-x-1'
+          subscribed ? 'translate-x-6' : 'translate-x-1'
         }`}
       />
     </div>
   </button>
+)
+
+// `denied` and `unsupported` are dead ends from inside the app — only the OS or a different browser
+// can resolve either — so this deliberately renders no control. A switch that silently does nothing
+// is worse than a sentence explaining why there is nothing to press.
+export const NotifyBlocked = ({ body, title }: { body: string; title: string }): React.ReactNode => (
+  <div className="flex items-start gap-3 text-left">
+    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.05] text-[#6B7280]">
+      <BellOff className="h-5 w-5" />
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-medium text-[#D4D4D4]">{title}</p>
+      <p className="text-xs text-[#4B5563]">{body}</p>
+    </div>
+  </div>
+)
+
+export const TurnOffLink = ({ onPress }: { onPress: () => void }): React.ReactNode => (
+  <button
+    className="text-center text-xs text-[#6B7280] underline decoration-white/15 underline-offset-4 transition-colors hover:text-[#9CA3AF] focus:outline-none"
+    onClick={onPress}
+    type="button"
+  >
+    Turn off
+  </button>
+)
+
+export const NotifyRetryMessage = (): React.ReactNode => (
+  <p className="text-center text-xs text-[#4B5563]">Couldn&apos;t turn on notifications. Please try again.</p>
+)
+
+// Shown only after the user asks for notifications, never on load. The three gestures happen in
+// Safari's own chrome rather than anywhere this app can reach, so "stop and do this now" is the
+// only honest framing — hence a modal rather than an inline hint.
+export const IosNotifySheet = ({ onClose, open }: { onClose: () => void; open: boolean }): React.ReactNode => (
+  <Modal isOpen={open} onOpenChange={(isOpen: boolean) => !isOpen && onClose()}>
+    {/* Container nests inside Backdrop for the same reason ConfirmDialog does: the backdrop is the
+        fixed, full-screen positioned layer, and a sibling container renders into its own
+        unpositioned portal, invisible behind the blur. */}
+    <Modal.Backdrop variant="blur">
+      <Modal.Container size="sm">
+        <Modal.Dialog>
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Heading>iPhone needs one more step</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-[#6B7280]">Safari only sends notifications from an app on your Home Screen.</p>
+              <ol className="flex flex-col gap-2 text-sm text-[#D4D4D4]">
+                <li>1. Tap Share</li>
+                <li>2. Tap Add to Home Screen</li>
+                <li>3. Open Choosee from there</li>
+              </ol>
+            </div>
+          </Modal.Body>
+          <Modal.Footer className="flex justify-end">
+            <Button
+              className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+              onPress={onClose}
+              slot="close"
+              variant="outline"
+            >
+              Not now
+            </Button>
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  </Modal>
 )
 
 export const ActionRow = ({ children }: { children: React.ReactNode }): React.ReactNode => (
