@@ -77,9 +77,23 @@ describe('usePushResubscribe', () => {
     expect(() => fire({ subscription, type: 'push-resubscribed' })).not.toThrow()
   })
 
+  // Passing `undefined` made `container.addEventListener` unreachable by construction, so this
+  // asserted nothing. Assert on the listener count instead — that observes the hook's behaviour
+  // rather than the arrangement's.
   it('should not listen at all when the browser has no service worker container', () => {
+    const before = listeners.length
+
     renderHook(() => usePushResubscribe('fuzzy-penguin', 'brave-tiger', undefined))
 
-    expect(container.addEventListener).not.toHaveBeenCalled()
+    expect(listeners.length).toEqual(before)
+  })
+
+  // Guards the event name. The fake addEventListener ignored its type, so changing the hook to
+  // listen for 'push-resubscribed' instead of 'message' left every test green while the worker's
+  // postMessage was never heard.
+  it('should listen for the message event specifically', () => {
+    renderHook(() => usePushResubscribe('fuzzy-penguin', 'brave-tiger', container))
+
+    expect(container.addEventListener).toHaveBeenCalledWith('message', expect.any(Function))
   })
 })

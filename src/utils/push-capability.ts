@@ -18,6 +18,11 @@ const IOS_PATTERN = /iPad|iPhone|iPod/
 // Instagram, Facebook, TikTok and Snapchat webviews. None can install, and most cannot push.
 const IN_APP_PATTERN = /FBAN|FBAV|Instagram|TikTok|Snapchat|Line\/|MicroMessenger/
 const FIREFOX_ANDROID_PATTERN = /Android.*Firefox\//
+// Chrome, Firefox, Edge, Opera and DuckDuckGo on iOS. Every one of them is WebKit underneath, and
+// none can install a Home Screen web app that receives push — only Safari can. They are therefore
+// a dead end for notifications, and the honest answer names the browser that would work rather
+// than handing them Safari's Share-sheet steps for an app they are not in.
+const IOS_NON_SAFARI_PATTERN = /CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/
 
 /** The only impure function here: reads the browser once so the resolvers stay pure. */
 export const readCapabilityEnv = (win: Window & typeof globalThis = window): CapabilityEnv => {
@@ -48,6 +53,13 @@ export const resolvePushCapability = (env: CapabilityEnv, isSubscribed: boolean)
   // `none` because a webview cannot install. The user was told a path existed and then shown no
   // path. These two functions must agree about this device.
   if (IN_APP_PATTERN.test(env.userAgent)) {
+    return 'unsupported'
+  }
+  // On iOS, only Safari can install a Home Screen web app that receives push. Chrome, Firefox, Edge
+  // and DuckDuckGo there are all WebKit wrappers with no such path, so `needs-install` would promise
+  // them a step that does not exist — and the sheet it opens names Safari's Share button, in an app
+  // they are not using. `unsupported` names the browser that would actually work.
+  if (env.isIos && !env.isStandalone && IOS_NON_SAFARI_PATTERN.test(env.userAgent)) {
     return 'unsupported'
   }
   // Ordered before the remaining support checks: on iOS Safari outside standalone there is no
@@ -81,8 +93,11 @@ export const resolveInstallMethod = (env: CapabilityEnv, hasInstallPrompt: boole
   if (hasInstallPrompt) {
     return 'prompt'
   }
+  // Same rule as the capability resolver, and they must agree: an iOS browser that is not Safari
+  // has no Add to Home Screen that produces a push-capable app, so offering any install path is
+  // offering one that cannot work.
   if (env.isIos) {
-    return 'ios-share'
+    return IOS_NON_SAFARI_PATTERN.test(env.userAgent) ? 'none' : 'ios-share'
   }
   // Firefox for Android installs but never fires beforeinstallprompt and has no Share sheet, so it
   // reaches neither branch above. Falling through to `none` would hide install from a browser that

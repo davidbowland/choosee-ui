@@ -12,6 +12,9 @@
 
 const CACHE_NAME = 'choosee-offline-v1'
 const OFFLINE_URL = '/offline.html'
+// Declared above the shared handler region so both this worker and the kill switch see it: the
+// kill switch must preserve this cache while deleting every other one.
+const CONTEXT_CACHE = 'choosee-push-context'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -183,12 +186,46 @@ self.addEventListener('notificationclick', (event) => {
 // A browser may rotate a subscription at any time. Without this the device goes quiet with nothing
 // in the UI to say so — the app still believes it is subscribed, because getSubscription() returns
 // the new one.
+// Where the page leaves what this worker needs to re-register a rotated subscription on its own.
+//
+// The Cache API is used as a tiny key-value store because it is the only storage a service worker
+// can reach synchronously enough here without pulling in IndexedDB. The entry holds no secret: a
+// session slug, a user id, the VAPID PUBLIC key, and the API origin.
+const CONTEXT_KEY = '/__push-context__'
+
+const readPushContext = async () => {
+  try {
+    const cache = await caches.open(CONTEXT_CACHE)
+    const stored = await cache.match(CONTEXT_KEY)
+    return stored ? await stored.json() : null
+  } catch {
+    return null
+  }
+}
+
+/*
+ * Re-register a subscription the browser rotated under us.
+ *
+ * Two things make the obvious implementation not work:
+ *
+ *  - This event fires overwhelmingly when NO page is open — that is the whole point of it. Relaying
+ *    the new subscription to `clients.matchAll()` and stopping there therefore does nothing in the
+ *    common case, and the device goes quiet while the UI still reads "We'll notify you!".
+ *  - Firefox fires it with no `oldSubscription`, and `getSubscription()` has already returned null
+ *    by then — so reading `applicationServerKey` off the old subscription yields undefined and the
+ *    re-subscribe cannot even be attempted.
+ *
+ * Both are solved by the page having written the key and the session context down at subscribe
+ * time. The relay to open windows is kept as well, since a live page can update its own UI.
+ */
 self.addEventListener('pushsubscriptionchange', (event) => {
   event.waitUntil(
     (async () => {
       try {
+        const context = await readPushContext()
         const old = event.oldSubscription || (await self.registration.pushManager.getSubscription())
-        const applicationServerKey = old && old.options ? old.options.applicationServerKey : undefined
+        const applicationServerKey =
+          (old && old.options && old.options.applicationServerKey) || (context && context.applicationServerKey)
         if (!applicationServerKey) {
           return
         }
@@ -196,8 +233,23 @@ self.addEventListener('pushsubscriptionchange', (event) => {
           applicationServerKey,
           userVisibleOnly: true,
         })
-        // The worker has no session context, so it hands the new subscription to every open window
-        // and lets the app re-POST it against whichever session it is showing.
+
+        // Re-register without needing a page. Everything required is in the stored context.
+        if (context && context.apiUrl && context.sessionId && context.userId) {
+          await fetch(
+            `${context.apiUrl}/sessions/${encodeURIComponent(context.sessionId)}/users/${encodeURIComponent(
+              context.userId,
+            )}/push-subscription`,
+            {
+              body: JSON.stringify(fresh.toJSON()),
+              headers: { 'content-type': 'application/json' },
+              method: 'POST',
+            },
+          )
+        }
+
+        // A page that happens to be open updates its own state from this rather than waiting for a
+        // reload.
         const windows = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
         windows.forEach((client) => client.postMessage({ subscription: fresh.toJSON(), type: 'push-resubscribed' }))
       } catch {

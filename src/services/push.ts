@@ -16,6 +16,41 @@ export type PushResult = 'subscribed' | 'unsupported' | 'denied' | 'dismissed' |
 // nobody sits watching a button that will never finish.
 export const READY_TIMEOUT_MS = 5_000
 
+// Where the service worker looks for what it needs to re-register a rotated subscription with no
+// page open — see the `pushsubscriptionchange` handler in scripts/sw-src.js. Nothing secret goes in
+// here: a session slug, a user id, the VAPID PUBLIC key, and the API origin.
+const CONTEXT_CACHE = 'choosee-push-context'
+const CONTEXT_KEY = '/__push-context__'
+
+const writePushContext = async (sessionId: string, userId: string, applicationServerKey: string): Promise<void> => {
+  try {
+    const cache = await caches.open(CONTEXT_CACHE)
+    await cache.put(
+      CONTEXT_KEY,
+      new Response(
+        JSON.stringify({
+          apiUrl: process.env.NEXT_PUBLIC_CHOOSEE_API_BASE_URL,
+          applicationServerKey,
+          sessionId,
+          userId,
+        }),
+        { headers: { 'content-type': 'application/json' } },
+      ),
+    )
+  } catch {
+    // Storage blocked (Safari private browsing). Push still works; only unattended recovery from a
+    // rotated subscription is lost, and the next visit re-subscribes anyway.
+  }
+}
+
+const clearPushContext = async (): Promise<void> => {
+  try {
+    await caches.delete(CONTEXT_CACHE)
+  } catch {
+    // Nothing to clear.
+  }
+}
+
 /* istanbul ignore next -- SSR/browser-support guard: the injected container path is what tests exercise */
 const resolveContainer = (): ServiceWorkerContainer | undefined =>
   typeof navigator !== 'undefined' && typeof PushManager !== 'undefined' ? navigator.serviceWorker : undefined
@@ -104,7 +139,19 @@ export const subscribeToPush = async (
     applicationServerKey: urlBase64ToUint8Array(publicKey),
     userVisibleOnly: true,
   })
-  await postPushSubscription(sessionId, userId, subscription.toJSON())
+  try {
+    await postPushSubscription(sessionId, userId, subscription.toJSON())
+    // Written only after the server has the subscription, so the worker never re-registers against
+    // a context the API never accepted.
+    await writePushContext(sessionId, userId, publicKey)
+  } catch (error) {
+    // Roll the browser subscription back. Leaving it in place is the quiet failure: the next visit
+    // asks isSubscribedToPush(), gets true, and shows "We'll notify you!" — while the API holds no
+    // record and will never send anything. A subscription the server does not know about is worse
+    // than none, because it looks like success.
+    await subscription.unsubscribe().catch(() => undefined)
+    throw error
+  }
   return 'subscribed'
 }
 
@@ -127,6 +174,9 @@ export const unsubscribeFromPush = async (
   }
   const { endpoint } = subscription
   await subscription.unsubscribe()
+  // Drop the recovery context too, or the worker would helpfully re-register a device that just
+  // asked to stop being notified.
+  await clearPushContext()
   try {
     await deletePushSubscription(sessionId, userId, endpoint)
   } catch {

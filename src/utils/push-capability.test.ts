@@ -121,6 +121,42 @@ describe('push-capability', () => {
     })
   })
 
+  // On iOS only Safari can install a push-capable Home Screen app. Telling a Chrome-for-iOS user to
+  // "Tap Share in Safari's toolbar" names an app they are not in, for a step that would not work.
+  describe('iOS browsers that are not Safari', () => {
+    const iosChrome =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 CriOS/120.0 Mobile/15E148 Safari/604.1'
+    const iosFirefox =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 FxiOS/121.0 Mobile/15E148 Safari/605.1.15'
+
+    it.each([
+      ['Chrome', iosChrome],
+      ['Firefox', iosFirefox],
+    ])('should report %s for iOS as unsupported rather than one install away', (_name, userAgent) => {
+      const env = envOf({ hasPushManager: false, isIos: true, permission: null, userAgent })
+
+      expect(resolvePushCapability(env, false)).toEqual('unsupported')
+    })
+
+    it.each([
+      ['Chrome', iosChrome],
+      ['Firefox', iosFirefox],
+    ])('should offer %s for iOS no install path at all', (_name, userAgent) => {
+      const env = envOf({ isIos: true, userAgent })
+
+      expect(resolveInstallMethod(env, false)).toEqual('none')
+    })
+
+    it('should still treat iOS Safari itself as one install away', () => {
+      const safari =
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1'
+      const env = envOf({ hasPushManager: false, isIos: true, permission: null, userAgent: safari })
+
+      expect(resolvePushCapability(env, false)).toEqual('needs-install')
+      expect(resolveInstallMethod(env, false)).toEqual('ios-share')
+    })
+  })
+
   describe('resolveInstallMethod', () => {
     it('should report installed when already running standalone', () => {
       expect(resolveInstallMethod(envOf({ isStandalone: true }), true)).toEqual('installed')

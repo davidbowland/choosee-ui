@@ -69,10 +69,41 @@ describe('useServiceWorker', () => {
   })
 
   describe('useServiceWorker', () => {
+    // This asserted `mockRegister` was not called after rendering the hook — but the hook resolves
+    // its own container from `navigator.serviceWorker`, which jsdom does not define, so the local
+    // mock was never reachable and the expectation held no matter what the hook did. Deleting the
+    // production guard entirely left it green. Define the container so the guard is what decides.
+    const withServiceWorkerContainer = (run: () => void): void => {
+      const original = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker')
+      Object.defineProperty(navigator, 'serviceWorker', {
+        configurable: true,
+        value: containerWith(null),
+        writable: true,
+      })
+      try {
+        run()
+      } finally {
+        // jsdom leaves `serviceWorker` undefined, so there is nothing to restore in that case —
+        // and it is a read-only property, so it cannot be deleted. Redefining it as undefined
+        // returns the environment to what every other test in this file assumes.
+        Object.defineProperty(navigator, 'serviceWorker', original ?? { configurable: true, value: undefined })
+      }
+    }
+
     it('should not register on mount outside production', () => {
-      renderHook(() => useServiceWorker())
+      withServiceWorkerContainer(() => {
+        renderHook(() => useServiceWorker())
+      })
 
       expect(mockRegister).not.toHaveBeenCalled()
+    })
+
+    it('should register on mount in production', () => {
+      withServiceWorkerContainer(() => {
+        renderHook(() => useServiceWorker(true))
+      })
+
+      expect(mockRegister).toHaveBeenCalledWith('/sw.js')
     })
   })
 })

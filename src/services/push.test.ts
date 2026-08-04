@@ -38,11 +38,22 @@ describe('push', () => {
     Object.defineProperty(globalThis, 'Notification', { configurable: true, value: undefined, writable: true })
   }
 
+  const mockCachePut = jest.fn()
+  const mockCacheDelete = jest.fn()
+
   beforeAll(() => {
+    Object.defineProperty(globalThis, 'caches', {
+      configurable: true,
+      value: {
+        delete: (...args: unknown[]) => mockCacheDelete(...args),
+        open: () => Promise.resolve({ put: (...args: unknown[]) => mockCachePut(...args) }),
+      },
+      writable: true,
+    })
     jest.mocked(fetchVapidPublicKey).mockResolvedValue({ publicKey: 'BFakePublicKey_-' })
     jest.mocked(postPushSubscription).mockResolvedValue()
     jest.mocked(deletePushSubscription).mockResolvedValue()
-    mockSubscribe.mockResolvedValue({ toJSON: () => subscriptionJson })
+    mockSubscribe.mockResolvedValue({ toJSON: () => subscriptionJson, unsubscribe: mockUnsubscribe })
     mockGetSubscription.mockResolvedValue({ endpoint: subscriptionJson.endpoint, unsubscribe: mockUnsubscribe })
     mockUnsubscribe.mockResolvedValue(true)
   })
@@ -141,6 +152,61 @@ describe('push', () => {
       await subscribeToPush(sessionId, userId, readyContainer())
 
       expect(fetchVapidPublicKey).not.toHaveBeenCalled()
+    })
+  })
+
+  // The service worker cannot re-register a rotated subscription without this: pushsubscriptionchange
+  // fires overwhelmingly with no page open, and Firefox fires it with no oldSubscription at all, so
+  // the VAPID key has to have been written down beforehand.
+  describe('recovery context', () => {
+    it('should record what the worker needs to re-register on its own', async () => {
+      setupNotification('granted')
+
+      await subscribeToPush(sessionId, userId, readyContainer())
+
+      expect(mockCachePut).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not record it when the server never accepted the subscription', async () => {
+      setupNotification('granted')
+      jest.mocked(postPushSubscription).mockRejectedValueOnce(new Error('offline'))
+
+      await expect(subscribeToPush(sessionId, userId, readyContainer())).rejects.toBeDefined()
+      expect(mockCachePut).not.toHaveBeenCalled()
+    })
+
+    it('should drop it on unsubscribe, so the worker cannot revive a device that opted out', async () => {
+      await unsubscribeFromPush(sessionId, userId, readyContainer())
+
+      expect(mockCacheDelete).toHaveBeenCalledWith('choosee-push-context')
+    })
+  })
+
+  describe('a failed registration with the API', () => {
+    // A browser subscription the server does not know about is worse than none: isSubscribedToPush
+    // reports true on the next visit, so the UI says "We'll notify you!" for a device that will
+    // never be sent anything.
+    it('should roll the browser subscription back when the POST fails', async () => {
+      setupNotification('granted')
+      jest.mocked(postPushSubscription).mockRejectedValueOnce(new Error('offline'))
+
+      await expect(subscribeToPush(sessionId, userId, readyContainer())).rejects.toThrow('offline')
+      expect(mockUnsubscribe).toHaveBeenCalledTimes(1)
+    })
+
+    it('should surface the failure rather than reporting success', async () => {
+      setupNotification('granted')
+      jest.mocked(postPushSubscription).mockRejectedValueOnce(new Error('offline'))
+
+      await expect(subscribeToPush(sessionId, userId, readyContainer())).rejects.toBeDefined()
+    })
+
+    it('should still surface the failure when the rollback itself fails', async () => {
+      setupNotification('granted')
+      jest.mocked(postPushSubscription).mockRejectedValueOnce(new Error('offline'))
+      mockUnsubscribe.mockRejectedValueOnce(new Error('cannot unsubscribe'))
+
+      await expect(subscribeToPush(sessionId, userId, readyContainer())).rejects.toThrow('offline')
     })
   })
 

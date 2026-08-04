@@ -54,8 +54,11 @@ export const registerServiceWorker = async (
   }
 }
 
-export const useServiceWorker = (): void => {
+// `isProduction` is injectable for the same reason it is on registerServiceWorker: without it the
+// hook's own call is unreachable under jsdom, and a test asserting "does not register outside
+// production" passes even with the guard deleted.
+export const useServiceWorker = (isProduction = process.env.NODE_ENV === 'production'): void => {
   useEffect(() => {
-    registerServiceWorker()
-  }, [])
+    registerServiceWorker(undefined, '/sw.js', isProduction)
+  }, [isProduction])
 }
