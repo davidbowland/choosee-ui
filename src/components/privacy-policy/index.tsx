@@ -16,15 +16,15 @@ const PrivacyPolicy = (): React.ReactNode => {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#F59E0B]">Legal</p>
         <h1 className="text-4xl font-bold text-white">Privacy Policy</h1>
         <p className="text-[#D4D4D4]">
-          This policy describes how Choosee handles your data. The short version: there&apos;s no account, we collect
-          very little, we keep it briefly, and we never sell it.
+          There&apos;s no account and nothing to sign up for. We collect very little, we keep it briefly, and we never
+          sell it.
         </p>
       </div>
 
       <Section title="What We Collect">
         <p>
-          Our servers automatically log your IP address, browser type, and the pages you visit. We use these logs to
-          detect abuse and keep the site running.
+          Our servers log your IP address, browser type, and the pages you visit. We read those logs to spot abuse and
+          keep the site running.
         </p>
         <p>
           There&apos;s no sign-in and no account. A Choosee is a link — anyone holding it can open it — and we never ask
@@ -32,32 +32,24 @@ const PrivacyPolicy = (): React.ReactNode => {
         </p>
         <p>
           When you create a Choosee we store what you asked us to search for: the address, the kinds of places you want
-          and don&apos;t want, the distance, and how you want them ranked. Inside a Choosee we store the votes you cast
-          and, if you tap your name to change it, whatever you type there. A name is optional and we don&apos;t check it
-          against anything.
+          and don&apos;t want, the distance, and how you want them ranked. Inside a Choosee we store your votes, and the
+          name you type if you set one. A name is optional, and we don&apos;t check it against anything.
         </p>
         <p>
-          When you join a Choosee we set one cookie. It&apos;s named <code>choosee_user_</code> followed by that
-          Choosee&apos;s ID, and it holds the ID that Choosee handed you — nothing else. Its path is that same Choosee,
-          so your browser sends it back on those pages and nowhere else, and it expires a day after it&apos;s set.
+          Your browser keeps a small marker so a Choosee remembers which voter you are. It holds nothing but that, it
+          works only on that one Choosee, and it expires after a day.
         </p>
         <p>
-          If you tap Use my location, your browser sends your coordinates to us and we pass them to Google to get a
-          street address back. Only the address is stored on the Choosee — but the coordinates do reach our server logs
-          and are deleted with them. Type the address instead if you&apos;d rather not send them; nothing else about the
-          Choosee changes.
+          If you tap Use my location, your browser sends us your coordinates and we pass them to Google to get a street
+          address back. We store the address on the Choosee, not the coordinates. Type the address instead if you&apos;d
+          rather not send them at all; nothing else about the Choosee changes.
         </p>
         <p>
-          If you turn on notifications, your browser mints a push subscription: a URL it issues, plus a pair of keys.
-          That&apos;s the whole thing. It identifies one browser on one device, not a person — there&apos;s no name, no
-          address, and no account attached to it. We store it against your record in that one Choosee and nowhere else,
-          and it dies when the Choosee expires. Turning notifications off deletes it too — from your browser first, then
-          from us.
+          If you turn on notifications, your browser gives us an address to send them to. It identifies that browser on
+          that device — not you. No name, no email, no account is attached to it. We keep it against your record in that
+          one Choosee, and it&apos;s deleted when the Choosee expires or when you turn notifications off.
         </p>
-        <p>
-          A notification carries which Choosee it&apos;s about, which round opened, and the winning restaurant&apos;s
-          name. It&apos;s encrypted with keys your browser generated before it leaves our servers.
-        </p>
+        <p>A notification tells you which Choosee it&apos;s about, which round opened, and which restaurant won.</p>
         <p>
           When you create a Choosee, we use Google reCAPTCHA to verify you&apos;re not a bot. reCAPTCHA collects
           technical and interaction data from your browser — such as your IP address and device information — and sends
@@ -67,23 +59,20 @@ const PrivacyPolicy = (): React.ReactNode => {
 
       <Section title="Why We Collect It">
         <p>
-          We process server log data under legitimate interests — operating a secure, functional website. We don&apos;t
-          rely on your consent for that, and we don&apos;t use your data for advertising or profiling.
+          We keep server logs to run the site securely — that&apos;s our lawful basis for them, not your consent. We
+          don&apos;t use any of it for advertising or profiling.
         </p>
         <p>
-          We only notify you when you turn notifications on, and only because you asked us to. We send nothing until you
-          switch it on. Notifications relate to a single Choosee and stop when it expires.
+          We send a notification only if you switch them on, and only about the Choosee you switched them on for. They
+          stop when it expires.
         </p>
       </Section>
 
       <Section title="What We Don't Do">
         <p>
           We don&apos;t sell your data. We don&apos;t share it with advertisers. We don&apos;t build profiles. There is
-          no account to create and no contact details to hand over, so we have no way to reach you away from the site.
-        </p>
-        <p>
-          A push subscription URL is a capability: anyone holding it could notify that device. When a notification fails
-          to deliver, what we log is which push service turned it down — not the URL.
+          no account to create and no contact details to hand over, so the only way we can reach you is a notification
+          you asked for.
         </p>
       </Section>
 
@@ -111,8 +100,9 @@ const PrivacyPolicy = (): React.ReactNode => {
           it for its own purposes.
         </p>
         <p>
-          Notifications travel through the push service your browser maker runs. We hand it the subscription URL your
-          browser issued and an encrypted message, and it delivers that message to your device.
+          Notifications travel through the push service your browser&apos;s maker runs — Apple, Google or Mozilla,
+          depending on your browser. They pass the message along to your device. We encrypt it first, so they can see
+          that a notification is on its way but not what it says.
         </p>
       </Section>
 
@@ -129,9 +119,9 @@ const PrivacyPolicy = (): React.ReactNode => {
 
       <Section title="Data Retention">
         <p>
-          Server logs are deleted automatically after 30 days. Everything inside a Choosee — the address, the
-          restaurants, the votes, any names, and any push subscriptions — is deleted when the Choosee expires, 24 hours
-          after it&apos;s created. There&apos;s no account, so nothing survives that.
+          Server logs are deleted after 30 days. Everything inside a Choosee — the address, the restaurants, the votes,
+          any names, and the address notifications are sent to — is deleted when the Choosee expires, 24 hours after
+          it&apos;s created. There&apos;s no account, so nothing survives that.
         </p>
       </Section>
 
