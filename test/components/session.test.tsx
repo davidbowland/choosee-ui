@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-import Session from '@components/session'
+import Session, { waitingInterval } from '@components/session'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -83,6 +83,35 @@ function renderWithClient(ui: React.ReactElement) {
   })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
+
+describe('waitingInterval', () => {
+  it('should poll hard while the session is still being built', () => {
+    expect(waitingInterval('loading', false)).toEqual(2_000)
+  })
+
+  it('should poll every 10s on the waiting screen without a subscription', () => {
+    expect(waitingInterval('waiting', false)).toEqual(10_000)
+  })
+
+  // Push is the backstop, so someone who will be told can afford to find out a little later.
+  it('should back off to 15s once this device holds a subscription', () => {
+    expect(waitingInterval('waiting', true)).toEqual(15_000)
+  })
+
+  // iOS forbids a push that shows no notification, so a foregrounded tab still has to poll —
+  // subscribing relaxes the interval, it never switches polling off.
+  it('should keep polling the waiting screen even when subscribed', () => {
+    expect(waitingInterval('waiting', true)).not.toBe(false)
+  })
+
+  it.each(['voting', 'winner', 'user-select', 'error'] as const)('should not poll during %s', (phase) => {
+    expect(waitingInterval(phase, false)).toBe(false)
+  })
+
+  it('should ignore the subscription outside the waiting screen', () => {
+    expect(waitingInterval('voting', true)).toBe(false)
+  })
+})
 
 describe('Session', () => {
   afterEach(async () => {

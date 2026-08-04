@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import React, { useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 
 import { ClosingSoonErrorAlert, ErrorBanner } from './elements'
 import { firstUnvotedIndex, sessionLoadErrorMessage } from './helpers'
@@ -12,10 +12,30 @@ import ErrorBoundary from '@components/error-boundary'
 import { usePushResubscribe } from '@hooks/usePushResubscribe'
 import { useSessionCookie } from '@hooks/useSessionCookie'
 import { fetchChoices, fetchSession, fetchUsers } from '@services/api'
+import { isSubscribedToPush } from '@services/push'
 import { ChoicesMap, SessionData, User } from '@types'
 import { isClosingSoonError } from '@utils/session'
 
 type Phase = 'loading' | 'error' | 'winner' | 'user-select' | 'voting' | 'waiting'
+
+// How hard to poll the session, by phase.
+//
+// Push is a backstop, not a replacement: iOS forbids a push that shows no notification, so we
+// cannot silently refresh a foregrounded tab and it still has to poll to advance on its own. What
+// subscribing buys is permission to poll LESS, because someone who will be told can afford to
+// find out a few seconds later. The real saving is behavioural — people can close the app instead
+// of babysitting it.
+export const waitingInterval = (phase: Phase, isSubscribed: boolean): number | false => {
+  switch (phase) {
+    case 'loading':
+      // Session creation is a live wait with a spinner on screen; leave it alone.
+      return 2_000
+    case 'waiting':
+      return isSubscribed ? 15_000 : 10_000
+    default:
+      return false
+  }
+}
 
 function derivePhase(
   session: SessionData | undefined,
@@ -68,19 +88,29 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   // without duplicating phase logic or needing access to users state.
   const phaseRef = useRef<Phase>('loading')
 
+  // Same trick for the subscription: refetchInterval is called by React Query outside the render
+  // cycle, so it reads a ref rather than state.
+  const subscribedRef = useRef(false)
+  useEffect(() => {
+    let cancelled = false
+    // A read that never prompts — see services/push.ts. Resolving it once on mount is enough:
+    // subscribing later only ever relaxes the interval, and the next poll picks that up.
+    void isSubscribedToPush()
+      .then((isSubscribed) => {
+        if (!cancelled) {
+          subscribedRef.current = isSubscribed
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const { data: session, error: sessionError } = useQuery<SessionData>({
     queryKey: ['session', sessionId],
     queryFn: () => fetchSession(sessionId),
-    refetchInterval: () => {
-      switch (phaseRef.current) {
-        case 'loading':
-          return 2_000
-        case 'waiting':
-          return 5_000
-        default:
-          return false
-      }
-    },
+    refetchInterval: () => waitingInterval(phaseRef.current, subscribedRef.current),
   })
 
   const { data: users } = useQuery<User[]>({
