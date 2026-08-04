@@ -101,6 +101,20 @@ describe('push', () => {
       expect(mockSubscribe).not.toHaveBeenCalled()
     })
 
+    it('should report dismissed, not denied, when the prompt is closed without a choice', async () => {
+      setupNotification('default')
+
+      expect(await subscribeToPush(sessionId, userId, readyContainer())).toEqual('dismissed')
+    })
+
+    it('should not subscribe after a dismissal', async () => {
+      setupNotification('default')
+
+      await subscribeToPush(sessionId, userId, readyContainer())
+
+      expect(mockSubscribe).not.toHaveBeenCalled()
+    })
+
     it('should report unsupported without a service worker container', async () => {
       setupNotification('granted')
 

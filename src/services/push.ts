@@ -4,7 +4,13 @@ import { deletePushSubscription, fetchVapidPublicKey, postPushSubscription } fro
 // fixes: 'unsupported' means this browser cannot do Web Push, and 'unready' means it can but our
 // worker is not running, which a reload often fixes. Telling a Firefox user their browser "can't
 // turn on notifications" would be a plain lie.
-export type PushResult = 'subscribed' | 'unsupported' | 'denied' | 'unready'
+// 'dismissed' is separate from 'denied' and the distinction is load-bearing. Notification
+// permission has THREE outcomes, not two: granted, denied, and still-default because the person
+// closed the prompt without choosing. Collapsing the last two means dismissing a prompt shows
+// "Notifications are blocked. Turn them back on in your browser settings." — advice that is wrong
+// (nothing is blocked) and that strands them, since the control is then replaced by a static line
+// with no way back short of a reload. A dismissal is a "not now", and must stay retryable.
+export type PushResult = 'subscribed' | 'unsupported' | 'denied' | 'dismissed' | 'unready'
 
 // Long enough to cover a registration still in flight when somebody taps quickly, short enough that
 // nobody sits watching a button that will never finish.
@@ -79,8 +85,13 @@ export const subscribeToPush = async (
   // Permission FIRST, and from the tap that called this: Safari and Firefox both require user
   // activation, and a multi-second wait for the worker beforehand would spend it.
   const permission = await Notification.requestPermission()
-  if (permission !== 'granted') {
+  // 'denied' is terminal — only the OS can undo it. Anything else that is not 'granted' means the
+  // prompt was closed without a choice, which is a "not now" and must leave the control armed.
+  if (permission === 'denied') {
     return 'denied'
+  }
+  if (permission !== 'granted') {
+    return 'dismissed'
   }
   // Before the VAPID fetch, so a browser that can never subscribe does not spend a request on a
   // key it cannot use.

@@ -92,12 +92,21 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       setCapability('subscribed')
       return
     }
-    // 'denied' is terminal and 'unsupported' means the browser cannot, so both become the capability
-    // itself — a static explanation with no control. Only 'unready' is worth retrying.
-    setNotifyStatus(result === 'unready' ? 'failed' : 'idle')
-    if (result !== 'unready') {
-      setCapability(result)
+    // 'unready' is transient — keep the switch armed and say so.
+    if (result === 'unready') {
+      setNotifyStatus('failed')
+      return
     }
+    // 'dismissed' means the prompt was closed without a choice. Nothing is wrong, nothing needs
+    // explaining, and nagging someone who just declined to decide is the wrong move — so drop
+    // silently back to idle with the switch still offered.
+    setNotifyStatus('idle')
+    if (result === 'dismissed') {
+      return
+    }
+    // 'denied' is terminal and 'unsupported' means the browser cannot. Both become the capability
+    // itself — a static explanation with no control, because neither can be resolved from here.
+    setCapability(result)
   }
 
   const closeMutation = useMutation({

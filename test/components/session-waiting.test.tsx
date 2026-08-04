@@ -376,6 +376,22 @@ describe('WaitingPhase', () => {
       expect(await screen.findByText("We'll notify you!")).toBeInTheDocument()
     })
 
+    // A dismissed prompt is a "not now", not a refusal. Collapsing it into `denied` told the user
+
+    // notifications were blocked and left them no way back short of a reload.
+
+    it('should keep the control offered when the permission prompt is dismissed', async () => {
+      jest.mocked(subscribeToPush).mockResolvedValueOnce('dismissed')
+
+      renderNotify()
+
+      await userEvent.click(await screen.findByText('Notify me when the next round opens'))
+
+      expect(await screen.findByText('Notify me when the next round opens')).toBeInTheDocument()
+
+      expect(screen.queryByText('Notifications are blocked')).not.toBeInTheDocument()
+    })
+
     it('should show the retry line when the worker never became ready', async () => {
       jest.mocked(subscribeToPush).mockResolvedValueOnce('unready')
       const user = userEvent.setup()
