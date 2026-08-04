@@ -1,8 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-// @ts-expect-error — mock-only export from __mocks__/index.tsx
-import { mockSetAuthState } from '@components/auth-context'
 import Session from '@components/session'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
@@ -11,7 +9,6 @@ import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
-jest.mock('@components/auth-context')
 
 // Mock child phases to keep tests focused on Session orchestration
 jest.mock('@components/session/loading', () => ({
@@ -70,7 +67,6 @@ const baseSession: SessionData = {
 const mockUser: User = {
   userId: 'user-1',
   name: 'Test User',
-  subscribedRounds: [],
   votes: [[null]],
 }
 
@@ -241,52 +237,5 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
     await user.click(screen.getByText('Select user'))
     expect(mockSetUserId).toHaveBeenCalledWith('user-1')
-  })
-
-  // The backfill fires an authenticated PATCH so the server can populate name and googleSub
-  // from the verified JWT. It only runs for a signed-in user whose name is still null.
-  describe('name backfill', () => {
-    const namelessUser: User = { ...mockUser, name: null }
-
-    it('should backfill from the token for a signed-in user with no name', async () => {
-      mockSetAuthState({ isSignedIn: true })
-      setup('user-1')
-      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
-      jest.mocked(api.fetchUsers).mockResolvedValue([namelessUser])
-      jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-      jest.mocked(api.backfillUserFromToken).mockResolvedValue({ ...namelessUser, name: 'Backfilled' })
-
-      renderWithClient(<Session sessionId="test-session" />)
-
-      await waitFor(() => expect(api.backfillUserFromToken).toHaveBeenCalledWith('test-session', 'user-1'))
-    })
-
-    it('should not backfill when the user already has a name', async () => {
-      mockSetAuthState({ isSignedIn: true })
-      setup('user-1')
-      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
-      jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
-      jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-
-      renderWithClient(<Session sessionId="test-session" />)
-
-      await waitFor(() => expect(api.fetchUsers).toHaveBeenCalled())
-      expect(api.backfillUserFromToken).not.toHaveBeenCalled()
-    })
-
-    it('should not backfill when the user is signed out', async () => {
-      // Explicit: mockSetAuthState uses mockReturnValue, which clearMocks does not reset,
-      // so a signed-in state set by an earlier test would otherwise leak into this one.
-      mockSetAuthState({ isSignedIn: false })
-      setup('user-1')
-      jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
-      jest.mocked(api.fetchUsers).mockResolvedValue([namelessUser])
-      jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
-
-      renderWithClient(<Session sessionId="test-session" />)
-
-      await waitFor(() => expect(api.fetchUsers).toHaveBeenCalled())
-      expect(api.backfillUserFromToken).not.toHaveBeenCalled()
-    })
   })
 })

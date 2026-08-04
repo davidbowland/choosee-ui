@@ -10,7 +10,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 
-jest.mock('@components/auth-context')
 jest.mock('@services/api')
 
 jest.mock('@heroui/react', () => ({
@@ -57,7 +56,6 @@ const mockSession: SessionData = {
 const mockUser: User = {
   userId: 'user-1',
   name: 'Test User',
-  subscribedRounds: [],
   votes: [[null, null]],
 }
 
@@ -177,12 +175,9 @@ describe('VotingPhase', () => {
     await user.click(screen.getByTestId('card-Restaurant A'))
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith(
-        'test-session',
-        'user-1',
-        [{ op: 'replace', path: '/votes/0/0', value: 'a' }],
-        false,
-      )
+      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
+        { op: 'replace', path: '/votes/0/0', value: 'a' },
+      ])
     })
   })
 
@@ -299,12 +294,9 @@ describe('VotingPhase', () => {
     await user.keyboard('{Enter}')
 
     await waitFor(() => {
-      expect(api.patchUser).toHaveBeenCalledWith(
-        'test-session',
-        'user-1',
-        [{ op: 'replace', path: '/name', value: 'New Name' }],
-        false,
-      )
+      expect(api.patchUser).toHaveBeenCalledWith('test-session', 'user-1', [
+        { op: 'replace', path: '/name', value: 'New Name' },
+      ])
     })
   })
 

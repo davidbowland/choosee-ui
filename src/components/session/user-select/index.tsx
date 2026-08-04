@@ -11,7 +11,6 @@ import {
   SectionTitle,
   UserOption,
 } from './elements'
-import { useAuthContext } from '@components/auth-context'
 import { createUser, parseApiMessage } from '@services/api'
 import { User } from '@types'
 import { displayName } from '@utils/users'
@@ -23,18 +22,13 @@ export interface UserSelectPhaseProps {
 }
 
 const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhaseProps): React.ReactNode => {
-  const { isSignedIn, isLoading: isAuthLoading } = useAuthContext()
   const [selected, setSelected] = useState<string | null>(null)
   const [createNew, setCreateNew] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const autoCreateFired = useRef(false)
 
-  // Keep a ref so the mutation closure always reads the latest value.
-  const isSignedInRef = useRef(isSignedIn)
-  isSignedInRef.current = isSignedIn
-
   const createMutation = useMutation({
-    mutationFn: () => createUser(sessionId, isSignedInRef.current),
+    mutationFn: () => createUser(sessionId),
     onSuccess: (newUser) => {
       onUserSelected(newUser.userId)
     },
@@ -51,18 +45,17 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
 
   const isEmpty = users.length === 0
   const doAutoCreate = useCallback(() => {
-    if (isEmpty && !isAuthLoading && !autoCreateFired.current) {
+    if (isEmpty && !autoCreateFired.current) {
       autoCreateFired.current = true
       createMutation.mutate()
     }
-  }, [isEmpty, isAuthLoading, createMutation])
+  }, [isEmpty, createMutation])
 
   useEffect(() => {
     doAutoCreate()
   }, [doAutoCreate])
 
   const handleConfirm = (): void => {
-    if (isAuthLoading) return
     if (createNew) {
       createMutation.mutate()
     } else if (selected) {
@@ -102,7 +95,7 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
 
       <ConfirmButton
         isDisabled={!createNew && !selected}
-        isLoading={createMutation.isPending || isAuthLoading}
+        isLoading={createMutation.isPending}
         onPress={handleConfirm}
       />
 

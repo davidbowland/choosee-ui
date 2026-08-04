@@ -1,8 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-// @ts-expect-error — mock-only export from __mocks__/index.tsx
-import { mockSetAuthState } from '@components/auth-context'
 import UserSelectPhase from '@components/session/user-select'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
@@ -10,15 +8,14 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { User } from '@types'
 
-jest.mock('@components/auth-context')
 jest.mock('@services/api', () => ({
   ...jest.requireActual('@services/api'),
   createUser: jest.fn(),
 }))
 
 const mockUsers: User[] = [
-  { userId: 'brave-tiger', name: null, subscribedRounds: [], votes: [[null]] },
-  { userId: 'user-2', name: 'Alice', subscribedRounds: [], votes: [[null]] },
+  { userId: 'brave-tiger', name: null, votes: [[null]] },
+  { userId: 'user-2', name: 'Alice', votes: [[null]] },
 ]
 
 function renderWithClient(ui: React.ReactElement) {
@@ -54,7 +51,6 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: null,
-      subscribedRounds: [],
       votes: [],
     }
     jest.mocked(api.createUser).mockResolvedValue(newUser)
@@ -62,7 +58,7 @@ describe('UserSelectPhase', () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />)
 
     await waitFor(() => {
-      expect(api.createUser).toHaveBeenCalledWith('s1', false)
+      expect(api.createUser).toHaveBeenCalledWith('s1')
     })
     await waitFor(() => {
       expect(onUserSelected).toHaveBeenCalledWith('new-user')
@@ -73,7 +69,6 @@ describe('UserSelectPhase', () => {
     const newUser: User = {
       userId: 'new-user',
       name: null,
-      subscribedRounds: [],
       votes: [],
     }
     jest.mocked(api.createUser).mockResolvedValue(newUser)
@@ -144,57 +139,5 @@ describe('UserSelectPhase', () => {
     await user.click(screen.getByText(/Let's go/i))
 
     expect(await screen.findByText(/Couldn't join/i)).toBeInTheDocument()
-  })
-
-  it('should not auto-create user while auth is still loading', () => {
-    mockSetAuthState({ isSignedIn: false, isLoading: true })
-    renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />)
-    expect(api.createUser).not.toHaveBeenCalled()
-  })
-
-  it('should not create user on manual confirm while auth is still loading', async () => {
-    mockSetAuthState({ isSignedIn: false, isLoading: true })
-    const user = userEvent.setup()
-    renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
-
-    await user.click(screen.getByText("I'm new"))
-    await user.click(screen.getByRole('button', { name: /Joining/i }))
-
-    expect(api.createUser).not.toHaveBeenCalled()
-  })
-
-  it('should auto-create with authenticated=true once auth finishes loading', async () => {
-    const newUser: User = {
-      userId: 'new-user',
-      name: 'Google User',
-      subscribedRounds: [],
-      votes: [],
-    }
-    jest.mocked(api.createUser).mockResolvedValue(newUser)
-
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
-    })
-
-    // Start with auth loading
-    mockSetAuthState({ isSignedIn: false, isLoading: true })
-    const { rerender } = render(
-      <QueryClientProvider client={queryClient}>
-        <UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />
-      </QueryClientProvider>,
-    )
-    expect(api.createUser).not.toHaveBeenCalled()
-
-    // Auth finishes — user is signed in
-    mockSetAuthState({ isSignedIn: true, isLoading: false })
-    rerender(
-      <QueryClientProvider client={queryClient}>
-        <UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={[]} />
-      </QueryClientProvider>,
-    )
-
-    await waitFor(() => {
-      expect(api.createUser).toHaveBeenCalledWith('s1', true)
-    })
   })
 })

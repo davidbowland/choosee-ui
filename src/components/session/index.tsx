@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useMemo, useRef } from 'react'
 
 import { ClosingSoonErrorAlert, ErrorBanner } from './elements'
 import { firstUnvotedIndex, sessionLoadErrorMessage } from './helpers'
@@ -8,10 +8,9 @@ import UserSelectPhase from './user-select'
 import VotingPhase from './voting'
 import WaitingPhase from './waiting'
 import WinnerPhase from './winner'
-import { useAuthContext } from '@components/auth-context'
 import ErrorBoundary from '@components/error-boundary'
 import { useSessionCookie } from '@hooks/useSessionCookie'
-import { backfillUserFromToken, fetchChoices, fetchSession, fetchUsers } from '@services/api'
+import { fetchChoices, fetchSession, fetchUsers } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 import { isClosingSoonError } from '@utils/session'
 
@@ -59,7 +58,6 @@ export interface SessionProps {
 
 const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { isSignedIn } = useAuthContext()
   const { userId, setUserId } = useSessionCookie(sessionId)
 
   // Read and strip ?id= from URL once on mount so the URL stays clean
@@ -109,34 +107,6 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   }, [queryParamId, userId, users])
 
   const currentUser = useMemo(() => users?.find((u) => u.userId === effectiveUserId), [users, effectiveUserId])
-
-  // When a signed-in user has a null name, send an empty PATCH so the backend
-  // auto-populates the name from their Google profile.
-  const namePatchFired = useRef(false)
-  // Reset the guard when auth state changes so re-sign-in triggers a new attempt
-  useEffect(() => {
-    namePatchFired.current = false
-  }, [isSignedIn])
-
-  const currentUserId = currentUser?.userId
-  const currentUserName = currentUser?.name
-  useEffect(() => {
-    if (isSignedIn && currentUserId && currentUserName === null && !namePatchFired.current) {
-      namePatchFired.current = true
-      backfillUserFromToken(sessionId, currentUserId)
-        .then((updated) => {
-          if (updated.name) {
-            queryClient.setQueryData<User[]>(['users', sessionId], (old) =>
-              old?.map((u) => (u.userId === updated.userId ? { ...u, name: updated.name } : u)),
-            )
-          }
-        })
-        .catch(() => {
-          // Graceful degradation — the guard resets so the next load retries the backfill
-          namePatchFired.current = false
-        })
-    }
-  }, [isSignedIn, currentUserId, currentUserName, sessionId, queryClient])
 
   const phase = derivePhase(session, currentUser, effectiveUserId != null, usersLoaded, sessionError)
   phaseRef.current = phase

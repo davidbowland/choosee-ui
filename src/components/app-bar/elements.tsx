@@ -1,8 +1,4 @@
-import { Button } from '@heroui/react'
-import { LogOut } from 'lucide-react'
 import React from 'react'
-
-import { GoogleLogo } from '@components/google-logo'
 
 export const NavContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <nav className="px-4 pt-4 pb-2 relative z-40">
@@ -37,33 +33,4 @@ export const Brand = ({ children }: { children: React.ReactNode }): React.ReactN
     </span>
     <BrandLink>{children}</BrandLink>
   </span>
-)
-
-export const GoogleSignInButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
-  <Button
-    aria-label="Sign in with Google"
-    className="shrink-0 rounded-full border-white/[0.09] bg-white/[0.05] px-3 text-[#D4D4D4] hover:bg-white/[0.09] sm:px-4"
-    onPress={onPress}
-    size="sm"
-    variant="outline"
-  >
-    <GoogleLogo />
-    <span className="hidden sm:inline">Sign in with Google</span>
-  </Button>
-)
-
-export const UserMenu = ({ name, onSignOut }: { name: string; onSignOut: () => void }): React.ReactNode => (
-  <div className="flex min-w-0 items-center gap-3">
-    <span className="hidden max-w-[120px] truncate text-sm text-[#6B7280] sm:inline">{name}</span>
-    <Button
-      aria-label="Sign out"
-      className="shrink-0 rounded-full border-white/[0.09] bg-white/[0.05] px-3 text-[#6B7280] hover:bg-white/[0.09] sm:px-4"
-      onPress={onSignOut}
-      size="sm"
-      variant="outline"
-    >
-      <LogOut className="h-4 w-4" />
-      <span className="hidden sm:inline">Sign out</span>
-    </Button>
-  </div>
 )
