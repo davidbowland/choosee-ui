@@ -36,7 +36,16 @@ const config = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
-  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out'],
+  // `.worktrees/` holds linked git worktrees, each a full copy of the repo including its tests.
+  // Without this, a run from the main tree discovers those copies and executes them against the
+  // MAIN tree's src — moduleNameMapper resolves @components/* etc. to <rootDir> regardless of which
+  // worktree the test file came from — so an in-progress branch's tests get graded against another
+  // branch's source. Every failure that produces is a phantom.
+  // Keeps worktree copies out of the module map as well as out of test discovery. Each worktree
+  // carries its own `__mocks__/file-mock.js`, and duplicates in the haste map make jest warn and
+  // then resolve a manual mock from whichever copy it saw first.
+  modulePathIgnorePatterns: ['/\\.worktrees/'],
+  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out', '/\\.worktrees/'],
 }
 
 // next/jest prepends its own transformIgnorePatterns that block all node_modules.
