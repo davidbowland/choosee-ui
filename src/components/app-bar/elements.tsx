@@ -24,6 +24,42 @@ const Mark = (): React.ReactNode => (
   </svg>
 )
 
+// A phone with a plus, drawn in lucide's idiom so it sits beside the app's other icons. Not a
+// download arrow: an arrow into a tray says "save a file", not "put this on my phone".
+const PhonePlus = (): React.ReactNode => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    height="18"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={1.6}
+    viewBox="0 0 24 24"
+    width="18"
+  >
+    <rect height="19" rx="2.5" width="11" x="2.5" y="2.5" />
+    <path d="M6.5 18.5h3" />
+    <path d="M18 5v6" />
+    <path d="M21 8h-6" />
+  </svg>
+)
+
+// Amber, the app's action colour, so the icon reads as pressable rather than as a status marker.
+// Label rather than visible text: this is the slot Google sign-in vacated, and the bar has room
+// for a disc, not a sentence.
+export const InstallIconButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
+  <button
+    aria-label="Add Choosee to your Home Screen"
+    className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[#F59E0B]/20 bg-[#F59E0B]/[0.12] text-[#F59E0B] transition-colors hover:bg-[#F59E0B]/20 focus:outline-none"
+    onClick={onPress}
+    title="Add Choosee to your Home Screen"
+    type="button"
+  >
+    <PhonePlus />
+  </button>
+)
+
 export const Brand = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <span className="flex items-center gap-2.5">
     <span className="rounded-[11px] border border-[#F59E0B]/20 bg-[#F59E0B]/[0.12] p-[3px]">

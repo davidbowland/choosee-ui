@@ -35,6 +35,18 @@ export const NewSessionButton = ({ onPress }: { onPress: () => void }): React.Re
   <PillArrowButton label="Start over" onPress={onPress} />
 )
 
+// Deliberately quiet — the winner screen's job is the restaurant, and this is an aside. Same
+// dialog as the app bar icon, so the two entry points cannot drift apart.
+export const InstallLink = ({ onPress }: { onPress: () => void }): React.ReactNode => (
+  <button
+    className="text-xs text-[#6B7280] underline underline-offset-4 hover:text-[#9CA3AF]"
+    onClick={onPress}
+    type="button"
+  >
+    Add Choosee to your Home Screen
+  </button>
+)
+
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <Button
     className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
