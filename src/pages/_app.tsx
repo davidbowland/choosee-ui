@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react'
 
 import '@assets/css/index.css'
 import '@config/amplify'
+import { useServiceWorker } from '@hooks/useServiceWorker'
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(
@@ -24,6 +25,8 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     document.documentElement.classList.add('dark')
   }, [])
+
+  useServiceWorker()
 
   return (
     <QueryClientProvider client={queryClient}>
