@@ -117,12 +117,14 @@ export const ConfirmDialog = ({
 // does not reliably read as something you can press. A switch does.
 export const NotifyCheckbox = ({
   disabled,
+  isFinal,
   isSaving,
   onChange,
   reminderEvent,
   subscribed,
 }: {
   disabled: boolean
+  isFinal: boolean
   isSaving?: boolean
   onChange: () => void
   reminderEvent: string
@@ -154,12 +156,19 @@ export const NotifyCheckbox = ({
       <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-[#D4D4D4]'}`}>
         {subscribed ? "We'll notify you!" : `Notify me when ${reminderEvent}`}
       </p>
+      {/* "One notification" was true under the old per-round opt-in, where you re-armed the toggle
+          every round. The opt-in is now once per Choosee and covers every remaining round plus the
+          winner, so promising one was a straightforward lie to anyone who subscribed in round 1 of
+          four. The copy has to describe the model that shipped. `isFinal` is the exception: there
+          really is only one left to send. */}
       <p className="text-xs text-[#4B5563]">
         {isSaving
           ? 'Turning on notifications…'
-          : subscribed
-            ? `One notification when ${reminderEvent}.`
-            : 'One notification — nothing else.'}
+          : isFinal
+            ? 'One notification when the winner is in.'
+            : subscribed
+              ? 'Each round, and the winner. Nothing else.'
+              : 'Each round until a winner, and nothing else.'}
       </p>
     </div>
     <div
@@ -201,8 +210,13 @@ export const TurnOffLink = ({ onPress }: { onPress: () => void }): React.ReactNo
   </button>
 )
 
-export const NotifyRetryMessage = (): React.ReactNode => (
-  <p className="text-center text-xs text-[#4B5563]">Couldn&apos;t turn on notifications. Please try again.</p>
+// The verb has to match what the user pressed. A failed "Turn off" reporting "Couldn't turn ON
+// notifications" tells them the opposite of what happened, and the switch beside it still reads
+// subscribed — so the sentence and the control disagree about which direction failed.
+export const NotifyRetryMessage = ({ action }: { action: 'on' | 'off' }): React.ReactNode => (
+  <p className="text-center text-xs text-[#4B5563]">
+    Couldn&apos;t turn {action === 'on' ? 'on' : 'off'} notifications. Please try again.
+  </p>
 )
 
 // Shown only after the user asks for notifications, never on load. The three gestures happen in

@@ -139,6 +139,18 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
 
   const currentUser = useMemo(() => users?.find((u) => u.userId === effectiveUserId), [users, effectiveUserId])
 
+  // Persist an identity that arrived in the URL. `consumeQueryParamId` strips `?id=` on mount, so
+  // without this it survives exactly one page load — and a notification tap is the case that
+  // matters: on an installed iOS app, which has its own cookie jar separate from the Safari tab the
+  // user joined in, every launch would otherwise land them on "Back again? Choose your name". The
+  // spec treats that picker as a one-time recovery path for the install transition, not a thing to
+  // meet on every notification.
+  useEffect(() => {
+    if (queryParamId && queryParamId === effectiveUserId && userId !== queryParamId) {
+      setUserId(queryParamId)
+    }
+  }, [queryParamId, effectiveUserId, userId, setUserId])
+
   // A browser can rotate this device's push subscription at any time. Only the page knows which
   // session and user it belongs to, so the worker hands the replacement here to be re-registered.
   usePushResubscribe(sessionId, effectiveUserId)

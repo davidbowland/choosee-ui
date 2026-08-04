@@ -321,7 +321,7 @@ describe('WaitingPhase', () => {
       renderNotify()
 
       expect(await screen.findByText('Notify me when the next round opens')).toBeInTheDocument()
-      expect(screen.getByText('One notification — nothing else.')).toBeInTheDocument()
+      expect(screen.getByText('Each round until a winner, and nothing else.')).toBeInTheDocument()
     })
 
     // The last round has no next round to promise, so the sentence has to change with it.
@@ -360,7 +360,7 @@ describe('WaitingPhase', () => {
       await user.click(await screen.findByText('Notify me when the next round opens'))
 
       expect(await screen.findByText("We'll notify you!")).toBeInTheDocument()
-      expect(screen.getByText('One notification when the next round opens.')).toBeInTheDocument()
+      expect(screen.getByText('Each round, and the winner. Nothing else.')).toBeInTheDocument()
     })
 
     it('should say it is working while the subscribe is in flight', async () => {
@@ -400,7 +400,8 @@ describe('WaitingPhase', () => {
 
       await userEvent.click(await screen.findByText('Turn off'))
 
-      expect(await screen.findByText("Couldn't turn on notifications. Please try again.")).toBeInTheDocument()
+      // The verb has to match the button that failed.
+      expect(await screen.findByText("Couldn't turn off notifications. Please try again.")).toBeInTheDocument()
       expect(screen.queryByText('Notify me when the next round opens')).not.toBeInTheDocument()
     })
 

@@ -45,7 +45,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
   // sentence — most likely "This browser can't send notifications" — that is wrong for most devices.
   const [capability, setCapability] = useState<PushCapability | null>(null)
   const [isIos, setIsIos] = useState(false)
-  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'failed'>('idle')
+  const [notifyStatus, setNotifyStatus] = useState<'idle' | 'saving' | 'failed-on' | 'failed-off'>('idle')
   const [iosSheetOpen, setIosSheetOpen] = useState(false)
 
   const currentRound = session.currentRound
@@ -86,8 +86,11 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
       try {
         await unsubscribeFromPush(sessionId, currentUser.userId)
         setCapability('ready')
+        // Clear any earlier failure. Without this a retry that succeeds leaves the previous
+        // "Couldn't turn off notifications" sitting under a switch that now reads unsubscribed.
+        setNotifyStatus('idle')
       } catch {
-        setNotifyStatus('failed')
+        setNotifyStatus('failed-off')
       }
       return
     }
@@ -105,7 +108,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
     }
     // 'unready' is transient — keep the switch armed and say so.
     if (result === 'unready') {
-      setNotifyStatus('failed')
+      setNotifyStatus('failed-on')
       return
     }
     // 'dismissed' means the prompt was closed without a choice. Nothing is wrong, nothing needs
@@ -178,13 +181,15 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
             <>
               <NotifyCheckbox
                 disabled={notifyStatus === 'saving'}
+                isFinal={isFinalRound(session)}
                 isSaving={notifyStatus === 'saving'}
                 onChange={() => void handleNotifyToggle()}
                 reminderEvent={reminderEvent}
                 subscribed={capability === 'subscribed'}
               />
               {capability === 'subscribed' && <TurnOffLink onPress={() => void handleNotifyToggle()} />}
-              {notifyStatus === 'failed' && <NotifyRetryMessage />}
+              {notifyStatus === 'failed-on' && <NotifyRetryMessage action="on" />}
+              {notifyStatus === 'failed-off' && <NotifyRetryMessage action="off" />}
             </>
           )}
         </NotifySection>

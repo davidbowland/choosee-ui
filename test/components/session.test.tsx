@@ -256,6 +256,41 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
   })
 
+  // A notification opens /s/{id}?id={userId}. consumeQueryParamId strips it on mount, so without
+  // persisting it the identity survives exactly one page load — and on an installed iOS app, whose
+  // cookie jar is separate from the Safari tab the user joined in, every launch would land on the
+  // name picker instead of the vote.
+  it('should remember an identity that arrived in the URL', async () => {
+    setup()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/s/test-session', search: '?id=user-1' },
+      writable: true,
+    })
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+
+    renderWithClient(<Session sessionId="test-session" />)
+
+    await waitFor(() => expect(mockSetUserId).toHaveBeenCalledWith('user-1'))
+  })
+
+  it('should not remember an id that is not a voter in this Choosee', async () => {
+    setup()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, pathname: '/s/test-session', search: '?id=not-a-voter' },
+      writable: true,
+    })
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+
+    renderWithClient(<Session sessionId="test-session" />)
+
+    await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
+    expect(mockSetUserId).not.toHaveBeenCalled()
+  })
+
   it('should handle user selection callback', async () => {
     setup()
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)

@@ -56,3 +56,44 @@ npm run deploy
 ```
 
 The `developer` role and [AWS SAM CLI](https://aws.amazon.com/serverless/sam/) are required to deploy this project.
+
+## Deploy prerequisites
+
+### VAPID keys (choosee-api)
+
+Web Push signing keys must exist in SSM **before the first notification is sent**, in each
+environment. Nothing in the stack creates them and nothing fails at deploy time if they are
+missing — the round advances normally and every notification fails with an AccessDenied visible
+only in CloudWatch.
+
+Generate once, in `choosee-api`:
+
+```bash
+npm run generate-vapid-keys
+```
+
+Rotating the pair silently invalidates every live subscription, and nothing tells the affected
+devices — they simply stop receiving notifications. Generate once and leave it alone.
+
+Store both halves at the paths derived from `EnvironmentMap.ssmPrefix` in `template.yaml`
+(`/choosee-api` for prod, `/choosee-api-test` for test):
+
+```bash
+aws ssm put-parameter --name "/choosee-api-test/vapid-public-key"  --type String       --value "<publicKey>"
+aws ssm put-parameter --name "/choosee-api-test/vapid-private-key" --type SecureString --value "<privateKey>"
+```
+
+Two things about the types are load-bearing:
+
+- The **public** key must be a plain `String`. `GetVapidPublicKeyFunction` is unauthenticated and
+  deliberately has no `kms:Decrypt` grant, so a SecureString there cannot be read at runtime.
+- The **private** key must be a `SecureString` under the account's default `aws/ssm` key — the ARN
+  hardcoded in `template.yaml`, which every SecureString-reading function is granted. Encrypting it
+  under a different CMK makes it unreadable by the functions that need it.
+
+### Deploy order
+
+`choosee-api` first, then `choosee-ui`. Neither stack imports from the other, so CloudFormation
+enforces nothing — but the UI expects the push endpoints to exist, and the API drops the `/authed`
+routes the previously deployed UI still calls. API-first puts the new contract in place for the UI
+that is about to ship.

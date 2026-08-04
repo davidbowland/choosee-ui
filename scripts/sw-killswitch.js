@@ -1,7 +1,14 @@
 /*
  * Emergency service worker kill switch.
  *
- *   cp scripts/sw-killswitch.js scripts/sw-src.js && npm run deploy
+ *   cp scripts/sw-killswitch.js scripts/sw-src.js
+ *   git commit -am "Kill the service worker" && git push origin master
+ *
+ * It must go through the pipeline. `npm run deploy` builds and syncs the TEST stack
+ * (scripts/deploy.sh deploys choosee-ui-test and copies to the choosee-ui-test bucket), so running
+ * it during a production incident changes nothing on choosee.dbowland.com. Only the master pipeline
+ * touches production, and only it passes the CloudFront distribution ID to copyToS3.sh — which is
+ * what invalidates /sw.js so browsers actually pick this up.
  *
  * Deletes every cache and handles no fetches, so the site behaves as a plain static site again.
  * Restore with `git checkout -- scripts/sw-src.js` once the real fix is ready.
