@@ -150,7 +150,10 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices }: WaitingPhase
     },
   })
 
-  const solo = isSoloVoter(session)
+  // Stays on the session's own count: this screen polls the session, and `solo` also picks the
+  // subtitle sitting next to `total={session.voterCount}` below. Reading the two from different
+  // snapshots is how you end up with "waiting for others" over a total of one.
+  const solo = isSoloVoter(session.voterCount, session.currentRound)
 
   return (
     <WaitingContainer>

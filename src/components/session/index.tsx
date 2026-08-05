@@ -190,7 +190,15 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
         return <UserSelectPhase onUserSelected={handleUserSelected} sessionId={sessionId} users={users ?? []} />
       case 'voting':
         return (
-          <VotingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
+          <VotingPhase
+            choices={choices ?? {}}
+            currentUser={currentUser!}
+            session={session!}
+            sessionId={sessionId}
+            // The users query keeps polling through the round; the session query does not. Reaching
+            // this phase already required a loaded users list, so this is never an empty stand-in.
+            voterCount={users!.length}
+          />
         )
       case 'waiting':
         return (

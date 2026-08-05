@@ -25,7 +25,11 @@ jest.mock('@components/session/user-select', () => ({
 }))
 jest.mock('@components/session/voting', () => ({
   __esModule: true,
-  default: () => <div data-testid="voting-phase">Voting</div>,
+  default: ({ voterCount }: { voterCount: number }) => (
+    <div data-testid="voting-phase">
+      Voting<span data-testid="voting-voter-count">{voterCount}</span>
+    </div>
+  ),
 }))
 jest.mock('@components/session/waiting', () => ({
   __esModule: true,
@@ -189,6 +193,18 @@ describe('Session', () => {
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByTestId('voting-phase')).toBeInTheDocument())
+  })
+
+  // baseSession carries voterCount 2 while the users query returns one user, so this only passes
+  // if the count comes off the users list — the query that keeps polling once voting starts.
+  it('should give the voting phase the users-list count rather than the session snapshot', async () => {
+    setup('user-1')
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+    renderWithClient(<Session sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByTestId('voting-phase')).toBeInTheDocument())
+    expect(screen.getByTestId('voting-voter-count')).toHaveTextContent('1')
   })
 
   it('should show waiting phase when user has voted all matchups', async () => {
