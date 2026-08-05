@@ -55,8 +55,26 @@ const readAll = (): JoinedSession[] => {
   }
 }
 
+const storedVersion = (): number | undefined => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return undefined
+    const parsed = JSON.parse(raw) as JoinedSessionsRecord
+    return typeof parsed?.version === 'number' ? parsed.version : undefined
+  } catch {
+    return undefined
+  }
+}
+
 const writeAll = (sessions: JoinedSession[]): void => {
   try {
+    // A record written by a LATER version of this app is one readAll cannot understand, so it
+    // returns []. Every mutator here is writeAll(readAll()…), which would then replace that record
+    // with an empty one and wipe every identity on the device. The envelope is versioned to make a
+    // future shape change safe; this is the line that actually makes it so.
+    const existing = storedVersion()
+    if (existing !== undefined && existing > RECORD_VERSION) return
+
     const record: JoinedSessionsRecord = { sessions: sessions.slice(0, STORAGE_LIMIT), version: RECORD_VERSION }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
   } catch {
