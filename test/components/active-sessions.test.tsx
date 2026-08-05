@@ -4,7 +4,7 @@ import React from 'react'
 import ActiveSessions from '@components/active-sessions'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
-import { render, screen, waitFor } from '@testing-library/react'
+import { RenderResult, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 import * as joinedSessions from '@utils/joined-sessions'
@@ -49,9 +49,9 @@ const unvoted: User = { name: 'Dana', userId: 'user-1', votes: [['a'], []] }
 const voted: User = { name: 'Dana', userId: 'user-1', votes: [['a'], ['a']] }
 const choices: ChoicesMap = { 'choice-1': { choiceId: 'choice-1', name: 'Gates Bar-B-Q', photos: [] } }
 
-const renderComponent = (): void => {
+const renderComponent = (): RenderResult => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
-  render(
+  return render(
     <QueryClientProvider client={queryClient}>
       <ActiveSessions />
     </QueryClientProvider>,
@@ -70,12 +70,15 @@ describe('ActiveSessions', () => {
     mockedApi.hasStatusCode.mockImplementation((err) => (err as Error | undefined)?.message === 'gone')
   })
 
-  it('renders nothing when no Choosees are remembered', () => {
+  // A first-time visitor must get the home page exactly as it was before this feature existed —
+  // no heading, no empty container, no reserved gap above the create form. Querying only for the
+  // heading would pass on an empty <section> that still occupies layout.
+  it('renders nothing at all when no Choosees are remembered', () => {
     mockedStore.readJoinedSessions.mockReturnValueOnce([])
 
-    renderComponent()
+    const { container } = renderComponent()
 
-    expect(screen.queryByText(/Pick back up/i)).not.toBeInTheDocument()
+    expect(container).toBeEmptyDOMElement()
   })
 
   it('shows the address before the network answers', async () => {
@@ -183,5 +186,32 @@ describe('ActiveSessions', () => {
     renderComponent()
 
     expect(mockedStore.rememberSession).not.toHaveBeenCalled()
+  })
+
+  // Not written back either, for the same reason the users query is gated: a not-ready session has
+  // an empty bracket, so caching its zeros would paint "Round 1 of 0" on the next first load. The
+  // test above passes with or without the guard, because address is undefined at that point anyway.
+  it('does not write anything back for a session that is not ready', async () => {
+    mockedApi.fetchSession.mockResolvedValueOnce({ ...session, isReady: false })
+
+    renderComponent()
+
+    await waitFor(() => expect(mockedApi.fetchSession).toHaveBeenCalled())
+    expect(mockedStore.rememberSession).not.toHaveBeenCalled()
+  })
+
+  // Pins the single most consequential line in the module. forgetSession is the only genuine delete
+  // — everything else flags — and retry is off globally, so keying it on this secondary endpoint
+  // would let one 404 during a deploy window strip the identity from every card on every device with
+  // this page open. Those people would then meet the name picker and vote as a second person. The
+  // decision was otherwise protected by a comment and nothing else.
+  it('keeps the card when only the voter list 404s', async () => {
+    mockedApi.fetchUsers.mockRejectedValueOnce(new Error('gone'))
+
+    renderComponent()
+
+    await waitFor(() => expect(mockedApi.fetchUsers).toHaveBeenCalled())
+    expect(mockedStore.forgetSession).not.toHaveBeenCalled()
+    expect(screen.getByText('4102 Main St')).toBeInTheDocument()
   })
 })

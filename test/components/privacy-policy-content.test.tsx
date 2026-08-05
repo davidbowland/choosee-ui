@@ -80,17 +80,26 @@ describe('PrivacyPolicy content', () => {
   // server-side until the Choosee expires — so an unscoped claim would contradict the same document
   // and tell a reader the push address was never stored.
   //
-  // Retention: "clears itself after a day" is a promise about DELETION, not about display. It is
-  // true only because readJoinedSessions writes back when it drops an expired entry and every
-  // mutator reads through readLive. If either is ever changed so the TTL merely filters what is
-  // shown, this sentence becomes false and an address the user typed sits in storage forever —
-  // so joined-sessions.test.ts asserts the deletion directly, not just the filtering.
-  it('scopes the on-device record to Choosees, and gives it both a lifetime and a control', () => {
+  // Two things this sentence must not say, both of which earlier drafts said and both of which were
+  // false.
+  //
+  // Not "what your browser remembers", unscoped: the push subscription is also something the browser
+  // remembers, and this policy says twelve lines earlier that we keep a copy server-side until the
+  // Choosee expires.
+  //
+  // Not "clears itself after a day": readJoinedSessions does delete expired entries, but it only
+  // runs on the home page, and services/push.ts keeps a per-Choosee context in Cache Storage with no
+  // TTL at all. Someone who opens a link from a text message, joins, and never returns runs none of
+  // that code. A promise of automatic deletion cannot be kept on a device that stops running the
+  // app, so the policy claims what is actually true — we stop USING it after a day — and names the
+  // control that really does delete it.
+  it('scopes the on-device record to Choosees and claims only what the code can honour', () => {
     setup()
 
     expect(screen.getByText(/What your browser remembers about your Choosees/i)).toBeInTheDocument()
-    expect(screen.getByText(/clears itself after a day/i)).toBeInTheDocument()
-    expect(screen.getByText(/Clearing your browser's data for this site removes it sooner/i)).toBeInTheDocument()
+    expect(screen.getByText(/We stop using it after a day/i)).toBeInTheDocument()
+    expect(screen.getByText(/clearing your browser's data for this site removes it/i)).toBeInTheDocument()
+    expect(screen.queryByText(/clears itself/i)).not.toBeInTheDocument()
   })
 
   it('states that there is no sign-in and no account', () => {

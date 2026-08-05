@@ -35,23 +35,27 @@ export function deriveCardState({ cached, choices, session, userId, users }: Car
     return { kind: 'winner', winnerName: choices?.[session.winner]?.name }
   }
 
-  const round = session.currentRound + 1
+  // Once the session is here its round supersedes the cached one, even while the voters load — but
+  // only if it is ready. A not-ready session has an empty bracket and zeroed rounds, which would
+  // render "Round 1 of 0"; the cached values are the last ones known to be real. The users query and
+  // the write-back effect both guard on isReady for the same reason.
+  const round = session.isReady ? session.currentRound + 1 : cached.currentRound + 1
+  const totalRounds = session.isReady ? session.totalRounds : cached.totalRounds
 
-  // Once the session is here its round supersedes the cached one, even while the voters load.
-  if (!users) return { kind: 'loading', round, totalRounds: session.totalRounds }
+  if (!users) return { kind: 'loading', round, totalRounds }
 
   const currentUser = users.find((user) => user.userId === userId)
 
   // No matching user means the stored identity is stale. Round progress is still true; a claim about
   // whose turn it is would not be.
   if (currentUser && firstUnvotedIndex(session, currentUser) !== -1) {
-    return { kind: 'your-turn', round, totalRounds: session.totalRounds }
+    return { kind: 'your-turn', round, totalRounds }
   }
 
   return {
     kind: 'waiting',
     round,
-    totalRounds: session.totalRounds,
+    totalRounds,
     voterCount: session.voterCount,
     votersSubmitted: session.votersSubmitted,
   }

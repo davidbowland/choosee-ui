@@ -130,7 +130,12 @@ export const rememberSession = (entry: Omit<JoinedSession, 'joinedAt'>, now = Da
 }
 
 const flag = (sessionId: string, key: 'dismissed' | 'winnerSeen', at: number): void => {
-  writeAll(readLive(at).map((session) => (session.sessionId === sessionId ? { ...session, [key]: true } : session)))
+  const all = readLive(at)
+  // Joining is the only thing that creates storage. Without this, someone who opens a shared link to
+  // an already-finished Choosee lands on the winner screen, markWinnerSeen fires, and they get a
+  // storage entry written for a Choosee they never joined.
+  if (!all.some((session) => session.sessionId === sessionId)) return
+  writeAll(all.map((session) => (session.sessionId === sessionId ? { ...session, [key]: true } : session)))
 }
 
 export const dismissSession = (sessionId: string, now = Date.now): void => flag(sessionId, 'dismissed', now())

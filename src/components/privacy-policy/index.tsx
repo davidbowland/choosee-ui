@@ -128,8 +128,8 @@ const PrivacyPolicy = (): React.ReactNode => {
           it&apos;s created. There&apos;s no account, so nothing survives that.
         </p>
         <p>
-          What your browser remembers about your Choosees stays on your device and clears itself after a day. Clearing
-          your browser&apos;s data for this site removes it sooner.
+          What your browser remembers about your Choosees stays on your device. We stop using it after a day, and
+          clearing your browser&apos;s data for this site removes it.
         </p>
       </Section>
 
