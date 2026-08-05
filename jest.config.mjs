@@ -44,8 +44,18 @@ const config = {
   // Keeps worktree copies out of the module map as well as out of test discovery. Each worktree
   // carries its own `__mocks__/file-mock.js`, and duplicates in the haste map make jest warn and
   // then resolve a manual mock from whichever copy it saw first.
-  modulePathIgnorePatterns: ['<rootDir>/.worktrees/'],
-  testPathIgnorePatterns: ['node_modules', '\\.cache', '<rootDir>.*/out', '<rootDir>/.worktrees/'],
+  // `.claude/worktrees/` is where the agent harness puts worktrees; `.worktrees/` is the manual
+  // convention. Both need excluding for the reason above, and missing the first one is silent:
+  // TypeScript's wildcard globs skip dot-directories so `npm run typecheck` never noticed, while
+  // jest happily discovered 75 worktree copies and graded them against this tree's src.
+  modulePathIgnorePatterns: ['<rootDir>/.worktrees/', '<rootDir>/.claude/worktrees/'],
+  testPathIgnorePatterns: [
+    'node_modules',
+    '\\.cache',
+    '<rootDir>.*/out',
+    '<rootDir>/.worktrees/',
+    '<rootDir>/.claude/worktrees/',
+  ],
 }
 
 // next/jest prepends its own transformIgnorePatterns that block all node_modules.
