@@ -62,12 +62,16 @@ export const ResumeCard = ({ address, onDismiss, sessionId, state }: ResumeCardP
   return (
     <div
       className={`rounded-[18px] border p-[3px] ${
-        isUrgent ? 'border-[#F59E0B]/25 bg-[#F59E0B]/[0.07]' : 'border-white/[0.06] bg-white/[0.025]'
+        // The amber ratio is .arena-eyebrow's, 0.08 fill against a 0.18 stroke, so the urgent state
+        // is built from vocabulary the stylesheet already speaks.
+        isUrgent ? 'border-[#F59E0B]/[0.18] bg-[#F59E0B]/[0.08]' : 'border-white/[0.06] bg-white/[0.025]'
       }`}
     >
+      {/* Same construction as .arena-glass-inner, at a smaller radius — including the inset top
+          highlight. Without it these read flatter than the CreateCard they sit directly above. */}
       <div
-        className={`flex items-stretch overflow-hidden rounded-[15px] ${
-          isUrgent ? 'bg-[#140F06]/95' : 'bg-[#0C0C0D]/95'
+        className={`flex items-stretch overflow-hidden rounded-[15px] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${
+          isUrgent ? 'bg-[rgba(20,15,6,0.97)]' : 'bg-[rgba(12,12,13,0.97)]'
         }`}
       >
         <Link className="flex flex-1 items-center gap-3 p-3 hover:bg-white/[0.02]" href={`/s/${sessionId}`}>

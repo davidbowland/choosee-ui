@@ -31,7 +31,7 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
   // Gated on isReady, matching the session page. A record is only ever written on join, and joining
   // requires a ready session, so a remembered Choosee was ready when it was remembered. Ungating
   // would render "Round 1 of 0 — 0 of 0 voted" off an empty bracket.
-  const { data: users, error: usersError } = useQuery<User[]>({
+  const { data: users } = useQuery<User[]>({
     enabled: session?.isReady === true,
     queryFn: () => fetchUsers(sessionId),
     queryKey: ['users', sessionId],
@@ -46,9 +46,17 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
     staleTime: Infinity,
   })
 
-  // 404 is authoritative: Choosees expire after 24 hours and the server forgets them. Any other
-  // failure is a blip, and a blip is not a reason to delete somebody's card.
-  const isGone = hasStatusCode(sessionError, 404) || hasStatusCode(usersError, 404)
+  // A 404 on the SESSION is authoritative: Choosees expire after 24 hours and the server forgets
+  // them. Any other failure is a blip, and a blip is not a reason to delete somebody's card.
+  //
+  // Deliberately not also keyed on the users query. onGone is the one genuine delete in the whole
+  // module — everything else flags — and retry is off globally, so a single 404 from the secondary
+  // endpoint for a reason unrelated to expiry (a deploy window, a gateway 404) would strip the
+  // identity from every card on every device with this page open, with no undo. The next time those
+  // people opened their link they would meet the name picker and vote as a second person, forking
+  // their votes: exactly what the flag-don't-delete design exists to prevent. A live session's 404
+  // covers real expiry on its own, and the users query cannot even fire unless the session loaded.
+  const isGone = hasStatusCode(sessionError, 404)
   useEffect(() => {
     if (isGone) onGone(sessionId)
   }, [isGone, onGone, sessionId])
@@ -57,11 +65,13 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
   // so someone who joined at round 0 and comes back three rounds later would be shown "Round 1 of 5"
   // before it snapped to "Round 4 of 5" — a stale round is worse than no round. rememberSession
   // preserves joinedAt and any flags, so this cannot extend the TTL or resurrect a dismissed card.
-  const { address, currentRound, totalRounds } = session ?? {}
+  // Gated on isReady for the same reason the users query above is: a not-ready session has an empty
+  // bracket, and caching its zeros would paint "Round 1 of 0" on the next first load.
+  const { address, currentRound, isReady, totalRounds } = session ?? {}
   useEffect(() => {
-    if (address === undefined || currentRound === undefined || totalRounds === undefined) return
+    if (!isReady || address === undefined || currentRound === undefined || totalRounds === undefined) return
     rememberSession({ address, currentRound, sessionId, totalRounds, userId: entry.userId })
-  }, [address, currentRound, totalRounds, sessionId, entry.userId])
+  }, [address, currentRound, isReady, totalRounds, sessionId, entry.userId])
 
   // The cached entry supplies the address and round for first paint. It does not stand in for a
   // SessionData — no session means loading, and deriveCardState says so itself.

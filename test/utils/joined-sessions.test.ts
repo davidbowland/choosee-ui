@@ -96,6 +96,29 @@ describe('joined-sessions', () => {
       expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['s1', 's2', 's3'])
     })
 
+    // The privacy policy promises the record "clears itself after a day". That is a claim about
+    // deletion, and a TTL that only filters what is displayed does not honour it: the address the
+    // user typed — or that came from their coordinates — would sit in origin-wide storage forever.
+    // Asserting the raw contents is the only way to tell the two apart.
+    it('deletes expired entries from storage, not just from the result', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - 25 * HOUR, sessionId: 'stale' })])
+
+      readJoinedSessions(now)
+
+      expect(JSON.parse(localStorage.getItem('choosee.joined') ?? '{}')).toEqual({ sessions: [], version: 1 })
+    })
+
+    it('leaves storage untouched when nothing has expired', () => {
+      setup()
+      seed([entry()])
+      const before = localStorage.getItem('choosee.joined')
+
+      readJoinedSessions(now)
+
+      expect(localStorage.getItem('choosee.joined')).toBe(before)
+    })
+
     it('drops entries past the 24 hour TTL', () => {
       setup()
       seed([
@@ -224,7 +247,7 @@ describe('joined-sessions', () => {
       setup()
       seed([entry()])
 
-      dismissSession('abcd')
+      dismissSession('abcd', now)
 
       expect(readJoinedSessions(now)).toEqual([])
       expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
@@ -234,7 +257,7 @@ describe('joined-sessions', () => {
       setup()
       seed([entry()])
 
-      markWinnerSeen('abcd')
+      markWinnerSeen('abcd', now)
 
       expect(readJoinedSessions(now)).toEqual([])
       expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
@@ -244,7 +267,7 @@ describe('joined-sessions', () => {
       setup()
       seed([entry({ sessionId: 'keep' }), entry({ sessionId: 'drop' })])
 
-      forgetSession('drop')
+      forgetSession('drop', now)
 
       expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['keep'])
       expect(findJoinedSession('drop', now)).toBeUndefined()
@@ -257,9 +280,22 @@ describe('joined-sessions', () => {
         throw new Error('QuotaExceededError')
       })
 
-      expect(() => dismissSession('abcd')).not.toThrow()
+      expect(() => dismissSession('abcd', now)).not.toThrow()
       // Without this the test would pass even if writeAll were never reached.
       expect(readJoinedSessions(now)).toEqual([entry()])
+    })
+
+    // A mutator that read through the unfiltered record would carry expired entries forward on
+    // every write, so the record would never actually shrink no matter how long it sat.
+    it('does not carry expired entries forward when something else is written', () => {
+      setup()
+      seed([entry({ joinedAt: NOW - 25 * HOUR, sessionId: 'stale' }), entry({ sessionId: 'live' })])
+
+      dismissSession('live', now)
+
+      expect(JSON.parse(localStorage.getItem('choosee.joined') ?? '{}').sessions).toEqual([
+        entry({ dismissed: true, sessionId: 'live' }),
+      ])
     })
 
     it('keeps the most recent identities when the storage ceiling is reached', () => {

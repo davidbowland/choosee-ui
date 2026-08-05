@@ -84,11 +84,29 @@ const writeAll = (sessions: JoinedSession[]): void => {
 
 const isLive = (session: JoinedSession, at: number): boolean => at - session.joinedAt < TTL_MS
 
+/**
+ * Everything still inside the TTL. Every reader and every mutator goes through this, so an expired
+ * entry is not merely hidden — it stops being carried forward the next time anything writes.
+ *
+ * That distinction is the whole point. A TTL that only filtered what is displayed would leave an
+ * address the user typed, or that came from their coordinates, in origin-wide storage indefinitely,
+ * while the privacy policy tells them it clears itself after a day.
+ */
+const readLive = (at: number): JoinedSession[] => readAll().filter((session) => isLive(session, at))
+
 /** The home page's view: live, unflagged, newest first, capped. */
 export const readJoinedSessions = (now = Date.now): JoinedSession[] => {
   const at = now()
-  return readAll()
-    .filter((session) => isLive(session, at) && !session.winnerSeen && !session.dismissed)
+  const all = readAll()
+  const live = all.filter((session) => isLive(session, at))
+
+  // On a device that has stopped joining Choosees, a read is the only event still guaranteed to
+  // happen, so it has to be what does the deleting. Writing only when something actually expired
+  // keeps the ordinary load read-only.
+  if (live.length !== all.length) writeAll(live)
+
+  return live
+    .filter((session) => !session.winnerSeen && !session.dismissed)
     .sort((a, b) => b.joinedAt - a.joinedAt)
     .slice(0, DISPLAY_LIMIT)
 }
@@ -98,29 +116,28 @@ export const readJoinedSessions = (now = Date.now): JoinedSession[] => {
  * hide a card, they do not revoke who you are. Filtering on them here would drop a returning voter
  * onto the name picker for the crime of tidying their home page.
  */
-export const findJoinedSession = (sessionId: string, now = Date.now): JoinedSession | undefined => {
-  const at = now()
-  return readAll().find((session) => session.sessionId === sessionId && isLive(session, at))
-}
+export const findJoinedSession = (sessionId: string, now = Date.now): JoinedSession | undefined =>
+  readLive(now()).find((session) => session.sessionId === sessionId)
 
 export const rememberSession = (entry: Omit<JoinedSession, 'joinedAt'>, now = Date.now): void => {
-  const all = readAll()
+  const at = now()
+  const all = readLive(at)
   const previous = all.find((session) => session.sessionId === entry.sessionId)
   // Spreading `previous` first preserves its flags and its original joinedAt: rejoining must not
   // resurrect a dismissed card, nor extend a TTL past the Choosee's real 24-hour expiry.
-  const merged: JoinedSession = { ...previous, ...entry, joinedAt: previous?.joinedAt ?? now() }
+  const merged: JoinedSession = { ...previous, ...entry, joinedAt: previous?.joinedAt ?? at }
   writeAll([merged, ...all.filter((session) => session.sessionId !== entry.sessionId)])
 }
 
-const flag = (sessionId: string, key: 'dismissed' | 'winnerSeen'): void => {
-  writeAll(readAll().map((session) => (session.sessionId === sessionId ? { ...session, [key]: true } : session)))
+const flag = (sessionId: string, key: 'dismissed' | 'winnerSeen', at: number): void => {
+  writeAll(readLive(at).map((session) => (session.sessionId === sessionId ? { ...session, [key]: true } : session)))
 }
 
-export const dismissSession = (sessionId: string): void => flag(sessionId, 'dismissed')
+export const dismissSession = (sessionId: string, now = Date.now): void => flag(sessionId, 'dismissed', now())
 
-export const markWinnerSeen = (sessionId: string): void => flag(sessionId, 'winnerSeen')
+export const markWinnerSeen = (sessionId: string, now = Date.now): void => flag(sessionId, 'winnerSeen', now())
 
 /** Genuine deletion. For a Choosee the server says is gone. */
-export const forgetSession = (sessionId: string): void => {
-  writeAll(readAll().filter((session) => session.sessionId !== sessionId))
+export const forgetSession = (sessionId: string, now = Date.now): void => {
+  writeAll(readLive(now()).filter((session) => session.sessionId !== sessionId))
 }

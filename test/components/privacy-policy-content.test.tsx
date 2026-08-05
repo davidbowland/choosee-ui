@@ -80,8 +80,11 @@ describe('PrivacyPolicy content', () => {
   // server-side until the Choosee expires — so an unscoped claim would contradict the same document
   // and tell a reader the push address was never stored.
   //
-  // Retention: joined-sessions.ts enforces a hard 24h TTL, so there is a real period to quote. The
-  // reader's own clear-site-data is the control, but it is not the only answer.
+  // Retention: "clears itself after a day" is a promise about DELETION, not about display. It is
+  // true only because readJoinedSessions writes back when it drops an expired entry and every
+  // mutator reads through readLive. If either is ever changed so the TTL merely filters what is
+  // shown, this sentence becomes false and an address the user typed sits in storage forever —
+  // so joined-sessions.test.ts asserts the deletion directly, not just the filtering.
   it('scopes the on-device record to Choosees, and gives it both a lifetime and a control', () => {
     setup()
 
