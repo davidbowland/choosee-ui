@@ -11,6 +11,7 @@ import WinnerPhase from './winner'
 import ErrorBoundary from '@components/error-boundary'
 import { usePushResubscribe } from '@hooks/usePushResubscribe'
 import { useSessionCookie } from '@hooks/useSessionCookie'
+import { useSessionRefresh } from '@hooks/useSessionRefresh'
 import { fetchChoices, fetchSession, fetchUsers } from '@services/api'
 import { isSubscribedToPush } from '@services/push'
 import { ChoicesMap, SessionData, User } from '@types'
@@ -154,6 +155,10 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   // A browser can rotate this device's push subscription at any time. Only the page knows which
   // session and user it belongs to, so the worker hands the replacement here to be re-registered.
   usePushResubscribe(sessionId, effectiveUserId)
+
+  // Tapping a notification for a session already open here only focuses the window. This is what
+  // turns that focus into a refresh, so the round the notification announced is the round on screen.
+  useSessionRefresh(sessionId)
 
   const phase = derivePhase(session, currentUser, effectiveUserId != null, usersLoaded, sessionError)
   phaseRef.current = phase

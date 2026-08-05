@@ -61,6 +61,12 @@ const buildNotification = (payload) => {
     return { body: "Tap to see where you're eating.", title: `${payload.winnerName} wins` }
   }
   if (payload && typeof payload.round === 'number') {
+    // `round` is the API's round INDEX, not its number: session.currentRound starts at 0, and every
+    // other surface in this app adds the one — the bracket columns, the voting header. Announcing
+    // the raw index told people opening round 2 that "Round 1 of 5 is open", which is worse than
+    // vague: round 1 is a round they have already voted in, so the notification named the wrong
+    // round rather than merely an unclear one. totalRounds is already a count, so it stays as sent.
+    const roundNumber = payload.round + 1
     // "of N" only when N is a real bracket length. `typeof 0 === 'number'` passes a naive guard, so
     // a caller that omits totalRounds — and the API's default for it is 0 — would otherwise render
     // "Round 2 of 0 is open". Dropping the clause degrades to a sentence that is merely less
@@ -68,7 +74,7 @@ const buildNotification = (payload) => {
     const total = typeof payload.totalRounds === 'number' && payload.totalRounds > 0 ? payload.totalRounds : null
     return {
       body: 'Tap to vote.',
-      title: total ? `Round ${payload.round} of ${total} is open` : `Round ${payload.round} is open`,
+      title: total ? `Round ${roundNumber} of ${total} is open` : `Round ${roundNumber} is open`,
     }
   }
   // A malformed or unreadable payload lands here. iOS revokes the push permission of a worker that
@@ -129,7 +135,7 @@ const normalizePath = (url) => {
   }
 }
 
-const openTarget = async (targetUrl) => {
+const openTarget = async (targetUrl, sessionId) => {
   const targetPath = normalizePath(targetUrl)
   let clientList = []
   try {
@@ -139,10 +145,18 @@ const openTarget = async (targetUrl) => {
   }
   const focusable = clientList.filter((client) => 'focus' in client)
 
-  // Already on this session: focus and stop. The session polls on its own, so the round arrives
-  // without a reload — and reloading would throw away whatever the person was mid-way through.
+  // Already on this session: focus rather than reload, which would throw away whatever the person
+  // was mid-way through. But focus alone lands them on the PREVIOUS round — the page's
+  // refetchOnWindowFocus is off, so nothing refetches until the poll comes round, up to 15s of
+  // looking at exactly the screen the notification said had changed. So ask the page to refetch now.
   const open = focusable.find((client) => normalizePath(client.url) === targetPath)
   if (open) {
+    try {
+      open.postMessage({ sessionId, type: 'session-refresh' })
+    } catch {
+      // A client that cannot be messaged is still one the person expects brought forward. Losing
+      // the immediate refresh costs a poll interval; skipping the focus would lose the tap.
+    }
     return open.focus()
   }
 
@@ -164,7 +178,8 @@ const openTarget = async (targetUrl) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  event.waitUntil(openTarget(targetPathFor(event.notification.data || {})))
+  const data = event.notification.data || {}
+  event.waitUntil(openTarget(targetPathFor(data), data.sessionId))
 })
 
 // A browser may rotate a subscription at any time. Without this the device goes quiet with nothing
@@ -245,4 +260,4 @@ self.addEventListener('pushsubscriptionchange', (event) => {
 
 // Test seam. `self.__swTestExports` is read by test/scripts/sw-src.test.ts, which evaluates this
 // file in a VM; it is inert in a real ServiceWorkerGlobalScope.
-self.__swTestExports = { buildNotification, targetPathFor }
+self.__swTestExports = { buildNotification, openTarget, targetPathFor }
