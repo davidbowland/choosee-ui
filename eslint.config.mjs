@@ -26,6 +26,12 @@ export default tseslint.config(
       '**/__mocks__/',
       '**/__snapshots__/',
       '.cache/',
+      // Linked git worktrees are full copies of the repo. Without these, `npm run lint` reports
+      // every problem in every worktree as a problem here — 50 of them, none of them in this tree.
+      // `.claude/worktrees/` is where the agent harness puts them; `.worktrees/` is the manual
+      // convention. jest.config.mjs excludes the same two, for the same reason.
+      '.claude/worktrees/',
+      '.worktrees/',
       '.next/',
       '.swc/',
       'build/',
