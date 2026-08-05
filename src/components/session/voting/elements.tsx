@@ -185,16 +185,20 @@ export const InlineNameEditor = ({
     // column is only a third of the header) made the pencil a flex sibling pinned to the far right
     // edge while the name centred in what was left of the row, so neither sat where it belonged.
     // Inline, the pencil trails the last word and the whole block centres as one.
+    // `group` rather than a plain `hover:` on the button: both children set their own colour, so a
+    // colour inherited from the button never reached either of them and the hover state did nothing.
     <button
-      className="max-w-full cursor-pointer text-left leading-none hover:text-[#F59E0B] md:text-center"
+      className="group max-w-full cursor-pointer text-left leading-none md:text-center"
       onClick={() => {
         setValue(name)
         setEditing(true)
       }}
       type="button"
     >
-      <span className="choosee-brand text-[32px] text-[#F5F5F5]">{name}</span>
-      <Pencil className="ml-2 inline h-3.5 w-3.5 align-middle text-[#6B7280]" />
+      <span className="choosee-brand text-[32px] text-[#F5F5F5] transition-colors group-hover:text-[#F59E0B]">
+        {name}
+      </span>
+      <Pencil className="ml-2 inline h-3.5 w-3.5 align-middle text-[#6B7280] transition-colors group-hover:text-[#F59E0B]" />
     </button>
   )
 }
