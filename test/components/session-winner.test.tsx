@@ -6,11 +6,14 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData } from '@types'
+import * as joinedSessions from '@utils/joined-sessions'
 
 const mockPush = jest.fn()
 jest.mock('next/router', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
+
+jest.mock('@utils/joined-sessions')
 
 // Mock BracketView to verify open/close
 jest.mock('@components/bracket-view', () => ({
@@ -144,5 +147,18 @@ describe('WinnerPhase', () => {
     await user.click(screen.getByRole('button', { name: installLabel }))
     await user.click(screen.getByRole('button', { name: 'Not now' }))
     expect(screen.queryByText('Put Choosee on your Home Screen')).not.toBeInTheDocument()
+  })
+
+  it('marks the joined-sessions record seen, so the home page retires the card', () => {
+    render(<WinnerPhase choices={mockChoices} session={{ ...mockSession, sessionId: 'abcd' }} />)
+    expect(joinedSessions.markWinnerSeen).toHaveBeenCalledWith('abcd')
+  })
+
+  // fetchChoices and fetchSession resolve independently, so the winner's choice can still be missing
+  // when this renders. The effect has to run on that path too, or arriving by push notification
+  // while choices are in flight would leave the card on the home page forever.
+  it('marks the record seen even while the winning choice is still loading', () => {
+    render(<WinnerPhase choices={{}} session={{ ...mockSession, sessionId: 'abcd' }} />)
+    expect(joinedSessions.markWinnerSeen).toHaveBeenCalledWith('abcd')
   })
 })
