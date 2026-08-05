@@ -9,19 +9,16 @@ describe('PrivacyPolicy content', () => {
     render(<PrivacyPolicy />)
   }
 
-  // useSessionCookie writes one cookie per Choosee: name `choosee_user_<sessionId>`, path
-  // `/s/<sessionId>`, expires in 1 day. The policy has to describe that cookie, not a vaguer one.
-  // Guards the CLAIM, not the wording. Explaining path scoping and how browsers decide when to send
-  // a cookie back was implementation detail that helped no reader decide anything — but the WORD
-  // "cookie" has to stay: disclosure regimes expect cookies named as such, and dropping it traded a
-  // precise true statement for a vague one.
-  it('identifies the cookie, what it holds, and when it expires', () => {
+  // The app sets no cookies at all now: identity moved to localStorage, which the home page can read
+  // and a path-scoped cookie could not. The WORD "cookie" still has to appear — disclosure regimes
+  // expect cookies named as such, and a policy silent on them reads as an oversight rather than a
+  // negative. What replaced the cookie has to be described in its place, or the section is a gap.
+  it('states that no cookies are set, and describes what replaced them', () => {
     setup()
 
-    expect(screen.getByText(/We set one cookie/i)).toBeInTheDocument()
-    expect(screen.getByText(/remembers which voter you are/i)).toBeInTheDocument()
-    expect(screen.getByText(/expires after a day/i)).toBeInTheDocument()
-    expect(screen.getByText(/no other cookies/i)).toBeInTheDocument()
+    expect(screen.getByText(/We set no cookies/i)).toBeInTheDocument()
+    expect(screen.getByText(/keeps track of the Choosees you've joined recently/i)).toBeInTheDocument()
+    expect(screen.getByText(/never leaves your device/i)).toBeInTheDocument()
   })
 
   // pushManager.subscribe() mints a URL bound to one browser on one device. Nothing in
@@ -67,6 +64,14 @@ describe('PrivacyPolicy content', () => {
 
     expect(screen.getByText(/Server logs are deleted after 30 days/i)).toBeInTheDocument()
     expect(screen.getByText(/24 hours\s+after it/i)).toBeInTheDocument()
+  })
+
+  // The on-device record has no server-side expiry to quote, so retention has to name the control
+  // the reader actually has: their own browser's clear-site-data.
+  it("says the on-device record is the user's to clear", () => {
+    setup()
+
+    expect(screen.getByText(/clear your browser's data for this site/i)).toBeInTheDocument()
   })
 
   it('states that there is no sign-in and no account', () => {

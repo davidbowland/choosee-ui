@@ -36,9 +36,9 @@ const PrivacyPolicy = (): React.ReactNode => {
           name you type if you set one. A name is optional, and we don&apos;t check it against anything.
         </p>
         <p>
-          We set one cookie, so a Choosee remembers which voter you are. It holds nothing but that, it works only on
-          that one Choosee, and it expires after a day. We use no other cookies and nothing for analytics or
-          advertising.
+          Your browser keeps track of the Choosees you&apos;ve joined recently and which voter you are in each, so you
+          can pick one back up from the home page. That never leaves your device. We set no cookies, and we run nothing
+          for analytics or advertising.
         </p>
         <p>
           If you tap Use my location, your browser sends us your coordinates and we pass them to Google to get a street
@@ -125,6 +125,10 @@ const PrivacyPolicy = (): React.ReactNode => {
           Server logs are deleted after 30 days. Everything inside a Choosee — the address, the restaurants, the votes,
           any names, and the address notifications are sent to — is deleted when the Choosee expires, 24 hours after
           it&apos;s created. There&apos;s no account, so nothing survives that.
+        </p>
+        <p>
+          What your browser remembers stays on your device; clear your browser&apos;s data for this site and it&apos;s
+          gone.
         </p>
       </Section>
 

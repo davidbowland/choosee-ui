@@ -40,11 +40,11 @@ jest.mock('@components/session/winner', () => ({
   default: () => <div data-testid="winner-phase">Winner</div>,
 }))
 
-// Mock cookie hook
+// Mock identity hook
 let mockUserId: string | null = null
 const mockSetUserId = jest.fn()
-jest.mock('@hooks/useSessionCookie', () => ({
-  useSessionCookie: () => ({ userId: mockUserId, setUserId: mockSetUserId }),
+jest.mock('@hooks/useSessionIdentity', () => ({
+  useSessionIdentity: () => ({ setUserId: mockSetUserId, userId: mockUserId }),
 }))
 
 const baseSession: SessionData = {
@@ -123,7 +123,7 @@ describe('Session', () => {
     queryClient?.clear()
   })
 
-  /** Starts each test with no identified user in the cookie. */
+  /** Starts each test with no identified user in the stored record. */
   const setup = (userId: string | null = null): void => {
     mockUserId = userId
   }
@@ -253,7 +253,7 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('loading-phase')).toBeInTheDocument())
   })
 
-  it('should prefer cookie userId over nothing', async () => {
+  it('should prefer the stored userId over nothing', async () => {
     setup('user-1')
     const votedUser = { ...mockUser, votes: [['a']] }
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
@@ -263,7 +263,7 @@ describe('Session', () => {
     await waitFor(() => expect(screen.getByTestId('waiting-phase')).toBeInTheDocument())
   })
 
-  it('should ignore cookie userId if not in users list', async () => {
+  it('should ignore the stored userId if not in users list', async () => {
     setup('nonexistent-user')
     jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
     jest.mocked(api.fetchUsers).mockResolvedValue([mockUser])
@@ -274,7 +274,7 @@ describe('Session', () => {
 
   // A notification opens /s/{id}?id={userId}. consumeQueryParamId strips it on mount, so without
   // persisting it the identity survives exactly one page load — and on an installed iOS app, whose
-  // cookie jar is separate from the Safari tab the user joined in, every launch would land on the
+  // storage is separate from the Safari tab the user joined in, every launch would land on the
   // name picker instead of the vote.
   it('should remember an identity that arrived in the URL', async () => {
     setup()
@@ -288,7 +288,13 @@ describe('Session', () => {
 
     renderWithClient(<Session sessionId="test-session" />)
 
-    await waitFor(() => expect(mockSetUserId).toHaveBeenCalledWith('user-1'))
+    await waitFor(() =>
+      expect(mockSetUserId).toHaveBeenCalledWith('user-1', {
+        address: '123 Main St',
+        currentRound: 0,
+        totalRounds: 2,
+      }),
+    )
   })
 
   it('should not remember an id that is not a voter in this Choosee', async () => {
@@ -316,7 +322,11 @@ describe('Session', () => {
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByTestId('user-select-phase')).toBeInTheDocument())
     await user.click(screen.getByText('Select user'))
-    expect(mockSetUserId).toHaveBeenCalledWith('user-1')
+    expect(mockSetUserId).toHaveBeenCalledWith('user-1', {
+      address: '123 Main St',
+      currentRound: 0,
+      totalRounds: 2,
+    })
   })
 
   // Joining writes a user row, which changes the session's voterCount. The voting screen never

@@ -10,7 +10,7 @@ import WaitingPhase from './waiting'
 import WinnerPhase from './winner'
 import ErrorBoundary from '@components/error-boundary'
 import { usePushResubscribe } from '@hooks/usePushResubscribe'
-import { useSessionCookie } from '@hooks/useSessionCookie'
+import { useSessionIdentity } from '@hooks/useSessionIdentity'
 import { useSessionRefresh } from '@hooks/useSessionRefresh'
 import { fetchChoices, fetchSession, fetchUsers } from '@services/api'
 import { isSubscribedToPush } from '@services/push'
@@ -80,7 +80,7 @@ export interface SessionProps {
 
 const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   const queryClient = useQueryClient()
-  const { userId, setUserId } = useSessionCookie(sessionId)
+  const { userId, setUserId } = useSessionIdentity(sessionId)
 
   // Read and strip ?id= from URL once on mount so the URL stays clean
   const queryParamId = useMemo(() => consumeQueryParamId(), [])
@@ -130,7 +130,8 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
 
   const usersLoaded = session?.isReady === true && users !== undefined
 
-  // Resolve user: query param > cookie > nothing. Only accept IDs present in the users list.
+  // Resolve user: query param > remembered identity > nothing. Only accept IDs present in the users
+  // list.
   const effectiveUserId = useMemo(() => {
     if (!users) return undefined
     if (queryParamId && users.some((u) => u.userId === queryParamId)) return queryParamId
@@ -142,15 +143,22 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
 
   // Persist an identity that arrived in the URL. `consumeQueryParamId` strips `?id=` on mount, so
   // without this it survives exactly one page load — and a notification tap is the case that
-  // matters: on an installed iOS app, which has its own cookie jar separate from the Safari tab the
+  // matters: on an installed iOS app, which has its own storage separate from the Safari tab the
   // user joined in, every launch would otherwise land them on "Back again? Choose your name". The
   // spec treats that picker as a one-time recovery path for the install transition, not a thing to
   // meet on every notification.
+  //
+  // `session` in the guard narrows the type rather than gating the effect: effectiveUserId is only
+  // ever set once the users query has resolved, which is itself gated on session.isReady.
   useEffect(() => {
-    if (queryParamId && queryParamId === effectiveUserId && userId !== queryParamId) {
-      setUserId(queryParamId)
+    if (queryParamId && queryParamId === effectiveUserId && userId !== queryParamId && session) {
+      setUserId(queryParamId, {
+        address: session.address,
+        currentRound: session.currentRound,
+        totalRounds: session.totalRounds,
+      })
     }
-  }, [queryParamId, effectiveUserId, userId, setUserId])
+  }, [queryParamId, effectiveUserId, userId, setUserId, session])
 
   // A browser can rotate this device's push subscription at any time. Only the page knows which
   // session and user it belongs to, so the worker hands the replacement here to be re-registered.
@@ -164,7 +172,13 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   phaseRef.current = phase
 
   const handleUserSelected = (newUserId: string): void => {
-    setUserId(newUserId)
+    // `session` is non-null here: this callback only reaches the DOM through UserSelectPhase, which
+    // renders only when usersLoaded is true, which requires session.isReady.
+    setUserId(newUserId, {
+      address: session!.address,
+      currentRound: session!.currentRound,
+      totalRounds: session!.totalRounds,
+    })
     void queryClient.invalidateQueries({ queryKey: ['users', sessionId] })
     // The session too, not just the users list: joining wrote a user row, and voterCount is derived
     // from those rows. The next phase is 'voting', which does not poll (see waitingInterval), so a
