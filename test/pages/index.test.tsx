@@ -1,5 +1,6 @@
 import React from 'react'
 
+import ActiveSessions from '@components/active-sessions'
 import AppBar from '@components/app-bar'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
@@ -7,12 +8,14 @@ import Index from '@pages/index'
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 
+jest.mock('@components/active-sessions')
 jest.mock('@components/app-bar')
 jest.mock('@components/privacy-link')
 jest.mock('@components/session-create')
 
 describe('Index page', () => {
   beforeAll(() => {
+    jest.mocked(ActiveSessions).mockReturnValue(<></>)
     jest.mocked(AppBar).mockReturnValue(<></>)
     jest.mocked(PrivacyLink).mockReturnValue(<></>)
     jest.mocked(SessionCreate).mockReturnValue(<></>)
@@ -26,6 +29,11 @@ describe('Index page', () => {
   it('should render SessionCreate', () => {
     render(<Index />)
     expect(SessionCreate).toHaveBeenCalledTimes(1)
+  })
+
+  it('should render ActiveSessions', () => {
+    render(<Index />)
+    expect(ActiveSessions).toHaveBeenCalledTimes(1)
   })
 
   it('should render PrivacyLink', () => {

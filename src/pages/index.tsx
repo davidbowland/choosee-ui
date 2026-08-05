@@ -2,6 +2,7 @@ import { Utensils } from 'lucide-react'
 import Head from 'next/head'
 import React from 'react'
 
+import ActiveSessions from '@components/active-sessions'
 import AppBar from '@components/app-bar'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
@@ -32,8 +33,11 @@ const Index = (): React.ReactNode => (
             everyone votes until there&apos;s a winner.
           </p>
         </div>
-        {/* Form right column */}
+        {/* Form right column. On mobile the single-column stack puts the resume cards between the
+            hero copy and the form; ActiveSessions renders nothing at all when there are none, so a
+            first-time visitor sees this page exactly as it was. */}
         <div>
+          <ActiveSessions />
           <SessionCreate />
         </div>
       </div>

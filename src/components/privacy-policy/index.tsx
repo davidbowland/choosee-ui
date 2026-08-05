@@ -37,8 +37,9 @@ const PrivacyPolicy = (): React.ReactNode => {
         </p>
         <p>
           Your browser keeps track of the Choosees you&apos;ve joined recently and which voter you are in each, so you
-          can pick one back up from the home page. That never leaves your device. We set no cookies, and we run nothing
-          for analytics or advertising.
+          can pick one back up from the home page. That never leaves your device. We set no cookies of our own;
+          Google&apos;s reCAPTCHA sets one, which is how it tells you apart from a bot. We run nothing for analytics or
+          advertising.
         </p>
         <p>
           If you tap Use my location, your browser sends us your coordinates and we pass them to Google to get a street
@@ -127,8 +128,8 @@ const PrivacyPolicy = (): React.ReactNode => {
           it&apos;s created. There&apos;s no account, so nothing survives that.
         </p>
         <p>
-          What your browser remembers stays on your device; clear your browser&apos;s data for this site and it&apos;s
-          gone.
+          What your browser remembers about your Choosees stays on your device and clears itself after a day. Clearing
+          your browser&apos;s data for this site removes it sooner.
         </p>
       </Section>
 

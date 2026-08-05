@@ -21,7 +21,10 @@ const StatusLine = ({ state }: { state: CardState }): React.ReactNode => {
       )
     case 'your-turn':
       return (
-        <span className="text-xs font-medium text-[#F59E0B]">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-[#F59E0B]">
+          {/* The one animated element on the card, on the one state that is asking for something.
+              motion-safe leaves it still for anyone who has asked the OS for reduced motion. */}
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] motion-safe:animate-pulse" />
           Your turn &mdash; round {state.round} of {state.totalRounds}
         </span>
       )

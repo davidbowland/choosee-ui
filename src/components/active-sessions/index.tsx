@@ -5,7 +5,13 @@ import { ListHeading, ResumeCard } from './elements'
 import { deriveCardState } from './helpers'
 import { fetchChoices, fetchSession, fetchUsers, hasStatusCode } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
-import { JoinedSession, dismissSession, forgetSession, readJoinedSessions } from '@utils/joined-sessions'
+import {
+  JoinedSession,
+  dismissSession,
+  forgetSession,
+  readJoinedSessions,
+  rememberSession,
+} from '@utils/joined-sessions'
 
 interface CardProps {
   entry: JoinedSession
@@ -46,6 +52,16 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
   useEffect(() => {
     if (isGone) onGone(sessionId)
   }, [isGone, onGone, sessionId])
+
+  // Refresh what the next first paint will read. The record is otherwise written only at join time,
+  // so someone who joined at round 0 and comes back three rounds later would be shown "Round 1 of 5"
+  // before it snapped to "Round 4 of 5" — a stale round is worse than no round. rememberSession
+  // preserves joinedAt and any flags, so this cannot extend the TTL or resurrect a dismissed card.
+  const { address, currentRound, totalRounds } = session ?? {}
+  useEffect(() => {
+    if (address === undefined || currentRound === undefined || totalRounds === undefined) return
+    rememberSession({ address, currentRound, sessionId, totalRounds, userId: entry.userId })
+  }, [address, currentRound, totalRounds, sessionId, entry.userId])
 
   // The cached entry supplies the address and round for first paint. It does not stand in for a
   // SessionData — no session means loading, and deriveCardState says so itself.

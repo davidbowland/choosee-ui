@@ -159,4 +159,29 @@ describe('ActiveSessions', () => {
 
     expect(await screen.findByRole('link', { name: /4102 Main St/i })).toHaveAttribute('href', '/s/abcd')
   })
+
+  // The record is otherwise only ever written at join time, so the round it caches would be frozen
+  // at whatever it was then. Someone who joined at round 0 and came back three rounds later would
+  // be shown "Round 1 of 5" on first paint before it snapped to the truth.
+  it('refreshes the stored round so the next first paint is not stale', async () => {
+    mockedApi.fetchSession.mockResolvedValueOnce({ ...session, address: 'Moved St', currentRound: 2 })
+
+    renderComponent()
+
+    await waitFor(() =>
+      expect(mockedStore.rememberSession).toHaveBeenCalledWith({
+        address: 'Moved St',
+        currentRound: 2,
+        sessionId: 'abcd',
+        totalRounds: 3,
+        userId: 'user-1',
+      }),
+    )
+  })
+
+  it('does not write anything back before the session arrives', () => {
+    renderComponent()
+
+    expect(mockedStore.rememberSession).not.toHaveBeenCalled()
+  })
 })

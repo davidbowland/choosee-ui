@@ -9,14 +9,21 @@ describe('PrivacyPolicy content', () => {
     render(<PrivacyPolicy />)
   }
 
-  // The app sets no cookies at all now: identity moved to localStorage, which the home page can read
-  // and a path-scoped cookie could not. The WORD "cookie" still has to appear — disclosure regimes
-  // expect cookies named as such, and a policy silent on them reads as an oversight rather than a
-  // negative. What replaced the cookie has to be described in its place, or the section is a gap.
-  it('states that no cookies are set, and describes what replaced them', () => {
+  // Identity moved to localStorage, which the home page can read and a path-scoped cookie could not.
+  // The WORD "cookie" still has to appear — disclosure regimes expect cookies named as such, and a
+  // policy silent on them reads as an oversight rather than a negative. What replaced it has to be
+  // described in its place, or the section is a gap.
+  //
+  // "of our own" is load-bearing and must not be trimmed to a flat "we set no cookies". That shorter
+  // sentence is FALSE: session-create injects reCAPTCHA v3 on mount, SessionCreate is on the home
+  // page, so every visitor loads it and Google sets _GRECAPTCHA. A privacy policy is the one place a
+  // convenient simplification becomes a false statement, so the reCAPTCHA clause is asserted here
+  // rather than left to survive on good intentions.
+  it('sets no cookies of its own, names the one third party that does, and describes what replaced ours', () => {
     setup()
 
-    expect(screen.getByText(/We set no cookies/i)).toBeInTheDocument()
+    expect(screen.getByText(/We set no cookies of our own/i)).toBeInTheDocument()
+    expect(screen.getByText(/Google's reCAPTCHA sets one/i)).toBeInTheDocument()
     expect(screen.getByText(/keeps track of the Choosees you've joined recently/i)).toBeInTheDocument()
     expect(screen.getByText(/never leaves your device/i)).toBeInTheDocument()
   })
@@ -66,12 +73,21 @@ describe('PrivacyPolicy content', () => {
     expect(screen.getByText(/24 hours\s+after it/i)).toBeInTheDocument()
   })
 
-  // The on-device record has no server-side expiry to quote, so retention has to name the control
-  // the reader actually has: their own browser's clear-site-data.
-  it("says the on-device record is the user's to clear", () => {
+  // Two things this has to get right, both of which a shorter sentence gets wrong.
+  //
+  // Scope: "what your browser remembers" unqualified is false here. The push subscription is also
+  // something the browser remembers, and this policy says twelve lines earlier that we keep a copy
+  // server-side until the Choosee expires — so an unscoped claim would contradict the same document
+  // and tell a reader the push address was never stored.
+  //
+  // Retention: joined-sessions.ts enforces a hard 24h TTL, so there is a real period to quote. The
+  // reader's own clear-site-data is the control, but it is not the only answer.
+  it('scopes the on-device record to Choosees, and gives it both a lifetime and a control', () => {
     setup()
 
-    expect(screen.getByText(/clear your browser's data for this site/i)).toBeInTheDocument()
+    expect(screen.getByText(/What your browser remembers about your Choosees/i)).toBeInTheDocument()
+    expect(screen.getByText(/clears itself after a day/i)).toBeInTheDocument()
+    expect(screen.getByText(/Clearing your browser's data for this site removes it sooner/i)).toBeInTheDocument()
   })
 
   it('states that there is no sign-in and no account', () => {
