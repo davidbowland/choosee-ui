@@ -1,5 +1,14 @@
-const STORAGE_KEY = 'choosee.joined'
 const RECORD_VERSION = 1
+
+// The version lives in the KEY, not only in the envelope, so two versions of this app can never
+// contend for one record. A field inside a document cannot protect that document from being
+// replaced: an earlier attempt kept a single key and had readAll bail on an unrecognised version
+// while writeAll refused to overwrite one — which deadlocked. A device that ran a later version and
+// then got rolled back could neither read its record nor replace it, so findJoinedSession returned
+// undefined forever, every visit to every Choosee met the name picker, and nothing in the app could
+// clear it. Namespacing makes that unreachable: each version owns its own key, a rollback finds its
+// own data intact, and a future version can read the previous key to migrate and then delete it.
+const STORAGE_KEY = `choosee.joined.v${RECORD_VERSION}`
 const TTL_MS = 24 * 60 * 60 * 1000
 
 // What the home page shows, versus what the record holds. The display cap keeps the create form —
@@ -55,26 +64,8 @@ const readAll = (): JoinedSession[] => {
   }
 }
 
-const storedVersion = (): number | undefined => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return undefined
-    const parsed = JSON.parse(raw) as JoinedSessionsRecord
-    return typeof parsed?.version === 'number' ? parsed.version : undefined
-  } catch {
-    return undefined
-  }
-}
-
 const writeAll = (sessions: JoinedSession[]): void => {
   try {
-    // A record written by a LATER version of this app is one readAll cannot understand, so it
-    // returns []. Every mutator here is writeAll(readAll()…), which would then replace that record
-    // with an empty one and wipe every identity on the device. The envelope is versioned to make a
-    // future shape change safe; this is the line that actually makes it so.
-    const existing = storedVersion()
-    if (existing !== undefined && existing > RECORD_VERSION) return
-
     const record: JoinedSessionsRecord = { sessions: sessions.slice(0, STORAGE_LIMIT), version: RECORD_VERSION }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
   } catch {

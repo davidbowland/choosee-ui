@@ -8,6 +8,10 @@ import {
   rememberSession,
 } from '@utils/joined-sessions'
 
+// Version-namespaced on purpose: see the comment on STORAGE_KEY. Spelled out here rather than
+// imported so that renaming the key in the source without meaning to shows up as a failure.
+const KEY = 'choosee.joined.v1'
+
 const NOW = 1_700_000_000_000
 const HOUR = 60 * 60 * 1000
 const now = () => NOW
@@ -23,7 +27,7 @@ const entry = (overrides: Partial<JoinedSession> = {}): JoinedSession => ({
 })
 
 const seed = (sessions: JoinedSession[], version = 1): void => {
-  localStorage.setItem('choosee.joined', JSON.stringify({ version, sessions }))
+  localStorage.setItem(KEY, JSON.stringify({ version, sessions }))
 }
 
 const setup = (): void => {
@@ -106,17 +110,17 @@ describe('joined-sessions', () => {
 
       readJoinedSessions(now)
 
-      expect(JSON.parse(localStorage.getItem('choosee.joined') ?? '{}')).toEqual({ sessions: [], version: 1 })
+      expect(JSON.parse(localStorage.getItem(KEY) ?? '{}')).toEqual({ sessions: [], version: 1 })
     })
 
     it('leaves storage untouched when nothing has expired', () => {
       setup()
       seed([entry()])
-      const before = localStorage.getItem('choosee.joined')
+      const before = localStorage.getItem(KEY)
 
       readJoinedSessions(now)
 
-      expect(localStorage.getItem('choosee.joined')).toBe(before)
+      expect(localStorage.getItem(KEY)).toBe(before)
     })
 
     it('drops entries past the 24 hour TTL', () => {
@@ -145,31 +149,58 @@ describe('joined-sessions', () => {
 
     it('returns empty for unparseable JSON', () => {
       setup()
-      localStorage.setItem('choosee.joined', 'not json {{{')
+      localStorage.setItem(KEY, 'not json {{{')
 
       expect(readJoinedSessions(now)).toEqual([])
     })
 
-    it('returns empty for an unrecognised record version', () => {
+    // Only reachable now by corruption or a hand-edited record, since each app version owns its own
+    // key. Recovery matters more than preservation here: returning [] lets the next write replace
+    // the bad record rather than the app being stuck on it.
+    it('returns empty for a record whose envelope version does not match its key', () => {
       setup()
       seed([entry()], 99)
 
       expect(readJoinedSessions(now)).toEqual([])
     })
 
-    // readAll cannot understand a future record, so it returns []. Writing over it would replace a
-    // shape a later version of the app depends on with an empty one, taking every identity with it.
-    it('refuses to overwrite a record written by a later version', () => {
+    it('recovers from a corrupted record by writing over it', () => {
       setup()
-      seed([entry({ sessionId: 'future' })], 2)
+      seed([entry()], 99)
 
       rememberSession(
         { address: '18th & Vine', currentRound: 0, sessionId: 'abcd', totalRounds: 2, userId: 'user-9' },
         now,
       )
 
-      expect(JSON.parse(localStorage.getItem('choosee.joined') ?? '{}')).toEqual({
-        sessions: [entry({ sessionId: 'future' })],
+      expect(readJoinedSessions(now)).toEqual([
+        entry({ address: '18th & Vine', currentRound: 0, totalRounds: 2, userId: 'user-9' }),
+      ])
+    })
+
+    // The property the version-namespaced key buys, and the reason the old single-key design had to
+    // go. A device that ran a later version of the app and was then rolled back must find its own
+    // record intact and keep working. Under one shared key the two versions deadlocked: reads bailed
+    // on the unrecognised version and writes refused to overwrite it, so findJoinedSession returned
+    // undefined forever and every visit to every Choosee met the name picker, with nothing in the
+    // app able to clear it.
+    it("leaves another version's record alone and keeps working from its own", () => {
+      setup()
+      localStorage.setItem(
+        'choosee.joined.v2',
+        JSON.stringify({ sessions: [{ shape: 'whatever version 2 stores' }], version: 2 }),
+      )
+      seed([entry()])
+
+      rememberSession(
+        { address: '18th & Vine', currentRound: 0, sessionId: 'other', totalRounds: 2, userId: 'user-9' },
+        now,
+      )
+
+      expect(readJoinedSessions(now).map((e) => e.sessionId)).toEqual(['other', 'abcd'])
+      expect(findJoinedSession('abcd', now)?.userId).toBe('user-1')
+      expect(JSON.parse(localStorage.getItem('choosee.joined.v2') ?? '{}')).toEqual({
+        sessions: [{ shape: 'whatever version 2 stores' }],
         version: 2,
       })
     })
@@ -179,10 +210,7 @@ describe('joined-sessions', () => {
     // validator deleted outright.
     it('drops an otherwise-live entry that is missing required fields', () => {
       setup()
-      localStorage.setItem(
-        'choosee.joined',
-        JSON.stringify({ sessions: [{ joinedAt: NOW, sessionId: 'abcd' }], version: 1 }),
-      )
+      localStorage.setItem(KEY, JSON.stringify({ sessions: [{ joinedAt: NOW, sessionId: 'abcd' }], version: 1 }))
 
       expect(readJoinedSessions(now)).toEqual([])
       expect(findJoinedSession('abcd', now)).toBeUndefined()
@@ -293,7 +321,7 @@ describe('joined-sessions', () => {
 
       dismissSession('live', now)
 
-      expect(JSON.parse(localStorage.getItem('choosee.joined') ?? '{}').sessions).toEqual([
+      expect(JSON.parse(localStorage.getItem(KEY) ?? '{}').sessions).toEqual([
         entry({ dismissed: true, sessionId: 'live' }),
       ])
     })
