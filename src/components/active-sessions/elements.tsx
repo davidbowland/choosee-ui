@@ -2,7 +2,7 @@ import { CheckSquare, Clock, Trophy, X } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
-import { CardState } from './helpers'
+import { CardState, TimeNote } from './helpers'
 
 export const ListHeading = (): React.ReactNode => <h2 className="arena-eyebrow">Pick back up</h2>
 
@@ -13,48 +13,100 @@ const Glyph = ({ state }: { state: CardState }): React.ReactNode => {
   return <Clock aria-hidden="true" className={className} strokeWidth={2.2} />
 }
 
-const StatusLine = ({ state }: { state: CardState }): React.ReactNode => {
+/**
+ * What the card wants from you, which is the only question a returning visitor arrives with. It
+ * leads because the alternative — leading with the address — leads with the one field two Choosees
+ * started from the same kitchen have in common.
+ */
+const headline = (state: CardState): string => {
   switch (state.kind) {
     case 'winner':
-      return (
-        <span className="text-xs text-[#D4D4D4]">{state.winnerName ? `${state.winnerName} won` : 'Winner picked'}</span>
-      )
+      return state.winnerName ? `${state.winnerName} won` : 'Winner picked'
     case 'your-turn':
-      return (
-        <span className="flex items-center gap-1.5 text-xs font-medium text-[#F59E0B]">
-          {/* The one animated element on the card, on the one state that is asking for something.
-              motion-safe leaves it still for anyone who has asked the OS for reduced motion. */}
-          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] motion-safe:animate-pulse" />
-          Your turn &mdash; round {state.round} of {state.totalRounds}
-        </span>
-      )
+      return 'Your turn to vote'
     case 'waiting':
-      return (
-        <span className="text-xs tabular-nums text-[#9CA3AF]">
-          Round {state.round} of {state.totalRounds} &mdash; {state.votersSubmitted} of {state.voterCount} voted
-        </span>
-      )
+      if (state.waitingOn) return `Waiting on ${state.waitingOn}`
+      // A count of zero means the voter list and the session disagree for the moment — every vote is
+      // in but the round has not turned over yet. "Waiting on 0 others" is not a sentence.
+      if (state.remaining < 1) return 'Waiting on the others'
+      return `Waiting on ${state.remaining} other${state.remaining === 1 ? '' : 's'}`
     default:
-      // The round comes from the local record, so it is on screen before any request finishes.
-      // Only the vote counts shimmer — and `motion-safe` leaves the bar still for anyone who has
-      // asked the OS for reduced motion.
-      return (
-        <span className="flex items-center gap-2 text-xs tabular-nums text-[#9CA3AF]">
-          Round {state.round} of {state.totalRounds}
-          <span className="h-2.5 w-16 rounded bg-white/10 motion-safe:animate-pulse" />
-        </span>
-      )
+      // Nothing has arrived yet, so the round — which is local — is the most this can honestly say.
+      return `Round ${state.round} of ${state.totalRounds}`
   }
 }
 
+const Headline = ({ state }: { state: CardState }): React.ReactNode => {
+  if (state.kind !== 'your-turn') {
+    return <span className="truncate text-sm font-semibold text-[#F5F5F5]">{headline(state)}</span>
+  }
+
+  return (
+    <span className="flex items-center gap-1.5 truncate text-sm font-semibold text-[#F59E0B]">
+      {/* The one animated element on the card, on the one state that is asking for something.
+          motion-safe leaves it still for anyone who has asked the OS for reduced motion. */}
+      <span aria-hidden="true" className="h-1.5 w-1.5 flex-none rounded-full bg-[#F59E0B] motion-safe:animate-pulse" />
+      {headline(state)}
+    </span>
+  )
+}
+
+/**
+ * Who is in it, and how far along it is. The roster is what actually tells two Choosees apart, and
+ * the round is what says whether it is worth going back to.
+ */
+const IdentityLine = ({ roster, state }: { roster?: string; state: CardState }): React.ReactNode => {
+  const className = 'truncate text-xs tabular-nums text-[#9CA3AF]'
+
+  // A finished Choosee has no round left to report, so the roster is the whole line — or there is no
+  // line, rather than an empty one holding space open.
+  if (state.kind === 'winner') {
+    return roster ? <span className={className}>{roster}</span> : null
+  }
+
+  // The round has already been said once, up top. Repeating it here would spend the line on nothing,
+  // so this waits for the roster — and shows the shimmer only while there is genuinely nothing to say.
+  if (state.kind === 'loading') {
+    return roster ? (
+      <span className={className}>{roster}</span>
+    ) : (
+      <span className="flex items-center text-xs">
+        <span className="h-2.5 w-16 rounded bg-white/10 motion-safe:animate-pulse" />
+      </span>
+    )
+  }
+
+  const round = `${state.round} of ${state.totalRounds}`
+  return <span className={className}>{roster ? `${roster} · round ${round}` : `Round ${round}`}</span>
+}
+
+/**
+ * Time first, address last, and both quiet. Whatever runs off the end of this line at 320px is the
+ * least useful thing on the card, which is the entire reason the address is on it.
+ */
+const MetaLine = ({ address, time }: { address: string; time: TimeNote }): React.ReactNode => (
+  <span className={`truncate text-[11px] tabular-nums ${time.isExpiring ? 'text-[#F59E0B]' : 'text-[#6B7280]'}`}>
+    {time.text} · {address}
+  </span>
+)
+
 export interface ResumeCardProps {
   address: string
+  roster?: string
   sessionId: string
   state: CardState
+  time: TimeNote
   onDismiss: () => void
 }
 
-export const ResumeCard = ({ address, onDismiss, sessionId, state }: ResumeCardProps): React.ReactNode => {
+export const ResumeCard = ({
+  address,
+  onDismiss,
+  roster,
+  sessionId,
+  state,
+  time,
+}: ResumeCardProps): React.ReactNode => {
   // The urgent state borrows the amber fill/stroke ratio .arena-eyebrow already establishes, rather
   // than introducing a new device for it.
   const isUrgent = state.kind === 'your-turn'
@@ -85,8 +137,9 @@ export const ResumeCard = ({ address, onDismiss, sessionId, state }: ResumeCardP
             <Glyph state={state} />
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-sm font-semibold text-[#F5F5F5]">{address}</span>
-            <StatusLine state={state} />
+            <Headline state={state} />
+            <IdentityLine roster={roster} state={state} />
+            <MetaLine address={address} time={time} />
           </span>
         </Link>
         {/* Divided from the tap target: dismissal is permanent, and a thumb reaching for the card

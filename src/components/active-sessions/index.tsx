@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { ListHeading, ResumeCard } from './elements'
-import { deriveCardState } from './helpers'
+import { deriveCardState, deriveRoster, deriveTimeNote, formatRoster } from './helpers'
 import { fetchChoices, fetchSession, fetchUsers, hasStatusCode } from '@services/api'
 import { ChoicesMap, SessionData, User } from '@types'
 import {
@@ -61,6 +61,14 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
     if (isGone) onGone(sessionId)
   }, [isGone, onGone, sessionId])
 
+  // Memoised because it is an effect dependency below, and a fresh array on every render would
+  // rewrite storage on every render. Both inputs are stable references — entry comes from state,
+  // users from the query cache — so this recomputes only when the roster can actually have changed.
+  const rosterNames = useMemo(
+    () => deriveRoster({ cached: entry.names, userId: entry.userId, users }),
+    [entry.names, entry.userId, users],
+  )
+
   // Refresh what the next first paint will read. The record is otherwise written only at join time,
   // so someone who joined at round 0 and comes back three rounds later would be shown "Round 1 of 5"
   // before it snapped to "Round 4 of 5" — a stale round is worse than no round. rememberSession
@@ -70,8 +78,18 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
   const { address, currentRound, isReady, totalRounds } = session ?? {}
   useEffect(() => {
     if (!isReady || address === undefined || currentRound === undefined || totalRounds === undefined) return
-    rememberSession({ address, currentRound, sessionId, totalRounds, userId: entry.userId })
-  }, [address, currentRound, isReady, totalRounds, sessionId, entry.userId])
+    // The names key is omitted rather than written as undefined when the voter list has not arrived:
+    // rememberSession merges over the previous record, so an explicit undefined would erase a roster
+    // this device already knew and put the next first paint back where it started.
+    rememberSession({
+      address,
+      currentRound,
+      ...(rosterNames.length > 0 && { names: rosterNames }),
+      sessionId,
+      totalRounds,
+      userId: entry.userId,
+    })
+  }, [address, currentRound, isReady, rosterNames, totalRounds, sessionId, entry.userId])
 
   // The cached entry supplies the address and round for first paint. It does not stand in for a
   // SessionData — no session means loading, and deriveCardState says so itself.
@@ -87,8 +105,10 @@ const Card = ({ entry, onDismiss, onGone }: CardProps): React.ReactNode => {
     <ResumeCard
       address={session?.address ?? entry.address}
       onDismiss={() => onDismiss(sessionId)}
+      roster={formatRoster(rosterNames)}
       sessionId={sessionId}
       state={state}
+      time={deriveTimeNote(entry.joinedAt)}
     />
   )
 }

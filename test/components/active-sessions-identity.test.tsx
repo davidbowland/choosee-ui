@@ -89,9 +89,9 @@ describe('dismissing a card and the identity it must not take with it', () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     renderHomePage()
 
-    expect(await screen.findByText('4102 Main St')).toBeInTheDocument()
+    expect(await screen.findByText(/4102 Main St/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /dismiss/i }))
-    await waitFor(() => expect(screen.queryByText('4102 Main St')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText(/4102 Main St/)).not.toBeInTheDocument())
 
     // Reopening the Choosee's own link. This is the assertion the whole flag-don't-delete design
     // exists to make true.
@@ -104,9 +104,9 @@ describe('dismissing a card and the identity it must not take with it', () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
     renderHomePage()
 
-    expect(await screen.findByText('4102 Main St')).toBeInTheDocument()
+    expect(await screen.findByText(/4102 Main St/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /dismiss/i }))
-    await waitFor(() => expect(screen.queryByText('4102 Main St')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByText(/4102 Main St/)).not.toBeInTheDocument())
 
     renderHomePage()
 

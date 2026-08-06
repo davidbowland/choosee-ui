@@ -47,6 +47,17 @@ const session: SessionData = {
 
 const unvoted: User = { name: 'Dana', userId: 'user-1', votes: [['a'], []] }
 const voted: User = { name: 'Dana', userId: 'user-1', votes: [['a'], ['a']] }
+const marcus: User = { name: 'Marcus', userId: 'user-2', votes: [['a'], ['a']] }
+const anon: User = { name: null, userId: 'user-3', votes: [['a'], ['a']] }
+
+const HOUR_MS = 60 * 60 * 1000
+const MINUTE_MS = 60 * 1000
+
+/** Two hours after the entry was joined. Fixed for the file, so every age on screen is a constant. */
+const now = entry.joinedAt + 2 * HOUR_MS
+
+/** Joined 23h20m before `now`, leaving 40 minutes of its 24-hour life. */
+const nearlyExpired = { ...entry, joinedAt: now - 23 * HOUR_MS - 20 * MINUTE_MS }
 const choices: ChoicesMap = { 'choice-1': { choiceId: 'choice-1', name: 'Gates Bar-B-Q', photos: [] } }
 
 const renderComponent = (): RenderResult => {
@@ -59,7 +70,34 @@ const renderComponent = (): RenderResult => {
 }
 
 describe('ActiveSessions', () => {
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   beforeAll(() => {
+    // The card reports how long ago a Choosee was joined, and it reads the clock itself rather than
+    // taking it as a prop. Only Date is faked: react-query and userEvent both need real timers, and
+    // faking those instead of this would hang every await in the file.
+    jest.useFakeTimers({
+      doNotFake: [
+        'cancelAnimationFrame',
+        'cancelIdleCallback',
+        'clearImmediate',
+        'clearInterval',
+        'clearTimeout',
+        'hrtime',
+        'nextTick',
+        'performance',
+        'queueMicrotask',
+        'requestAnimationFrame',
+        'requestIdleCallback',
+        'setImmediate',
+        'setInterval',
+        'setTimeout',
+      ],
+    })
+    jest.setSystemTime(now)
+
     mockedStore.readJoinedSessions.mockReturnValue([entry])
     mockedApi.fetchSession.mockResolvedValue(session)
     mockedApi.fetchUsers.mockResolvedValue([unvoted])
@@ -84,7 +122,26 @@ describe('ActiveSessions', () => {
   it('shows the address before the network answers', async () => {
     renderComponent()
 
-    expect(screen.getByText('4102 Main St')).toBeInTheDocument()
+    expect(screen.getByText(/4102 Main St/)).toBeInTheDocument()
+    await screen.findByText(/Your turn/i)
+  })
+
+  // Time first, address last. Whatever runs off the end of this line on a narrow phone is the least
+  // useful thing on the card, which is the whole reason the address was moved onto it.
+  it('says how long ago the Choosee was joined, ahead of the address', async () => {
+    renderComponent()
+
+    expect(screen.getByText('2h ago · 4102 Main St')).toBeInTheDocument()
+    await screen.findByText(/Your turn/i)
+  })
+
+  // The one place in the app that admits a Choosee expires. Nothing else tells anyone.
+  it('counts down instead once the Choosee is nearly expired', async () => {
+    mockedStore.readJoinedSessions.mockReturnValueOnce([nearlyExpired])
+
+    renderComponent()
+
+    expect(screen.getByText('40 min left · 4102 Main St')).toBeInTheDocument()
     await screen.findByText(/Your turn/i)
   })
 
@@ -100,15 +157,77 @@ describe('ActiveSessions', () => {
   it('announces your turn when a vote is outstanding', async () => {
     renderComponent()
 
-    expect(await screen.findByText(/Your turn — round 2 of 3/i)).toBeInTheDocument()
+    expect(await screen.findByText('Your turn to vote')).toBeInTheDocument()
+    expect(screen.getByText('Round 2 of 3')).toBeInTheDocument()
   })
 
-  it('reports the vote count when waiting on other people', async () => {
+  it('counts who is left when waiting on other people', async () => {
     mockedApi.fetchUsers.mockResolvedValueOnce([voted])
 
     renderComponent()
 
-    expect(await screen.findByText(/Round 2 of 3 — 2 of 4 voted/i)).toBeInTheDocument()
+    expect(await screen.findByText('Waiting on 2 others')).toBeInTheDocument()
+  })
+
+  // The count comes from the session and the name from the voter list. Naming somebody is only worth
+  // doing when both agree there is exactly one person holding the round up.
+  it('names the one person the round is waiting on', async () => {
+    mockedApi.fetchSession.mockResolvedValueOnce({ ...session, voterCount: 2, votersSubmitted: 1 })
+    mockedApi.fetchUsers.mockResolvedValueOnce([voted, { ...marcus, votes: [['a'], []] }])
+
+    renderComponent()
+
+    expect(await screen.findByText('Waiting on Marcus')).toBeInTheDocument()
+  })
+
+  // The line that actually tells two Choosees apart. Everything else about them is usually identical
+  // — same address, same round — because people start them from the same kitchen.
+  it('names who you are deciding with, alongside the round', async () => {
+    mockedApi.fetchUsers.mockResolvedValueOnce([unvoted, marcus])
+
+    renderComponent()
+
+    expect(await screen.findByText('Marcus · round 2 of 3')).toBeInTheDocument()
+  })
+
+  it('leaves out anyone who has not named themselves', async () => {
+    mockedApi.fetchUsers.mockResolvedValueOnce([unvoted, marcus, anon])
+
+    renderComponent()
+
+    expect(await screen.findByText('Marcus · round 2 of 3')).toBeInTheDocument()
+  })
+
+  // Storage is what paints first, so a roster that only ever came from the network would pop in a
+  // beat late on every visit — the same reason the round is cached.
+  it('shows the stored roster before the voter list answers', () => {
+    mockedStore.readJoinedSessions.mockReturnValueOnce([{ ...entry, names: ['Marcus', 'Priya'] }])
+
+    renderComponent()
+
+    expect(screen.getByText('Marcus & Priya')).toBeInTheDocument()
+  })
+
+  it('stores the roster so the next first paint has it', async () => {
+    mockedApi.fetchUsers.mockResolvedValueOnce([unvoted, marcus])
+
+    renderComponent()
+
+    await waitFor(() =>
+      expect(mockedStore.rememberSession).toHaveBeenCalledWith(expect.objectContaining({ names: ['Marcus'] })),
+    )
+  })
+
+  // rememberSession merges over the previous record, so writing an explicit undefined would erase a
+  // roster this device already knew and put the next first paint back where it started.
+  it('does not erase a stored roster when the voter list has not arrived', async () => {
+    mockedStore.readJoinedSessions.mockReturnValueOnce([{ ...entry, names: ['Marcus'] }])
+    mockedApi.fetchUsers.mockRejectedValueOnce(new Error('offline'))
+
+    renderComponent()
+
+    await waitFor(() => expect(mockedStore.rememberSession).toHaveBeenCalled())
+    expect(mockedStore.rememberSession).not.toHaveBeenCalledWith(expect.objectContaining({ names: undefined }))
   })
 
   it('names the winner once a Choosee has finished', async () => {
@@ -134,7 +253,7 @@ describe('ActiveSessions', () => {
     renderComponent()
 
     await waitFor(() => expect(mockedStore.forgetSession).toHaveBeenCalledWith('abcd'))
-    expect(screen.queryByText('4102 Main St')).not.toBeInTheDocument()
+    expect(screen.queryByText(/4102 Main St/)).not.toBeInTheDocument()
   })
 
   it('keeps the card when the request fails for any other reason', async () => {
@@ -143,7 +262,7 @@ describe('ActiveSessions', () => {
     renderComponent()
 
     await waitFor(() => expect(mockedApi.hasStatusCode).toHaveBeenCalledWith(expect.any(Error), 404))
-    expect(screen.getByText('4102 Main St')).toBeInTheDocument()
+    expect(screen.getByText(/4102 Main St/)).toBeInTheDocument()
     expect(mockedStore.forgetSession).not.toHaveBeenCalled()
   })
 
@@ -154,7 +273,7 @@ describe('ActiveSessions', () => {
     await userEvent.click(screen.getByRole('button', { name: /dismiss/i }))
 
     expect(mockedStore.dismissSession).toHaveBeenCalledWith('abcd')
-    expect(screen.queryByText('4102 Main St')).not.toBeInTheDocument()
+    expect(screen.queryByText(/4102 Main St/)).not.toBeInTheDocument()
   })
 
   it('links each card to its Choosee', async () => {
@@ -212,6 +331,6 @@ describe('ActiveSessions', () => {
 
     await waitFor(() => expect(mockedApi.fetchUsers).toHaveBeenCalled())
     expect(mockedStore.forgetSession).not.toHaveBeenCalled()
-    expect(screen.getByText('4102 Main St')).toBeInTheDocument()
+    expect(screen.getByText(/4102 Main St/)).toBeInTheDocument()
   })
 })

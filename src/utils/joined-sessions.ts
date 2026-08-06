@@ -9,7 +9,9 @@ const RECORD_VERSION = 1
 // clear it. Namespacing makes that unreachable: each version owns its own key, a rollback finds its
 // own data intact, and a future version can read the previous key to migrate and then delete it.
 const STORAGE_KEY = `choosee.joined.v${RECORD_VERSION}`
-const TTL_MS = 24 * 60 * 60 * 1000
+
+/** How long a Choosee lives. Exported so the card can say how much of it is left. */
+export const TTL_MS = 24 * 60 * 60 * 1000
 
 // What the home page shows, versus what the record holds. The display cap keeps the create form —
 // the page's actual job — from being pushed down. The storage cap is a ceiling on a list that
@@ -25,6 +27,14 @@ export interface JoinedSession {
   currentRound: number
   totalRounds: number
   joinedAt: number
+  /**
+   * The other voters, as they have named themselves. Optional, and deliberately not part of the
+   * record version: a record written before this existed is still a valid record, and the card
+   * falls back to the address for the one paint it takes for the voter list to arrive.
+   *
+   * Excludes this device's own voter — the line reads as who you are deciding *with*.
+   */
+  names?: string[]
   /** Set once the winner phase has rendered for this Choosee. Hides the card; keeps the identity. */
   winnerSeen?: true
   /** Set by the dismiss control. Hides the card; keeps the identity. */
@@ -45,7 +55,11 @@ const isJoinedSession = (value: unknown): value is JoinedSession => {
     typeof candidate.address === 'string' &&
     typeof candidate.currentRound === 'number' &&
     typeof candidate.totalRounds === 'number' &&
-    typeof candidate.joinedAt === 'number'
+    typeof candidate.joinedAt === 'number' &&
+    // Absent is valid — it is what every record written before names existed looks like. Present
+    // and malformed is not: the card maps over it.
+    (candidate.names === undefined ||
+      (Array.isArray(candidate.names) && candidate.names.every((name) => typeof name === 'string')))
   )
 }
 
