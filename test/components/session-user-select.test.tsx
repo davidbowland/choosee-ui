@@ -3,6 +3,7 @@ import React from 'react'
 
 import UserSelectPhase from '@components/session/user-select'
 import * as api from '@services/api'
+import { apiError } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -89,12 +90,7 @@ describe('UserSelectPhase', () => {
   })
 
   it('should show error when create user returns 400', async () => {
-    const { ApiError } = jest.requireActual('aws-amplify/api') as { ApiError: any }
-    const error = new ApiError({ message: 'Bad Request', name: 'ApiError', recoverySuggestion: '' })
-    Object.defineProperty(error, '_response', {
-      value: { statusCode: 400, headers: {}, body: JSON.stringify({ message: 'Max players reached' }) },
-    })
-    jest.mocked(api.createUser).mockRejectedValue(error)
+    jest.mocked(api.createUser).mockRejectedValue(apiError(400, JSON.stringify({ message: 'Max players reached' })))
 
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)

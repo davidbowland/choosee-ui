@@ -18,3 +18,10 @@ export const sessionConfigResult: SessionConfig = {
 export const recaptchaToken = 'qwertyuiokjhgffgh'
 
 export const sessionId = 'aeio'
+
+/**
+ * A rejection shaped exactly like the one `@services/api` throws for a non-2xx response, so error
+ * paths are exercised against the real thing rather than a guess at it.
+ */
+export const apiError = (statusCode: number, body = '{}'): Error =>
+  Object.assign(new Error(`responded with ${statusCode}`), { body, statusCode })

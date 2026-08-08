@@ -1,6 +1,3 @@
-import { ApiError, del, get, patch, post } from 'aws-amplify/api'
-
-import { apiNameUnauthenticated } from '@config/amplify'
 import {
   AddressResult,
   ChoicesMap,
@@ -12,112 +9,120 @@ import {
   User,
 } from '@types'
 
-type AnyBody = any
+const baseUrl = process.env.NEXT_PUBLIC_CHOOSEE_API_BASE_URL
+
+// Plain `fetch`, deliberately, in place of the Amplify REST client. Amplify retried every request
+// up to three times on a 5xx or a dropped connection, which is exactly the case where the server
+// may already have done the work. Half of the calls below are non-idempotent: POST /sessions spends
+// a Places search and creates a Choosee, POST /users consumes one of a session's capped seats, and
+// POST /rounds/{n}/close advances the tournament. A replayed one of those bills twice, fills the
+// session with a phantom player, or reports failure for something that in fact succeeded. Nothing
+// here needs SigV4 signing or credential resolution — every endpoint is unauthenticated — so the
+// client was earning nothing but that retry. The query layer already sets `retry: false`; this
+// keeps the network layer honest about the same promise.
+
+/** The shape thrown for any non-2xx response. `body` is the raw text, for the API's own message. */
+interface ApiRequestError extends Error {
+  body: string
+  statusCode: number
+}
+
+interface RequestOptions {
+  body?: unknown
+  headers?: Record<string, string>
+  queryParams?: Record<string, string>
+}
 
 // --- Helpers ---
 
-async function apiGet<T>(
-  path: string,
-  queryParams?: Record<string, string>,
-  headers?: Record<string, string>,
-): Promise<T> {
-  const { body } = await get({ apiName: apiNameUnauthenticated, path, options: { headers, queryParams } }).response
-  return body.json() as Promise<T>
+const buildUrl = (path: string, queryParams?: Record<string, string>): string =>
+  queryParams === undefined ? `${baseUrl}${path}` : `${baseUrl}${path}?${new URLSearchParams(queryParams)}`
+
+const sendRequest = async (method: string, path: string, options: RequestOptions = {}): Promise<Response> => {
+  const { body, headers, queryParams } = options
+  const response = await fetch(buildUrl(path, queryParams), {
+    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: body === undefined ? headers : { ...headers, 'Content-Type': 'application/json' },
+    method,
+  })
+  if (!response.ok) {
+    const error: ApiRequestError = Object.assign(new Error(`${method} ${path} responded with ${response.status}`), {
+      body: await response.text(),
+      statusCode: response.status,
+    })
+    throw error
+  }
+  return response
 }
 
-async function apiPost<T>(path: string, reqBody?: AnyBody, headers?: Record<string, string>): Promise<T> {
-  const { body } = await post({
-    apiName: apiNameUnauthenticated,
-    path,
-    options: { headers, body: reqBody },
-  }).response
-  return body.json() as Promise<T>
-}
-
-async function apiPatch<T>(path: string, reqBody?: AnyBody): Promise<T> {
-  const { body } = await patch({
-    apiName: apiNameUnauthenticated,
-    path,
-    options: { body: reqBody },
-  }).response
-  return body.json() as Promise<T>
-}
+const requestJson = async <T>(method: string, path: string, options?: RequestOptions): Promise<T> =>
+  (await sendRequest(method, path, options)).json() as Promise<T>
 
 // --- Public API ---
 
 export const fetchAddress = (latitude: number, longitude: number, token: string): Promise<AddressResult> =>
-  apiGet(
-    '/reverse-geocode',
-    { latitude: String(latitude), longitude: String(longitude) },
-    { 'x-recaptcha-token': token },
-  )
+  requestJson('GET', '/reverse-geocode', {
+    headers: { 'x-recaptcha-token': token },
+    queryParams: { latitude: String(latitude), longitude: String(longitude) },
+  })
 
-export const fetchSessionConfig = (): Promise<SessionConfig> => apiGet('/sessions/config')
+export const fetchSessionConfig = (): Promise<SessionConfig> => requestJson('GET', '/sessions/config')
 
 export const createSession = (session: NewSessionRequest, token: string): Promise<{ sessionId: string }> =>
-  apiPost('/sessions', session, { 'x-recaptcha-token': token })
+  requestJson('POST', '/sessions', { body: session, headers: { 'x-recaptcha-token': token } })
 
 export const fetchSession = (sessionId: string): Promise<SessionData> =>
-  apiGet(`/sessions/${encodeURIComponent(sessionId)}`)
+  requestJson('GET', `/sessions/${encodeURIComponent(sessionId)}`)
 
 export const fetchChoices = (sessionId: string): Promise<ChoicesMap> =>
-  apiGet(`/sessions/${encodeURIComponent(sessionId)}/choices`)
+  requestJson('GET', `/sessions/${encodeURIComponent(sessionId)}/choices`)
 
 export const fetchUsers = (sessionId: string): Promise<User[]> =>
-  apiGet(`/sessions/${encodeURIComponent(sessionId)}/users`)
+  requestJson('GET', `/sessions/${encodeURIComponent(sessionId)}/users`)
 
 export const createUser = (sessionId: string): Promise<User> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/users`, {})
+  requestJson('POST', `/sessions/${encodeURIComponent(sessionId)}/users`, { body: {} })
 
 export const patchUser = (sessionId: string, userId: string, operations: PatchOperation[]): Promise<User> =>
-  apiPatch(`/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`, operations)
+  requestJson('PATCH', `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}`, {
+    body: operations,
+  })
 
 export const closeRound = (sessionId: string, roundId: number): Promise<SessionData> =>
-  apiPost(`/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`)
+  requestJson('POST', `/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`)
 
-export const fetchVapidPublicKey = (): Promise<{ publicKey: string }> => apiGet('/push/vapid-public-key')
+export const fetchVapidPublicKey = (): Promise<{ publicKey: string }> => requestJson('GET', '/push/vapid-public-key')
 
+// The endpoint answers 204, so the response body is never read: parsing an empty payload as JSON
+// would reject on a request that in fact succeeded.
 export const postPushSubscription = async (
   sessionId: string,
   userId: string,
   subscription: PushSubscriptionJSON,
 ): Promise<void> => {
-  // The endpoint answers 204, so there is no body to parse — awaiting the raw response avoids
-  // apiPost's body.json(), which would reject on an empty payload.
-  await post({
-    apiName: apiNameUnauthenticated,
-    path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
-    options: { body: subscription as AnyBody },
-  }).response
+  await sendRequest(
+    'POST',
+    `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+    { body: subscription },
+  )
 }
 
 // The endpoint travels as a query parameter, not a body: a body on DELETE is legal but poorly
 // supported across proxies and clients.
 export const deletePushSubscription = async (sessionId: string, userId: string, endpoint: string): Promise<void> => {
-  await del({
-    apiName: apiNameUnauthenticated,
-    path: `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
-    options: { queryParams: { endpoint } },
-  }).response
+  await sendRequest(
+    'DELETE',
+    `/sessions/${encodeURIComponent(sessionId)}/users/${encodeURIComponent(userId)}/push-subscription`,
+    { queryParams: { endpoint } },
+  )
 }
 
-export function parseApiMessage(body: string | undefined, fallback: string): string {
-  return parseBodyField(body, 'message') ?? fallback
-}
+// --- Error inspection ---
 
-export function hasStatusCode(err: unknown, statusCode: number): boolean {
-  return err instanceof ApiError && err.response?.statusCode === statusCode
-}
+const isApiRequestError = (err: unknown): err is ApiRequestError =>
+  err instanceof Error && typeof (err as ApiRequestError).statusCode === 'number'
 
-export function hasErrorCode(err: unknown, code: ErrorCode): boolean {
-  if (err instanceof ApiError && err.response) {
-    if (err.response.statusCode !== 400 || !err.response.body) return false
-    return parseBodyField(err.response.body, 'errorCode') === code
-  }
-  return false
-}
-
-function parseBodyField(body: string | undefined, field: string): string | undefined {
+const parseBodyField = (body: string | undefined, field: string): string | undefined => {
   try {
     const parsed = JSON.parse(body ?? '{}') as Record<string, unknown>
     const value = parsed[field]
@@ -126,3 +131,13 @@ function parseBodyField(body: string | undefined, field: string): string | undef
     return undefined
   }
 }
+
+export const hasStatusCode = (err: unknown, statusCode: number): boolean =>
+  isApiRequestError(err) && err.statusCode === statusCode
+
+export const hasErrorCode = (err: unknown, code: ErrorCode): boolean =>
+  isApiRequestError(err) && err.statusCode === 400 && parseBodyField(err.body, 'errorCode') === code
+
+/** The API's own explanation of a failure, when it sent one, and `fallback` otherwise. */
+export const apiErrorMessage = (err: unknown, fallback: string): string =>
+  (isApiRequestError(err) ? parseBodyField(err.body, 'message') : undefined) ?? fallback

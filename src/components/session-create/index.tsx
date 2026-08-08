@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -17,7 +16,7 @@ import {
   VoteCountHint,
 } from './elements'
 import FeedbackMessage from '@components/feedback-message'
-import { createSession, fetchAddress, fetchSessionConfig } from '@services/api'
+import { createSession, fetchAddress, fetchSessionConfig, hasStatusCode } from '@services/api'
 import { NewSessionRequest, PlaceTypeDisplay, SessionConfig } from '@types'
 
 const RECAPTCHA_SCRIPT_ID = 'recaptcha-v3-script'
@@ -47,7 +46,7 @@ const executeRecaptcha = async (action: string): Promise<string> => {
   return grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action })
 }
 
-const isScoreRejection = (error: unknown): boolean => error instanceof ApiError && error.response?.statusCode === 403
+const isScoreRejection = (error: unknown): boolean => hasStatusCode(error, 403)
 
 /** Runs a reCAPTCHA-guarded request, replaying it once with a fresh token when the API rejects the
     score. Both guarded endpoints verify the token before doing any other work, so a rejected
@@ -98,7 +97,7 @@ const SessionCreate = (): React.ReactNode => {
       router.push(`/s/${data.sessionId}`)
     },
     onError: (error: unknown) => {
-      if (error instanceof ApiError && error.response?.statusCode === 403) {
+      if (isScoreRejection(error)) {
         setErrorMessage('Unusual traffic detected. Please try again later.')
       } else {
         setErrorMessage('Something went wrong setting up your restaurants. Try again.')

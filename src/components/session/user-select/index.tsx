@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query'
-import { ApiError } from 'aws-amplify/api'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
@@ -11,7 +10,7 @@ import {
   SectionTitle,
   UserOption,
 } from './elements'
-import { createUser, parseApiMessage } from '@services/api'
+import { apiErrorMessage, createUser, hasStatusCode } from '@services/api'
 import { User } from '@types'
 import { displayName } from '@utils/users'
 
@@ -33,11 +32,9 @@ const UserSelectPhase = ({ sessionId, users, onUserSelected }: UserSelectPhasePr
       onUserSelected(newUser.userId)
     },
     onError: (err: unknown) => {
-      if (err instanceof ApiError && err.response) {
-        if (err.response.statusCode === 400) {
-          setError(parseApiMessage(err.response.body, 'This Choosee is full.'))
-          return
-        }
+      if (hasStatusCode(err, 400)) {
+        setError(apiErrorMessage(err, 'This Choosee is full.'))
+        return
       }
       setError("Couldn't join. Try again.")
     },

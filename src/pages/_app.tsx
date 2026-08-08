@@ -6,7 +6,6 @@ import type { AppProps } from 'next/app'
 import React, { useEffect, useState } from 'react'
 
 import '@assets/css/index.css'
-import '@config/amplify'
 import { InstallPromptContext, useInstallPrompt } from '@hooks/useInstallPrompt'
 import { useServiceWorker } from '@hooks/useServiceWorker'
 

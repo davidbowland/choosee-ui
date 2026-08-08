@@ -1,11 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ApiError } from 'aws-amplify/api'
 import { useRouter } from 'next/router'
 import React from 'react'
 
 import SessionCreate from './index'
 import * as api from '@services/api'
-import { sessionConfigResult, recaptchaToken, sessionId } from '@test/__mocks__'
+import { apiError, sessionConfigResult, recaptchaToken, sessionId } from '@test/__mocks__'
 import '@testing-library/jest-dom'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -31,11 +30,7 @@ describe('SessionCreate component', () => {
   const getCurrentPosition = jest.fn((success: PositionCallback) =>
     success({ coords: { latitude: 34.09, longitude: -118.41 } } as GeolocationPosition),
   )
-  const forbiddenError = (): ApiError => {
-    const error = new ApiError({ message: 'Forbidden', name: 'ApiError', recoverySuggestion: '' })
-    Object.defineProperty(error, 'response', { get: () => ({ statusCode: 403, headers: {}, body: '{}' }) })
-    return error
-  }
+  const forbiddenError = (): Error => apiError(403)
 
   const executesFor = (action: string) => grecaptchaExecute.mock.calls.filter((call) => call[1].action === action)
 
@@ -43,6 +38,14 @@ describe('SessionCreate component', () => {
     jest.mocked(api).fetchSessionConfig.mockResolvedValue(sessionConfigResult)
     jest.mocked(api).fetchAddress.mockResolvedValue({ address })
     jest.mocked(api).createSession.mockResolvedValue({ sessionId })
+    // The module is auto-mocked, so the component's only view of a status code is this helper.
+    // Give it the real implementation rather than a canned answer, so the 403 branch is exercised
+    // by the shape the service actually throws.
+    jest
+      .mocked(api)
+      .hasStatusCode.mockImplementation(
+        (err, statusCode) => (err as { statusCode?: number })?.statusCode === statusCode,
+      )
     jest.mocked(useRouter).mockReturnValue({ push: mockPush, replace: jest.fn() } as any)
 
     console.error = jest.fn()

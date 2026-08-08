@@ -1,15 +1,6 @@
-import { ApiError } from 'aws-amplify/api'
-
 import { firstUnvotedIndex, isFinalRound, sessionLoadErrorMessage } from '@components/session/helpers'
+import { apiError } from '@test/__mocks__'
 import { SessionData, User } from '@types'
-
-function apiError(statusCode: number): ApiError {
-  const error = Object.assign(new Error('Request failed'), {
-    response: { statusCode, headers: {}, body: '{}' },
-  })
-  Object.setPrototypeOf(error, ApiError.prototype)
-  return error as ApiError
-}
 
 const baseSession: SessionData = {
   sessionId: 'test',
