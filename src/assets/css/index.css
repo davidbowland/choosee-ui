@@ -1,7 +1,11 @@
 @import '@heroui/styles';
 
 :root {
-  --font-display: 'Bebas Neue', 'Impact', cursive;
+  /* Bebas Neue is a condensed, blocky display face. The generic on the end of this stack is what
+     paints the brand for the swap period on any device missing every named fallback — `cursive`
+     put that first frame in Snell Roundhand on iOS, which is the opposite of the letterform we
+     then swap to. `sans-serif` is the generic that actually resembles the face. */
+  --font-display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
   --font-body: 'Outfit Variable', 'Helvetica', sans-serif;
 }
 
