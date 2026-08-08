@@ -15,12 +15,12 @@ sam deploy --stack-name choosee-ui-test \
   --parameter-overrides Environment=test
 
 # Copy project to S3
-#
+
 # The distribution ID comes from the stack rather than being hardcoded, so a rebuilt stack cannot
 # leave the deploy invalidating a distribution that no longer serves the site. An empty result is
-# not fatal — copyToS3.sh warns and skips the invalidation rather than failing the deploy.
+# not fatal — copyToS3.sh warns and skips the invalidation.
 
 DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name choosee-ui-test --region us-east-2 \
-  --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text 2>/dev/null || true)
+  --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --output text 2>/dev/null || true)
 
 ./scripts/copyToS3.sh choosee-ui-test "$DISTRIBUTION_ID"

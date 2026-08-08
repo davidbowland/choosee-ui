@@ -19,9 +19,9 @@ export const ProgressText = ({
     <ProgressBar color="warning" maxValue={total || 1} minValue={0} value={finished}>
       <div className="mb-2 flex items-center justify-between text-sm">
         <ProgressBar.Output>
-          <span className="font-medium text-[#D4D4D4]">Voted</span>
+          <span className="font-medium text-default-800">Voted</span>
         </ProgressBar.Output>
-        <span className="tabular-nums text-[#6B7280]">
+        <span className="tabular-nums text-default-600">
           {finished} / {total}
         </span>
       </div>
@@ -29,7 +29,7 @@ export const ProgressText = ({
         <ProgressBar.Fill />
       </ProgressBar.Track>
     </ProgressBar>
-    <p className="mt-2 text-center text-xs text-[#4B5563]">{subtitle}</p>
+    <p className="mt-2 text-center text-xs text-default-500">{subtitle}</p>
   </div>
 )
 
@@ -47,7 +47,7 @@ export const ForceRoundButton = ({
   onPress: () => void
 }): React.ReactNode => (
   <button
-    className="inline-flex items-center gap-1.5 text-[13px] text-[#6B7280] underline decoration-white/15 underline-offset-4 transition-colors hover:text-[#9CA3AF] focus:outline-none disabled:opacity-50"
+    className="inline-flex items-center gap-1.5 text-[13px] text-default-600 underline decoration-white/15 underline-offset-4 transition-colors hover:text-default-700 focus:outline-none disabled:opacity-50"
     disabled={isLoading}
     onClick={onPress}
     type="button"
@@ -82,13 +82,13 @@ export const ConfirmDialog = ({
             <AlertDialog.Heading>Skip ahead without them?</AlertDialog.Heading>
           </AlertDialog.Header>
           <AlertDialog.Body>
-            <p className="text-sm text-[#6B7280]">
+            <p className="text-sm text-default-600">
               Not everyone has voted. Their votes won&apos;t count in this round.
             </p>
           </AlertDialog.Body>
           <AlertDialog.Footer className="flex justify-end gap-2">
             <Button
-              className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+              className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-600 hover:bg-white/[0.09]"
               isDisabled={isLoading}
               onPress={onCancel}
               slot="close"
@@ -153,7 +153,7 @@ export const NotifyCheckbox = ({
       )}
     </div>
     <div className="min-w-0 flex-1">
-      <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-[#D4D4D4]'}`}>
+      <p className={`text-sm font-medium ${subscribed ? 'text-success' : 'text-default-800'}`}>
         {subscribed ? "We'll notify you!" : `Notify me when ${reminderEvent}`}
       </p>
       {/* "One notification" was true under the old per-round opt-in, where you re-armed the toggle
@@ -161,7 +161,7 @@ export const NotifyCheckbox = ({
           winner, so promising one was a straightforward lie to anyone who subscribed in round 1 of
           four. The copy has to describe the model that shipped. `isFinal` is the exception: there
           really is only one left to send. */}
-      <p className="text-xs text-[#4B5563]">
+      <p className="text-xs text-default-500">
         {isSaving
           ? 'Turning on notifications…'
           : isFinal
@@ -190,19 +190,19 @@ export const NotifyCheckbox = ({
 // is worse than a sentence explaining why there is nothing to press.
 export const NotifyBlocked = ({ body, title }: { body: string; title: string }): React.ReactNode => (
   <div className="flex items-start gap-3 text-left">
-    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.05] text-[#6B7280]">
+    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.05] text-default-600">
       <BellOff className="h-5 w-5" />
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-sm font-medium text-[#D4D4D4]">{title}</p>
-      <p className="text-xs text-[#4B5563]">{body}</p>
+      <p className="text-sm font-medium text-default-800">{title}</p>
+      <p className="text-xs text-default-500">{body}</p>
     </div>
   </div>
 )
 
 export const TurnOffLink = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <button
-    className="text-center text-xs text-[#6B7280] underline decoration-white/15 underline-offset-4 transition-colors hover:text-[#9CA3AF] focus:outline-none"
+    className="text-center text-xs text-default-600 underline decoration-white/15 underline-offset-4 transition-colors hover:text-default-700 focus:outline-none"
     onClick={onPress}
     type="button"
   >
@@ -214,7 +214,7 @@ export const TurnOffLink = ({ onPress }: { onPress: () => void }): React.ReactNo
 // notifications" tells them the opposite of what happened, and the switch beside it still reads
 // subscribed — so the sentence and the control disagree about which direction failed.
 export const NotifyRetryMessage = ({ action }: { action: 'on' | 'off' }): React.ReactNode => (
-  <p className="text-center text-xs text-[#4B5563]">
+  <p className="text-center text-xs text-default-500">
     Couldn&apos;t turn {action === 'on' ? 'on' : 'off'} notifications. Please try again.
   </p>
 )
@@ -236,8 +236,10 @@ export const IosNotifySheet = ({ onClose, open }: { onClose: () => void; open: b
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-3">
-              <p className="text-sm text-[#6B7280]">Safari only sends notifications from an app on your Home Screen.</p>
-              <ol className="flex flex-col gap-2 text-sm text-[#D4D4D4]">
+              <p className="text-sm text-default-600">
+                Safari only sends notifications from an app on your Home Screen.
+              </p>
+              <ol className="flex flex-col gap-2 text-sm text-default-800">
                 <li>1. Tap Share</li>
                 <li>2. Tap Add to Home Screen</li>
                 <li>3. Open Choosee from there</li>
@@ -246,7 +248,7 @@ export const IosNotifySheet = ({ onClose, open }: { onClose: () => void; open: b
           </Modal.Body>
           <Modal.Footer className="flex justify-end">
             <Button
-              className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+              className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-600 hover:bg-white/[0.09]"
               onPress={onClose}
               slot="close"
               variant="outline"
@@ -272,7 +274,7 @@ export const SegmentDivider = (): React.ReactNode => <div className="mx-1 h-5 w-
 
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <button
-    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-[#E5E7EB] transition-colors hover:bg-white/[0.08] focus:outline-none"
+    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-default-900 transition-colors hover:bg-white/[0.08] focus:outline-none"
     onClick={onPress}
     type="button"
   >

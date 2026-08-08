@@ -21,7 +21,7 @@ const NotFound = (): React.ReactNode => {
         <div className="mx-auto mt-8 max-w-md px-4 text-center">
           <h1 className="mb-4 text-xl font-semibold">Page not found</h1>
           <p className="mb-4 text-default-500">That link may have expired or been mistyped.</p>
-          <Link className="text-primary underline" href="/">
+          <Link className="text-accent underline" href="/">
             Go home
           </Link>
         </div>

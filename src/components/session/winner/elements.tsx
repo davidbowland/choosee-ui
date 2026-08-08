@@ -13,7 +13,7 @@ export const WinnerLoading = (): React.ReactNode => (
     <div className="relative h-12 w-12">
       <div className="absolute inset-0 animate-spin rounded-full border-4 border-white/[0.06] border-t-[#F59E0B]" />
     </div>
-    <p className="text-[#4B5563]">Revealing the winner…</p>
+    <p className="text-default-500">Revealing the winner…</p>
   </div>
 )
 
@@ -39,7 +39,7 @@ export const NewSessionButton = ({ onPress }: { onPress: () => void }): React.Re
 // dialog as the app bar icon, so the two entry points cannot drift apart.
 export const InstallLink = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <button
-    className="text-xs text-[#6B7280] underline underline-offset-4 hover:text-[#9CA3AF]"
+    className="text-xs text-default-600 underline underline-offset-4 hover:text-default-700"
     onClick={onPress}
     type="button"
   >
@@ -49,7 +49,7 @@ export const InstallLink = ({ onPress }: { onPress: () => void }): React.ReactNo
 
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <Button
-    className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280] hover:bg-white/[0.09]"
+    className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-600 hover:bg-white/[0.09]"
     onPress={onPress}
     variant="outline"
   >

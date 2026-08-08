@@ -32,14 +32,33 @@ import { PillArrowButton } from '@components/pill-arrow-button'
 import { LoadingSpinner } from '@components/session/loading'
 import type { SortOption } from '@types'
 
+/* The settled height of <CreateCard>, reserved here so that swapping this card for the real form
+   moves nothing. This column's height is the grid row's height, and on md+ `.home-grid` centers the
+   two columns against each other — so the column growing from a spinner to the finished form did not
+   just fill space below itself, it pulled the hero down with it. That single swap measured as the
+   bulk of the home page's 0.24 CLS.
+
+   Hard-coding a pixel height is only safe because the md grid pins this column to exactly 460px
+   (`md:grid-cols-[1fr_460px]` in src/pages/index.tsx), so above md the form has one width and one
+   height. To re-derive it, load the page and read the settled `.arena-glass-outer` height in the
+   right column at any viewport ≥ md. It will drift if the API's sort options change count or a field
+   is added to the form — both of which change the form's height by a row.
+
+   Deliberately not applied below md, where the column is fluid and the form is taller than this
+   (≈968px at 390px wide), so this would under-reserve rather than over-reserve. Nothing is above the
+   card there to be pushed anyway — it is the last thing on the page — and mobile CLS measures 0.03. */
 export const LoadingCard = ({ error }: { error?: string }): React.ReactNode => (
-  <div className="arena-glass-outer">
-    <div className="arena-glass-inner p-6">
+  <div className="arena-glass-outer flex flex-col md:min-h-[770px]">
+    {/* Centers vertically in the reserved height, but deliberately does not center horizontally:
+        `items-center` would shrink these children to their content width, and LoadingSpinner cycles
+        a status message on a timer, so every message of a different length would resize the box and
+        shift the layout. Stretching them keeps the width fixed and lets them center their own text. */}
+    <div className="arena-glass-inner flex flex-1 flex-col justify-center p-6">
       {error ? (
         <div className="flex flex-col items-center gap-4 py-12">
           <p className="text-center text-sm text-red-400">{error}</p>
           <Button
-            className="rounded-full border-white/[0.09] bg-white/[0.05] text-[#D4D4D4]"
+            className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-800"
             onPress={() => window.location.reload()}
             variant="secondary"
           >
@@ -73,7 +92,7 @@ export const AddressField = ({
   onChange: (value: string) => void
 }): React.ReactNode => (
   <div className="w-full">
-    <div className="mb-[5px] text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Your location</div>
+    <div className="mb-[5px] text-[9px] font-bold uppercase tracking-[0.18em] text-default-600">Your location</div>
     <Input
       aria-label="Your location"
       autoComplete="postal-code"
@@ -114,7 +133,7 @@ export const UseMyLocationButton = ({
 
 const radioContentClass = [
   'group relative flex w-full flex-col items-start gap-0.5 rounded-[10px] border px-3 py-2.5 text-[11px] font-medium transition-all',
-  'border-white/[0.06] bg-white/[0.02] text-[#4B5563]',
+  'border-white/[0.06] bg-white/[0.02] text-default-500',
   'data-[selected=true]:border-[rgba(245,158,11,0.25)] data-[selected=true]:bg-[rgba(245,158,11,0.08)] data-[selected=true]:text-[#F59E0B]',
   'data-[focus-visible=true]:border-[rgba(245,158,11,0.25)] data-[focus-visible=true]:bg-[rgba(245,158,11,0.08)]',
 ].join(' ')
@@ -131,7 +150,7 @@ export const SortByFieldset = ({
   onChange: (value: string) => void
 }): React.ReactNode => (
   <RadioGroup isDisabled={isLoading} onChange={(v) => onChange(v)} value={rankBy} variant="secondary">
-    <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Sort by</Label>
+    <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-default-600">Sort by</Label>
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
       {options.map(({ value, label, description }) => (
         <Radio key={value} value={value}>
@@ -151,7 +170,7 @@ export const SortByFieldset = ({
 export const VoteCountHint = ({ maxChoices }: { maxChoices: number }): React.ReactNode => {
   const maxVotes = maxChoices - 1
   return (
-    <p className="text-[11px] text-[#4B5563]">
+    <p className="text-[11px] text-default-500">
       Up to <span className="font-semibold text-[#F59E0B]">{maxChoices}</span> restaurants —{' '}
       <span className="font-semibold text-[#F59E0B]">{maxVotes}</span> {maxVotes === 1 ? 'vote' : 'votes'} per person
     </p>
@@ -173,7 +192,7 @@ export const MaxChoicesSlider = ({
 }): React.ReactNode => (
   <div className="w-full">
     <div className="mb-3 flex items-center justify-between text-sm">
-      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Maximum restaurants</span>
+      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-default-600">Maximum restaurants</span>
       <span className="font-semibold text-[#F59E0B]">{value}</span>
     </div>
     <SliderRoot
@@ -208,7 +227,7 @@ export const DistanceSlider = ({
 }): React.ReactNode => (
   <div className="w-full">
     <div className="mb-3 flex items-center justify-between text-sm">
-      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">Maximum distance</span>
+      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-default-600">Maximum distance</span>
       <span className="font-semibold text-[#F59E0B]">
         {value} {value === 1 ? 'mile' : 'miles'}
       </span>
@@ -277,7 +296,7 @@ export const MultiSelect = ({
       selectionMode="multiple"
       value={selectedKeys as Key[]}
     >
-      <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#6B7280]">{label}</Label>
+      <Label className="text-[9px] font-bold uppercase tracking-[0.18em] text-default-600">{label}</Label>
       <AutocompleteTrigger>
         <AutocompleteValue>
           {({ defaultChildren, isPlaceholder, state }: any) => {
@@ -347,14 +366,14 @@ export const FilterClosingSoonToggle = ({
       <div className="flex items-center gap-3">
         <div
           className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
-            checked ? 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]' : 'bg-white/[0.05] text-[#4B5563]'
+            checked ? 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]' : 'bg-white/[0.05] text-default-500'
           }`}
         >
           <Clock className="h-4 w-4" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <Label className="text-sm font-medium text-[#D4D4D4]">Skip closed & closing places</Label>
-          <Description className="cursor-[inherit]! text-xs text-[#4B5563]">
+          <Label className="text-sm font-medium text-default-800">Skip closed & closing places</Label>
+          <Description className="cursor-[inherit]! text-xs text-default-500">
             Skip places already closed or closing within an hour
           </Description>
         </div>

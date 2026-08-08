@@ -40,16 +40,16 @@ const Index = (): React.ReactNode => {
                 of its own and JSX trims the whitespace on both sides of it, which is exactly how you
                 get WHERE AREWE EATING?. The page test asserts the headline's text rather than
                 trusting the formatter to leave this alone. */}
-            <h1 className="choosee-brand hero-title leading-[0.9] text-[#F5F5F5]">
+            <h1 className="choosee-brand hero-title leading-[0.9] text-foreground">
               WHERE ARE <br className="hero-break" />
               WE <br className="hero-break" />
               <span className="text-[#F59E0B]">EATING?</span>
             </h1>
-            <p className="max-w-[320px] text-sm leading-[1.7] text-[#4B5563]" data-hero="full">
+            <p className="max-w-[320px] text-sm leading-[1.7] text-default-500" data-hero="full">
               Can&apos;t agree on where to eat? Start a Choosee &mdash; we&apos;ll line up restaurants near you and
               everyone votes until there&apos;s a winner.
             </p>
-            <p className="max-w-[320px] text-sm leading-[1.7] text-[#4B5563]" data-hero="compact">
+            <p className="max-w-[320px] text-sm leading-[1.7] text-default-500" data-hero="compact">
               Line up restaurants near you and let everyone vote until there&apos;s a winner.
             </p>
             {/* Beneath the headline, so no number of cards can move it. The column is top-aligned

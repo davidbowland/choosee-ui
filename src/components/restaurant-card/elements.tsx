@@ -47,6 +47,10 @@ export const VotingCardImage = ({
 }): React.ReactNode => {
   const [loaded, setLoaded] = useState(!src)
 
+  // The icon below is off the muted text ramp on purpose. Every other grey in this file was raised
+  // to clear 4.5:1, but this glyph is decorative filler for a missing photo — WCAG exempts it, and
+  // at 80px on a raised surface the passing value reads as a bright icon competing with the card it
+  // is standing in for. The card's text carries the information.
   if (!src) {
     return (
       <div className="relative flex h-60 w-full items-center justify-center bg-white/[0.03]">
@@ -153,11 +157,13 @@ export const HoursList = ({ hours, size = 'md' }: { hours: string[]; size?: 'sm'
   const sm = size === 'sm'
   return (
     <div className="flex flex-col gap-1">
-      <div className={`flex items-center ${sm ? 'gap-1.5 text-xs text-[#374151]' : 'gap-2 text-sm text-[#4B5563]'}`}>
+      <div
+        className={`flex items-center ${sm ? 'gap-1.5 text-xs text-default-400' : 'gap-2 text-sm text-default-500'}`}
+      >
         <Clock className={sm ? 'h-3 w-3' : 'h-4 w-4'} />
         <span className="font-medium">Hours</span>
       </div>
-      <ul className={sm ? 'space-y-0.5 pl-4 text-xs text-[#4B5563]' : 'space-y-1 pl-6 text-sm text-[#4B5563]'}>
+      <ul className={sm ? 'space-y-0.5 pl-4 text-xs text-default-500' : 'space-y-1 pl-6 text-sm text-default-500'}>
         {hours.map((hour) => (
           <li key={hour}>{hour}</li>
         ))}
@@ -179,14 +185,16 @@ export const PlaceTypeChips = ({ types, size = 'md' }: { types: string[]; size?:
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className={`flex items-center ${sm ? 'gap-1.5 text-xs text-[#374151]' : 'gap-2 text-sm text-[#4B5563]'}`}>
+      <div
+        className={`flex items-center ${sm ? 'gap-1.5 text-xs text-default-400' : 'gap-2 text-sm text-default-500'}`}
+      >
         <TagIcon className={sm ? 'h-3 w-3' : 'h-4 w-4'} />
         <span className="font-medium">Type</span>
       </div>
       <div className={`flex flex-wrap ${sm ? 'gap-1.5 pl-4' : 'gap-2 pl-6'}`}>
         {visible.map((type) => (
           <span
-            className={`inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] font-medium text-[#9CA3AF] ${
+            className={`inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] font-medium text-default-700 ${
               sm ? 'px-2.5 py-0.5 text-xs' : 'px-3 py-1 text-sm'
             }`}
             key={type}
@@ -198,7 +206,7 @@ export const PlaceTypeChips = ({ types, size = 'md' }: { types: string[]; size?:
       {hasOverflow && (
         <Button
           aria-label={expanded ? 'Show fewer place types' : `Show ${hiddenCount} more place types`}
-          className={`${sm ? 'ml-4' : 'ml-6'} mt-0.5 rounded-full border-white/[0.09] bg-white/[0.05] text-[#6B7280]`}
+          className={`${sm ? 'ml-4' : 'ml-6'} mt-0.5 rounded-full border-white/[0.09] bg-white/[0.05] text-default-600`}
           onPress={() => setExpanded((prev) => !prev)}
           size="sm"
           variant="outline"
@@ -215,7 +223,7 @@ export const VotingInfoToggle = ({ children }: { children: React.ReactNode }): R
   return (
     <div>
       <button
-        className="flex items-center gap-1.5 py-0.5 text-xs text-[#374151] hover:text-[#6B7280]"
+        className="flex items-center gap-1.5 py-0.5 text-xs text-default-400 hover:text-default-600"
         onClick={(e) => {
           e.stopPropagation()
           setOpen(!open)
@@ -242,7 +250,7 @@ export const AddressMapLink = ({
   distanceMiles?: number
 }): React.ReactNode => (
   <a
-    className="flex items-start gap-1.5 text-xs text-[#4B5563] hover:text-[#F59E0B]"
+    className="flex items-start gap-1.5 text-xs text-default-500 hover:text-[#F59E0B]"
     href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
     onClick={(e) => e.stopPropagation()}
     rel="noopener noreferrer"
@@ -251,29 +259,20 @@ export const AddressMapLink = ({
     <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
     <span>
       {address}
-      {distanceMiles != null && <span className="text-[#374151]"> · {distanceMiles.toFixed(1)} mi</span>}
+      {distanceMiles != null && <span className="text-default-400"> · {distanceMiles.toFixed(1)} mi</span>}
     </span>
   </a>
 )
 
 export const DistanceDisplay = ({ distanceMiles }: { distanceMiles: number }): React.ReactNode => (
-  <div className="flex items-center gap-1.5 text-xs text-[#4B5563]">
+  <div className="flex items-center gap-1.5 text-xs text-default-500">
     <Navigation className="h-3 w-3 shrink-0" />
     <span>{distanceMiles.toFixed(1)} mi</span>
     <span
-      className="inline-flex cursor-default text-[#374151]"
+      className="inline-flex cursor-default text-default-400"
       title="Distance is measured from the address you entered and may not reflect your exact location if you used a city name or ZIP code."
     >
       <Info className="h-3 w-3" />
-    </span>
-  </div>
-)
-
-export const TodayHoursLine = ({ hours }: { hours: string }): React.ReactNode => (
-  <div className="flex items-center gap-1.5 text-xs text-[#4B5563]">
-    <Clock className="h-3 w-3 shrink-0" />
-    <span>
-      <span className="font-medium text-[#6B7280]">Today</span> {hours}
     </span>
   </div>
 )
@@ -282,6 +281,7 @@ const PhotoImage = ({ alt, src }: { alt: string; src: string }): React.ReactNode
   <img alt={alt} className="h-48 w-full rounded-md object-cover" src={src} />
 )
 
+// Decorative, and off the muted text ramp for the same reason as the hero placeholder above.
 const PhotoPlaceholder = (): React.ReactNode => (
   <div className="flex h-48 w-full items-center justify-center rounded-md bg-white/[0.03]">
     <UtensilsCrossed className="h-16 w-16 text-[#374151]" />
@@ -290,7 +290,7 @@ const PhotoPlaceholder = (): React.ReactNode => (
 
 export const AddressLine = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <a
-    className="flex items-start gap-2 text-sm text-[#4B5563] hover:text-[#F59E0B]"
+    className="flex items-start gap-2 text-sm text-default-500 hover:text-[#F59E0B]"
     href={`https://maps.google.com/?q=${encodeURIComponent(String(children))}`}
     rel="noopener noreferrer"
     target="_blank"
@@ -302,7 +302,7 @@ export const AddressLine = ({ children }: { children: React.ReactNode }): React.
 
 export const PhoneLink = ({ phone }: { phone: string }): React.ReactNode => (
   <div className="flex items-center gap-2 text-sm">
-    <Phone className="h-4 w-4 shrink-0 text-[#4B5563]" />
+    <Phone className="h-4 w-4 shrink-0 text-default-500" />
     <a className="text-[#F59E0B] underline" href={`tel:${phone}`}>
       {phone}
     </a>
@@ -310,7 +310,7 @@ export const PhoneLink = ({ phone }: { phone: string }): React.ReactNode => (
 )
 
 export const CardName = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <h3 className="choosee-brand text-[22px] tracking-[0.05em] text-[#F5F5F5]">{children}</h3>
+  <h3 className="choosee-brand text-[22px] tracking-[0.05em] text-foreground">{children}</h3>
 )
 
 export const CardMeta = ({
@@ -323,12 +323,12 @@ export const CardMeta = ({
   ratingsTotal?: number
 }): React.ReactNode => (
   <div className="flex flex-wrap items-center gap-3 text-sm">
-    {priceLabel && <span className="font-medium text-[#6B7280]">{priceLabel}</span>}
+    {priceLabel && <span className="font-medium text-default-600">{priceLabel}</span>}
     {rating != null && (
       <span className="flex items-center gap-1">
         <Star className="h-4 w-4 fill-[#F59E0B] text-[#F59E0B]" />
-        <span className="text-[#D4D4D4]">{rating}</span>
-        {ratingsTotal != null && <span className="text-[#4B5563]">({ratingsTotal})</span>}
+        <span className="text-default-800">{rating}</span>
+        {ratingsTotal != null && <span className="text-default-500">({ratingsTotal})</span>}
       </span>
     )}
   </div>
@@ -336,7 +336,7 @@ export const CardMeta = ({
 
 export const WebsiteLink = ({ url }: { url: string }): React.ReactNode => (
   <div className="flex min-w-0 max-w-[250px] items-center gap-2 overflow-hidden text-sm">
-    <Store className="h-4 w-4 shrink-0 text-[#4B5563]" />
+    <Store className="h-4 w-4 shrink-0 text-default-500" />
     <a
       className="min-w-0 truncate text-[#F59E0B] underline"
       href={url}

@@ -5,7 +5,7 @@ import React from 'react'
 const Section = ({ title, children }: { title: string; children: React.ReactNode }): React.ReactNode => (
   <div className="flex flex-col gap-3 border-t border-[rgba(255,255,255,0.06)] pt-8">
     <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-[#F59E0B]">{title}</h2>
-    <div className="flex flex-col gap-3 text-[#D4D4D4]">{children}</div>
+    <div className="flex flex-col gap-3 text-default-800">{children}</div>
   </div>
 )
 
@@ -15,7 +15,7 @@ const PrivacyPolicy = (): React.ReactNode => {
       <div className="flex flex-col gap-4">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#F59E0B]">Legal</p>
         <h1 className="text-4xl font-bold text-white">Privacy Policy</h1>
-        <p className="text-[#D4D4D4]">
+        <p className="text-default-800">
           There&apos;s no account and nothing to sign up for. We collect very little, we keep it briefly, and we never
           sell it.
         </p>
@@ -154,8 +154,8 @@ const PrivacyPolicy = (): React.ReactNode => {
         </p>
       </Section>
 
-      <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.06)] pt-6 text-sm text-[#4B5563]">
-        <Link className="flex items-center gap-1 hover:text-[#D4D4D4]" href="/">
+      <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.06)] pt-6 text-sm text-default-500">
+        <Link className="flex items-center gap-1 hover:text-default-800" href="/">
           <ArrowLeft aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
           Back to Choosee
         </Link>

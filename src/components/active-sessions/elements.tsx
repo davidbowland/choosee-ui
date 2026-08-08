@@ -44,7 +44,7 @@ const Headline = ({ state }: { state: CardState }): React.ReactNode => {
   }
 
   if (state.kind !== 'your-turn') {
-    return <span className="truncate text-sm font-semibold text-[#F5F5F5]">{headline(state)}</span>
+    return <span className="truncate text-sm font-semibold text-foreground">{headline(state)}</span>
   }
 
   return (
@@ -70,7 +70,7 @@ const IdentityLine = ({
   roster?: string
   state: CardState
 }): React.ReactNode => {
-  const className = 'truncate text-xs tabular-nums text-[#9CA3AF]'
+  const className = 'truncate text-xs tabular-nums text-default-700'
 
   // A finished Choosee has no round left to report, so the roster is the whole line. With nobody to
   // name, the line still holds its space: the skeleton that stood here cannot know a winner has no
@@ -124,7 +124,7 @@ const IdentityLine = ({
  * least useful thing on the card, which is the entire reason the address is on it.
  */
 const MetaLine = ({ address, time }: { address: string; time: TimeNote }): React.ReactNode => (
-  <span className={`truncate text-[11px] tabular-nums ${time.isExpiring ? 'text-[#F59E0B]' : 'text-[#6B7280]'}`}>
+  <span className={`truncate text-[11px] tabular-nums ${time.isExpiring ? 'text-[#F59E0B]' : 'text-default-600'}`}>
     {time.text} · {address}
   </span>
 )
@@ -202,7 +202,7 @@ export interface ShowMoreProps {
 export const ShowMore = ({ hidden, isExpanded, onPress }: ShowMoreProps): React.ReactNode => (
   <button
     aria-expanded={isExpanded}
-    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/10 bg-white/[0.015] p-2.5 text-xs font-medium text-[#9CA3AF] transition-colors hover:border-white/20 hover:text-[#F5F5F5]"
+    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/10 bg-white/[0.015] p-2.5 text-xs font-medium text-default-700 transition-colors hover:border-white/20 hover:text-foreground"
     onClick={onPress}
     type="button"
   >
@@ -282,7 +282,7 @@ export const ResumeCard = ({
             className={`grid h-8 w-8 flex-none place-items-center rounded-[10px] border ${
               isUrgent
                 ? 'border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#F59E0B]'
-                : 'border-white/[0.06] bg-white/[0.04] text-[#9CA3AF]'
+                : 'border-white/[0.06] bg-white/[0.04] text-default-700'
             }`}
           >
             <Glyph state={state} />
@@ -297,7 +297,7 @@ export const ResumeCard = ({
             finds this corner. */}
         <button
           aria-label={`Dismiss ${address}`}
-          className="flex w-10 flex-none items-center justify-center border-l border-white/[0.07] text-[#4B5563] hover:bg-white/[0.03] hover:text-[#D4D4D4]"
+          className="flex w-10 flex-none items-center justify-center border-l border-white/[0.07] text-default-500 hover:bg-white/[0.03] hover:text-default-800"
           onClick={onDismiss}
           type="button"
         >

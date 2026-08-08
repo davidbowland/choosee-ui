@@ -24,7 +24,7 @@ export const TournamentHeader = ({
   roundTotal: number
 }): React.ReactNode => {
   const roundPct = Math.round((roundCurrent / roundTotal) * 100)
-  const labelClass = 'text-[8px] font-bold uppercase tracking-[0.2em] text-[#374151]'
+  const labelClass = 'text-[8px] font-bold uppercase tracking-[0.2em] text-default-400'
   return (
     <div className="w-full overflow-hidden rounded-[18px] border border-white/[0.06] bg-white/[0.02]">
       <div className="flex flex-col">
@@ -32,16 +32,16 @@ export const TournamentHeader = ({
         <div className="flex divide-x divide-white/[0.06]">
           <div className="flex flex-1 flex-col items-center gap-0.5 py-3 md:py-4">
             <span className={labelClass}>Round</span>
-            <div className="choosee-brand whitespace-nowrap text-[38px] leading-none text-[#F5F5F5] md:text-[52px]">
+            <div className="choosee-brand whitespace-nowrap text-[38px] leading-none text-foreground md:text-[52px]">
               {roundCurrent}
-              <span className="text-[16px] text-[#374151] md:text-[22px]"> / {roundTotal}</span>
+              <span className="text-[16px] text-default-400 md:text-[22px]"> / {roundTotal}</span>
             </div>
           </div>
           <div className="flex flex-1 flex-col items-center gap-0.5 py-3 md:py-4">
             <span className={labelClass}>Match</span>
-            <div className="choosee-brand whitespace-nowrap text-[38px] leading-none text-[#F5F5F5] md:text-[52px]">
+            <div className="choosee-brand whitespace-nowrap text-[38px] leading-none text-foreground md:text-[52px]">
               {matchCurrent}
-              <span className="text-[16px] text-[#374151] md:text-[22px]"> / {matchTotal}</span>
+              <span className="text-[16px] text-default-400 md:text-[22px]"> / {matchTotal}</span>
             </div>
           </div>
           {/* Voting As: third column on desktop only */}
@@ -128,7 +128,7 @@ export const SegmentDivider = (): React.ReactNode => <div className="mx-1 h-5 w-
 
 export const BracketButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
   <button
-    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-[#E5E7EB] transition-colors hover:bg-white/[0.08] focus:outline-none"
+    className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium text-default-900 transition-colors hover:bg-white/[0.08] focus:outline-none"
     onClick={onPress}
     type="button"
   >
@@ -165,7 +165,7 @@ export const InlineNameEditor = ({
     return (
       <input
         autoFocus
-        className="choosee-brand rounded border border-[rgba(245,158,11,0.3)] bg-transparent px-2 py-1 text-[22px] font-bold text-[#F5F5F5] outline-none focus:border-[#F59E0B]"
+        className="choosee-brand rounded border border-[rgba(245,158,11,0.3)] bg-transparent px-2 py-1 text-[22px] font-bold text-foreground outline-none focus:border-[#F59E0B]"
         onBlur={commit}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
@@ -195,10 +195,10 @@ export const InlineNameEditor = ({
       }}
       type="button"
     >
-      <span className="choosee-brand text-[32px] text-[#F5F5F5] transition-colors group-hover:text-[#F59E0B]">
+      <span className="choosee-brand text-[32px] text-foreground transition-colors group-hover:text-[#F59E0B]">
         {name}
       </span>
-      <Pencil className="ml-2 inline h-3.5 w-3.5 align-middle text-[#6B7280] transition-colors group-hover:text-[#F59E0B]" />
+      <Pencil className="ml-2 inline h-3.5 w-3.5 align-middle text-default-600 transition-colors group-hover:text-[#F59E0B]" />
     </button>
   )
 }

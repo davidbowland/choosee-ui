@@ -310,7 +310,7 @@ const SessionCreate = (): React.ReactNode => {
           <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
           <p className="text-center text-xs">Your Choosee expires in 24 hours</p>
           <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
-          <p className="text-center text-[10px] text-[#4B5563]">This site is protected by reCAPTCHA</p>
+          <p className="text-center text-[10px] text-default-500">This site is protected by reCAPTCHA</p>
         </CreateCard>
       </div>
       <FeedbackMessage autoHideDuration={15_000} message={errorMessage} onClose={clearError} severity="error" />

@@ -1,5 +1,11 @@
 // This app is unlisted by design — friends-and-family only, not meant to be publicly discoverable.
-// No sitemap is published, and robots.txt disallows crawling entirely.
+// No sitemap is published, and every page carries <meta name="robots" content="noindex, nofollow">
+// from src/pages/_document.tsx.
+//
+// robots.txt deliberately ALLOWS crawling. Disallowing it would be counterproductive: a crawler has
+// to fetch a page to see its noindex, so a blocked URL stays eligible for indexing from inbound
+// links — and session links are exactly the URLs that get pasted into places crawlers read. Allowing
+// the fetch is what lets noindex actually remove the URL.
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
   siteUrl: 'https://choosee.dbowland.com',
@@ -10,6 +16,6 @@ module.exports = {
   generateRobotsTxt: true,
   exclude: ['/*'],
   robotsTxtOptions: {
-    policies: [{ userAgent: '*', disallow: '/' }],
+    policies: [{ userAgent: '*', allow: '/' }],
   },
 }

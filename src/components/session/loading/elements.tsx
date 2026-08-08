@@ -54,7 +54,7 @@ export const LoadingSpinner = ({ random = Math.random }: LoadingSpinnerProps = {
           style={{ animationDirection: 'reverse', animationDuration: '1.4s' }}
         />
       </div>
-      <p aria-live="polite" className="text-center text-[#4B5563] transition-all duration-500" role="status">
+      <p aria-live="polite" className="text-center text-default-500 transition-all duration-500" role="status">
         {messages ? messages[msgIdx] : 'Loading...'}
       </p>
     </div>

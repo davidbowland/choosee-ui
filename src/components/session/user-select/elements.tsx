@@ -10,7 +10,7 @@ export const SectionContainer = ({ children }: { children: React.ReactNode }): R
 )
 
 export const SectionTitle = ({ children }: { children: React.ReactNode }): React.ReactNode => (
-  <h2 className="choosee-brand text-3xl text-[#F5F5F5]">{children}</h2>
+  <h2 className="choosee-brand text-3xl text-foreground">{children}</h2>
 )
 
 export const UserOption = ({
@@ -30,7 +30,7 @@ export const UserOption = ({
     }`}
   >
     <input checked={checked} className="accent-[#F59E0B]" name="user-select" onChange={onChange} type="radio" />
-    <span className="text-sm font-medium text-[#D4D4D4]">{label}</span>
+    <span className="text-sm font-medium text-default-800">{label}</span>
   </label>
 )
 

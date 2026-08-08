@@ -23,59 +23,67 @@ body {
 }
 
 /* ---- Arena dark theme overrides ----
-   HeroUI v3 with Tailwind v4 registers theme colors as --color-* CSS variables.
-   We override both the short form (--background) and the prefixed form
-   (--color-background) so the overrides work regardless of HeroUI's
-   internal naming convention.
-*/
+   Every name here is one HeroUI actually reads. Its theme registers colors as
+   `--color-x: var(--x)`, so the UNPREFIXED name is the knob and the --color- form is HeroUI's
+   own alias; setting the alias as well — as this block used to, for all nine of these — assigned
+   variables that nothing ever reads. The build confirms it: `var(--foreground)` appears 83 times
+   in the compiled stylesheet and `var(--color-foreground)` zero times.
+
+   Names not in HeroUI's vocabulary are worth just as little. --primary and --divider were both
+   invented here; v3 calls those `accent` and `separator`, so the amber assigned to --primary went
+   nowhere and every accent-colored control in the app — sliders, radio indicators, switches, focus
+   rings — kept rendering in HeroUI's stock blue against an otherwise amber page. Assigning --accent
+   is what that line was always trying to say. */
 html.dark {
   /* Backgrounds */
   --background: #0a0a0b;
-  --color-background: #0a0a0b;
   --surface: #0d0d0e;
-  --color-surface: #0d0d0e;
 
   /* Foreground */
   --foreground: #f5f5f5;
-  --color-foreground: #f5f5f5;
 
-  /* Primary → Amber */
-  --primary: #f59e0b;
-  --color-primary: #f59e0b;
-  --primary-foreground: #0a0a0b;
-  --color-primary-foreground: #0a0a0b;
-
-  /* Default neutral scale — dark grays */
-  --default-50: #0d0d0e;
-  --color-default-50: #0d0d0e;
-  --default-100: #111113;
-  --color-default-100: #111113;
-  --default-200: #1a1a1c;
-  --color-default-200: #1a1a1c;
-  --default-300: #27272a;
-  --color-default-300: #27272a;
-  --default-400: #374151;
-  --color-default-400: #374151;
-  --default-500: #4b5563;
-  --color-default-500: #4b5563;
-  --default-600: #6b7280;
-  --color-default-600: #6b7280;
-  --default-700: #9ca3af;
-  --color-default-700: #9ca3af;
-  --default-800: #d1d5db;
-  --color-default-800: #d1d5db;
-  --default-900: #f9fafb;
-  --color-default-900: #f9fafb;
-
-  /* Divider / border */
-  --divider: rgba(255, 255, 255, 0.07);
-  --color-divider: rgba(255, 255, 255, 0.07);
+  /* Brand amber. The rest of the accent family derives from these two by color-mix
+     (--accent-hover, --accent-soft, --accent-soft-foreground) and --focus is a straight alias of
+     --accent, so the whole set follows from here. --accent-foreground is the exception and has to
+     be set: it defaults to near-white, which is 1.97:1 on this amber, where the near-black below
+     is 9.21:1. */
+  --accent: #f59e0b;
+  --accent-foreground: #0a0a0b;
 
   /* Warning stays amber (used for Trophy icon) */
   --warning: #f59e0b;
-  --color-warning: #f59e0b;
   --warning-foreground: #0a0a0b;
-  --color-warning-foreground: #0a0a0b;
+}
+
+/* ---- Muted text ramp ----
+   Every rung of this used to fail WCAG AA against this theme's near-black: body copy at #4b5563
+   measured 2.62:1 where 4.5:1 is the floor, the 9px field labels at #6b7280 reached 4.09:1, and the
+   privacy link at #1f2937 was 1.35:1. The rungs below are spaced across 5.4:1–11.4:1 against
+   --background and each still clears 4.5:1 against the lightest surface any text lands on — a
+   bg-white/[0.06] chip — which is what actually sets the floor. Same order as the ramp they replace,
+   so the hierarchy the components were built around survives.
+
+   `@theme` rather than a plain variable block, and that distinction is the whole point of this
+   section. Declaring --color-default-500 inside html.dark defines a variable but registers nothing
+   with Tailwind, so `text-default-500` compiles to no rule at all and the element quietly inherits
+   its parent's color — which is exactly what the error pages were doing. Only a color declared in
+   @theme becomes a utility, which is what lets every call site name the rung instead of pasting the
+   hex, and what stops this ramp from drifting back out of compliance one component at a time.
+
+   These live here, not in html.dark, because the app is dark-only: _document.tsx puts .dark on the
+   documentElement before first paint and nothing ever takes it off. Add a light theme and these need
+   to move behind it.
+
+   The scale starts at 400 because this is a text ramp and nothing below that rung was text. The old
+   50–300 entries were surfaces that no rule ever read; the one class that wanted them,
+   `bg-default-300` in the photo carousel, is now a plain translucent white. */
+@theme {
+  --color-default-400: #7f8692;
+  --color-default-500: #969ba6;
+  --color-default-600: #abb0b9;
+  --color-default-700: #c0c5cc;
+  --color-default-800: #d4d4d4;
+  --color-default-900: #e5e7eb;
 }
 
 /* ---- Arena CSS utilities ---- */

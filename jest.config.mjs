@@ -52,7 +52,7 @@ const config = {
   testPathIgnorePatterns: [
     'node_modules',
     '\\.cache',
-    '<rootDir>.*/out',
+    '<rootDir>.*/out/',
     '<rootDir>/.worktrees/',
     '<rootDir>/.claude/worktrees/',
   ],
