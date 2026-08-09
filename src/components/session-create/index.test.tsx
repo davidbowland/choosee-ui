@@ -215,6 +215,69 @@ describe('SessionCreate component', () => {
     })
   })
 
+  describe('reCAPTCHA script loading', () => {
+    const scriptSrc = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`
+
+    const recaptchaScript = () => document.getElementById('recaptcha-v3-script')
+
+    /** The script tag is appended to a document shared by every test in this file, and the loader
+        is deliberately idempotent, so a tag left behind by an earlier test would mask whether the
+        code under test appended one of its own. */
+    const setup = () => {
+      recaptchaScript()?.remove()
+    }
+
+    it('should not load the script on mount', async () => {
+      setup()
+      renderWithClient(<SessionCreate />)
+
+      await screen.findByLabelText(/Your location/i)
+
+      expect(recaptchaScript()).toBeNull()
+    })
+
+    it('should load the script on first interaction anywhere on the page', async () => {
+      setup()
+      renderWithClient(<SessionCreate />)
+      await screen.findByLabelText(/Your location/i)
+
+      fireEvent.scroll(window)
+
+      expect(recaptchaScript()).toHaveAttribute('src', scriptSrc)
+    })
+
+    it('should load the script only once across repeated interactions', async () => {
+      setup()
+      renderWithClient(<SessionCreate />)
+      await screen.findByLabelText(/Your location/i)
+
+      fireEvent.scroll(window)
+      fireEvent.pointerDown(window)
+      fireEvent.keyDown(window)
+
+      expect(document.querySelectorAll('#recaptcha-v3-script')).toHaveLength(1)
+    })
+
+    it('should load the script when a token is requested without any prior interaction', async () => {
+      setup()
+      renderWithClient(<SessionCreate />)
+
+      const user = userEvent.setup()
+      const addressInput = await screen.findByLabelText(/Your location/i)
+      await act(async () => {
+        await user.clear(addressInput)
+        await user.type(addressInput, address)
+      })
+      const chooseButton = await screen.findByRole('button', { name: /Find restaurants/i })
+      await act(async () => {
+        await user.click(chooseButton)
+      })
+
+      await waitFor(() => expect(api.createSession).toHaveBeenCalled())
+      expect(recaptchaScript()).toHaveAttribute('src', scriptSrc)
+    })
+  })
+
   describe('reCAPTCHA warm-up', () => {
     it('should not prime before the user touches the form', async () => {
       renderWithClient(<SessionCreate />)

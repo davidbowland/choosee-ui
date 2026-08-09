@@ -23,6 +23,18 @@ const RECAPTCHA_SCRIPT_ID = 'recaptcha-v3-script'
 
 const RECAPTCHA_TIMEOUT_MS = 10_000
 
+const RECAPTCHA_INTERACTION_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const
+
+/** Appends the reCAPTCHA v3 script, at most once per document. */
+const loadRecaptcha = (): void => {
+  if (document.getElementById(RECAPTCHA_SCRIPT_ID)) return
+  const script = document.createElement('script')
+  script.id = RECAPTCHA_SCRIPT_ID
+  script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`
+  script.async = true
+  document.body.appendChild(script)
+}
+
 /** Polls for the reCAPTCHA global then waits for it to be ready. Handles the case where
     the script tag hasn't finished loading yet when this is called. */
 const waitForRecaptcha = (): Promise<void> =>
@@ -40,8 +52,10 @@ const waitForRecaptcha = (): Promise<void> =>
     check()
   })
 
-/** Waits for reCAPTCHA to be ready, then mints a fresh token for `action`. */
+/** Waits for reCAPTCHA to be ready, then mints a fresh token for `action`. Loads the script itself
+    so a token request can never be stranded polling for a global that nothing ever requested. */
 const executeRecaptcha = async (action: string): Promise<string> => {
+  loadRecaptcha()
   await waitForRecaptcha()
   return grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action })
 }
@@ -115,14 +129,23 @@ const SessionCreate = (): React.ReactNode => {
     setDefaultsApplied(true)
   }, [config, defaultsApplied])
 
+  // reCAPTCHA is ~670 KiB and roughly a second of main-thread time, and nothing here needs a token
+  // until the visitor acts. Loading it on mount put all of that inside the initial page load, where
+  // it was by far the largest contributor to blocking time — and every visitor who read the page
+  // and left paid it for a token that was never minted. The trigger is the first interaction
+  // anywhere on the document rather than the form specifically, because the form sits below the
+  // hero: a scroll toward it starts the download well before `primeRecaptcha` fires on touch, which
+  // is what keeps the warm-up window from collapsing onto the real execute.
   useEffect(() => {
-    if (!document.getElementById(RECAPTCHA_SCRIPT_ID)) {
-      const script = document.createElement('script')
-      script.id = RECAPTCHA_SCRIPT_ID
-      script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`
-      script.async = true
-      document.body.appendChild(script)
+    const handleFirstInteraction = (): void => {
+      RECAPTCHA_INTERACTION_EVENTS.forEach((event) => window.removeEventListener(event, handleFirstInteraction, true))
+      loadRecaptcha()
     }
+    RECAPTCHA_INTERACTION_EVENTS.forEach((event) =>
+      window.addEventListener(event, handleFirstInteraction, { capture: true, passive: true }),
+    )
+    return () =>
+      RECAPTCHA_INTERACTION_EVENTS.forEach((event) => window.removeEventListener(event, handleFirstInteraction, true))
   }, [])
 
   // reCAPTCHA v3 scores the first, cold `execute` of a page load low because it has gathered almost
