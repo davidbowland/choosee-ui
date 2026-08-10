@@ -288,7 +288,7 @@ const SessionCreate = (): React.ReactNode => {
           pointerdown that precedes a "Use my location" click, which gives the warm-up the whole
           permission prompt and GPS fix to settle before the geocode token is minted. */}
       <div onFocusCapture={primeRecaptcha} onPointerDownCapture={primeRecaptcha}>
-        <CreateCard>
+        <CreateCard onSubmit={handleSubmit}>
           <AddressField disabled={isLoading} error={addressError} onChange={(v) => setAddress(v)} value={address} />
           <UseMyLocationButton error={locationError} isLoading={isLocating} onPress={handleUseMyLocation} />
           <MultiSelect
@@ -332,7 +332,7 @@ const SessionCreate = (): React.ReactNode => {
           />
           <FilterClosingSoonToggle checked={filterClosingSoon} disabled={isLoading} onChange={setFilterClosingSoon} />
           <p className="text-center text-xs">Your Choosee expires in 24 hours</p>
-          <SubmitButton isLoading={isLoading} onPress={handleSubmit} />
+          <SubmitButton isLoading={isLoading} />
           <p className="text-center text-[10px] text-default-500">This site is protected by reCAPTCHA</p>
         </CreateCard>
       </div>

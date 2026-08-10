@@ -56,7 +56,9 @@ export const LoadingCard = ({ error }: { error?: string }): React.ReactNode => (
     <div className="arena-glass-inner flex flex-1 flex-col justify-center p-6">
       {error ? (
         <div className="flex flex-col items-center gap-4 py-12">
-          <p className="text-center text-sm text-red-400">{error}</p>
+          <p className="text-center text-sm text-red-400" role="alert">
+            {error}
+          </p>
           <Button
             className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-800"
             onPress={() => window.location.reload()}
@@ -72,10 +74,32 @@ export const LoadingCard = ({ error }: { error?: string }): React.ReactNode => (
   </div>
 )
 
-export const CreateCard = ({ children }: { children: React.ReactNode }): React.ReactNode => (
+/**
+ * A real <form>, so the create card can be completed without a pointer.
+ *
+ * There was no form element anywhere in this app and PillArrowButton had no type, so pressing Enter
+ * in the address field did nothing at all. Nobody noticed because every submit here is also a mouse
+ * target — which is exactly the shape of a defect that only ever affects people using a keyboard.
+ */
+export const CreateCard = ({
+  children,
+  onSubmit,
+}: {
+  children: React.ReactNode
+  onSubmit: () => void
+}): React.ReactNode => (
   <div className="arena-glass-outer">
     <div className="arena-glass-inner p-6">
-      <div className="flex flex-col gap-[18px]">{children}</div>
+      <form
+        className="flex flex-col gap-[18px]"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          onSubmit()
+        }}
+      >
+        {children}
+      </form>
     </div>
   </div>
 )
@@ -94,6 +118,8 @@ export const AddressField = ({
   <div className="w-full">
     <div className="mb-[5px] text-[9px] font-bold uppercase tracking-[0.18em] text-default-600">Your location</div>
     <Input
+      aria-describedby={error ? 'address-error' : undefined}
+      aria-invalid={error ? true : undefined}
       aria-label="Your location"
       autoComplete="postal-code"
       className="w-full"
@@ -104,7 +130,14 @@ export const AddressField = ({
       type="text"
       value={value}
     />
-    {error && <span className="mt-1 block text-sm text-red-400">{error}</span>}
+    {/* The field already had an accessible name; what it lacked was any relationship between itself
+        and the reason it was rejected. Colour was the whole signal, and colour is not a signal to
+        anyone using this without sight. */}
+    {error && (
+      <span className="mt-1 block text-sm text-red-400" id="address-error" role="alert">
+        {error}
+      </span>
+    )}
   </div>
 )
 
@@ -127,7 +160,11 @@ export const UseMyLocationButton = ({
       {isLoading ? <Spinner className="h-3 w-3" size="sm" /> : <LocateFixed className="h-3 w-3" />}
       {isLoading ? 'Detecting location…' : 'Use my location'}
     </button>
-    {error && <span className="text-xs text-red-400">{error}</span>}
+    {error && (
+      <span className="text-xs text-red-400" role="alert">
+        {error}
+      </span>
+    )}
   </div>
 )
 
@@ -249,8 +286,21 @@ export const DistanceSlider = ({
   </div>
 )
 
-export const SubmitButton = ({ isLoading, onPress }: { isLoading: boolean; onPress: () => void }): React.ReactNode => (
-  <PillArrowButton isLoading={isLoading} label="Find restaurants" loadingLabel="Loading..." onPress={onPress} />
+/**
+ * Submission goes through the form, not through this button.
+ *
+ * With both an onPress and type="submit" the handler fires twice for one press — once from the press
+ * handler and once from the native submit — which is how a click ended up clearing the very error it
+ * had just produced. The form is the single path, so keyboard and pointer take exactly the same one.
+ */
+export const SubmitButton = ({ isLoading }: { isLoading: boolean }): React.ReactNode => (
+  <PillArrowButton
+    isLoading={isLoading}
+    label="Find restaurants"
+    loadingLabel="Loading..."
+    onPress={() => undefined}
+    type="submit"
+  />
 )
 
 export interface MultiSelectItem {
