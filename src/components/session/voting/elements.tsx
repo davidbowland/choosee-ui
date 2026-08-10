@@ -164,6 +164,10 @@ export const InlineNameEditor = ({
   if (editing) {
     return (
       <input
+        // The only control in the app with no accessible name of any kind — no label, no aria-label,
+        // no placeholder. WCAG 4.1.2, level A: a screen reader announced an edit box and nothing else,
+        // so there was no way to know what was being edited.
+        aria-label="Your name"
         autoFocus
         className="choosee-brand rounded border border-[rgba(245,158,11,0.3)] bg-transparent px-2 py-1 text-[22px] font-bold text-foreground outline-none focus:border-[#F59E0B]"
         onBlur={commit}
