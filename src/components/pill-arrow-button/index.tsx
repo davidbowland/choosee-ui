@@ -8,17 +8,23 @@ export const PillArrowButton = ({
   label,
   loadingLabel,
   onPress,
+  // Defaults to a plain button because every existing call site is one. Only a control inside a real
+  // <form> asks for 'submit', and that is what makes Enter-in-a-field submit at all — without it a
+  // keyboard user cannot complete the form, whatever the pointer can do.
+  type = 'button',
 }: {
   isDisabled?: boolean
   isLoading?: boolean
   label: string
   loadingLabel?: string
   onPress: () => void
+  type?: 'button' | 'submit'
 }): React.ReactNode => (
   <Button
     className="flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] pl-5 pr-[7px] text-[13px] font-bold text-[#0A0A0B] hover:opacity-90 disabled:opacity-40"
     isDisabled={isDisabled || isLoading}
     onPress={onPress}
+    type={type}
     variant="primary"
   >
     <span>{isLoading ? (loadingLabel ?? label) : label}</span>
