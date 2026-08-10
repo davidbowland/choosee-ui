@@ -65,6 +65,9 @@ export interface SessionData {
   rankBy: string
   voterCount: number
   votersSubmitted: number
+  // Absent until somebody answers "anyone else coming?" — which is exactly what the round-1 waiting
+  // screen renders the question from. Round 1 will not advance on its own while it is unset.
+  expectedVoters?: number
 }
 
 export interface User {

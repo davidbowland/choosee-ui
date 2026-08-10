@@ -60,6 +60,22 @@ const buildNotification = (payload) => {
   if (payload && typeof payload.winnerName === 'string' && payload.winnerName.length > 0) {
     return { body: "Tap to see where you're eating.", title: `${payload.winnerName} wins` }
   }
+  if (payload && typeof payload.readyRound === 'number') {
+    // The round did NOT open: everyone present voted and nothing advanced it, so a person has to.
+    // Its own field rather than `round`, which below means the opposite — a round that DID open —
+    // and is the worker's discriminator for that sentence. Same "of N only when N is real" guard as
+    // below: the API's default for totalRounds is 0, and `typeof 0 === 'number'` passes a naive check.
+    const total = typeof payload.totalRounds === 'number' && payload.totalRounds > 0 ? payload.totalRounds : null
+    // readyRound is an INDEX, like `round`. The round it would open is therefore readyRound + 2 as a
+    // human number: + 1 to turn the index into its own round number, + 1 again for the next one.
+    // It is the last round when readyRound + 1 — the human number of the round just finished —
+    // reaches the bracket length, because then there is no next round to open, only a winner.
+    const isFinal = total !== null && payload.readyRound + 1 >= total
+    return {
+      body: isFinal ? 'Tap to see the winner.' : `Tap to start round ${payload.readyRound + 2}.`,
+      title: "Everyone's voted",
+    }
+  }
   if (payload && typeof payload.round === 'number') {
     // `round` is the API's round INDEX, not its number: session.currentRound starts at 0, and every
     // other surface in this app adds the one — the bracket columns, the voting header. Announcing

@@ -91,6 +91,11 @@ export const patchUser = (sessionId: string, userId: string, operations: PatchOp
 export const closeRound = (sessionId: string, roundId: number): Promise<SessionData> =>
   requestJson('POST', `/sessions/${encodeURIComponent(sessionId)}/rounds/${roundId}/close`)
 
+// Answers with the whole session, not just the value written: the API runs the advance check before
+// it responds, so the body may already describe a round the count just opened.
+export const setExpectedVoters = (sessionId: string, expectedVoters: number): Promise<SessionData> =>
+  requestJson('PATCH', `/sessions/${encodeURIComponent(sessionId)}`, { body: { expectedVoters } })
+
 export const fetchVapidPublicKey = (): Promise<{ publicKey: string }> => requestJson('GET', '/push/vapid-public-key')
 
 // The endpoint answers 204, so the response body is never read: parsing an empty payload as JSON
