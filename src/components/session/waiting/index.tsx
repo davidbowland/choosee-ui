@@ -31,7 +31,7 @@ import {
 import BracketView from '@components/bracket-view'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
-import { apiErrorMessage, closeRound, hasErrorCode, hasStatusCode, setExpectedVoters } from '@services/api'
+import { closeRound, hasErrorCode, hasStatusCode, setExpectedVoters } from '@services/api'
 import { isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from '@services/push'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
 import { PushCapability, readCapabilityEnv, resolvePushCapability } from '@utils/push-capability'
@@ -55,6 +55,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
   const queryClient = useQueryClient()
   const [bracketOpen, setBracketOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmNames, setConfirmNames] = useState<string[]>([])
   const [hasShared, setHasShared] = useState(false)
   const [stepperOpen, setStepperOpen] = useState(false)
   const [moreVoters, setMoreVoters] = useState(1)
@@ -202,12 +203,15 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
         return
       }
       // The route raises four errorCode-less 400s — over the cap, a non-positive count, a Choosee
-      // that is not ready, and one that already has a winner. Answering all of them with a sentence
-      // about crowd size told the wrong story for the reachable one: another participant pressing
-      // "See the winner" on a one-round bracket while this stepper is open. The server already
-      // says which it was, so relay that rather than guessing.
+      // that is not ready, and one that already has a winner. The reachable one is the last:
+      // another participant pressing "See the winner" on a one-round bracket while this stepper is
+      // open. The client cannot tell them apart without an errorCode, and the server's own strings
+      // say "session", which is the one word this product never shows a user. So: one honest
+      // sentence that does not invite a retry, plus a refresh so the screen re-derives from
+      // whatever is actually true now.
       if (hasStatusCode(err, 400)) {
-        toast.danger(apiErrorMessage(err, "Couldn't save that."))
+        toast.danger("Couldn't save that — this Choosee has moved on. Refreshed to catch you up.")
+        void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
         return
       }
       // A 404 is terminal — the Choosee expired out from under a screen people sit on for hours —
@@ -230,7 +234,13 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
   const showProgress = !isRoundOne || isArmed || session.voterCount > 1
   // Armed, the bar measures against the number that was given; unarmed it measures who is here.
   // Later rounds never read the count — the server has stopped consulting it by then.
-  const progressTotal = isArmed && session.expectedVoters != null ? session.expectedVoters : session.voterCount
+  // max, not the raw count: armed for 3 with 4 in the room renders "Voted 4 / 3" otherwise, and
+  // once everyone expected has voted the bar fills while a fourth person is still deciding — a
+  // completed bar over a round that has not moved and says nothing about why.
+  const progressTotal =
+    isArmed && session.expectedVoters != null
+      ? Math.max(session.expectedVoters, session.voterCount)
+      : session.voterCount
   const stillMissing = Math.max(0, progressTotal - session.voterCount)
   const armedSubtitle = [
     otherNames.length > 0 ? `${joinNames(otherNames)} ${otherNames.length === 1 ? 'is' : 'are'} here.` : '',
@@ -242,23 +252,18 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
     outstandingNames.length > 0
       ? `${joinNames(outstandingNames)} ${outstandingNames.length === 1 ? 'is' : 'are'} still voting.`
       : ''
-  // Unarmed round 1 with everyone present done: state who is here and stop. The roster is the only
-  // fact worth reporting at that moment — whether anyone else is coming is the question below, and
-  // the screen must not answer it on the user's behalf.
-  const presentSubtitle =
-    otherNames.length > 0 ? `${joinNames(otherNames)} ${otherNames.length === 1 ? 'is' : 'are'} here.` : ''
-  // Round 1 must never fall through to the later-round default. Unarmed, with everyone present
-  // already voted, that default put "Waiting for others to finish voting..." under a full bar and
-  // directly above "Anyone else coming?" — three sentences contradicting each other, and the
-  // progress line simply false: nobody present is still voting, which is exactly why the card is
-  // asking. That state is not an edge case, it is the one this whole feature creates. So round 1
-  // says who is here, or says nothing, and lets the question carry the screen.
-  const roundOneSubtitle = (isArmed && armedSubtitle) || outstandingSubtitle || presentSubtitle
-  const subtitle = isRoundOne
-    ? roundOneSubtitle
-    : solo
-      ? 'Wrapping up this round...'
-      : 'Waiting for others to finish voting...'
+  // Who is still voting outranks the countdown. Armed, the old order let armedSubtitle win outright,
+  // so an over-attended round showed a full bar and "Alex and Jordan are here." with nothing saying
+  // a fourth person had not finished or why round 2 had not opened.
+  //
+  // Round 1 must never fall through to the later-round default either: unarmed with everyone
+  // present done, that printed "Waiting for others to finish voting..." under a full bar and
+  // directly above "Anyone else coming?" — three sentences contradicting each other, the middle one
+  // false. When round 1 has nothing true to add, it says nothing and lets the question carry the
+  // screen; the roster already names who is here inside the card, so repeating it here only
+  // stutters.
+  const roundOneSubtitle = outstandingSubtitle || (isArmed && armedSubtitle) || ''
+  const subtitle = isRoundOne ? roundOneSubtitle : 'Waiting for others to finish voting...'
 
   const morePhrase = moreVoters === 1 ? '1 more person has' : `${moreVoters} more people have`
   const stepperHelper = isFinalRound(session)
@@ -278,8 +283,22 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
 
   // Closing the round throws away the votes of anyone mid-matchup, so it asks first — and names
   // them, because "not everyone has voted" is what makes that decision impossible to weigh.
+  //
+  // Gated on BOTH sources, because they disagree in a direction that loses votes. `outstandingNames`
+  // comes from the users query at 30s; `votersSubmitted`/`voterCount` come from the session poll at
+  // 10-15s and are derived server-side from one snapshot. So a newcomer who joins and has not voted
+  // shows up in the session counts up to 30s before the users list knows they exist — and gating on
+  // the list alone meant no confirm, an immediate close, and exactly the silently-discarded vote
+  // this whole feature was built to prevent. The names are the nicety; the counts are the guard.
+  const someoneOutstanding = outstandingNames.length > 0 || session.votersSubmitted < session.voterCount
+
   const handleNextRound = (): void => {
-    if (outstandingNames.length > 0) {
+    if (someoneOutstanding) {
+      // Frozen at open. ConfirmDialog derives its whole sentence from these, and the likeliest next
+      // event is the very person it names finishing — which would rewrite an open dialog into
+      // "Skip ahead without them?" over a body reading "Not everyone has voted", now false, and
+      // relabel the confirm button away from the action the user actually pressed.
+      setConfirmNames(outstandingNames)
       setConfirmOpen(true)
       return
     }
@@ -319,7 +338,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
           <RoundOneQuestion
             roster={otherNames.length > 0 ? <RosterLine names={otherNames} /> : <FinishedRoundOneTitle />}
           >
-            <WaitForOthersButton onPress={openStepper} />
+            {session.voterCount < MAX_EXPECTED_VOTERS && <WaitForOthersButton onPress={openStepper} />}
             <NextRoundButton isLoading={closeMutation.isPending} label={nextLabel} onPress={handleNextRound} />
           </RoundOneQuestion>
         ))}
@@ -380,7 +399,7 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
           onConfirm={() => closeMutation.mutate()}
           open={confirmOpen}
           // Only round 1 knows who it would be cutting off; later rounds keep today's unnamed copy.
-          outstandingNames={isRoundOne ? outstandingNames : undefined}
+          outstandingNames={isRoundOne ? confirmNames : undefined}
         />
       )}
 

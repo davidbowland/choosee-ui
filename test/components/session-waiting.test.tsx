@@ -582,9 +582,28 @@ describe('WaitingPhase', () => {
 
       expect(screen.queryByText(/Waiting for others to finish voting/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/still voting/i)).not.toBeInTheDocument()
-      expect(screen.getByText('Alex is here.')).toBeInTheDocument()
+      // The roster names Alex inside the card; the progress subtitle deliberately says nothing, so
+      // the name appears exactly once rather than stuttering across both.
+      expect(screen.getAllByText('Alex')).toHaveLength(1)
       expect(screen.getByText('Anyone else coming?')).toBeInTheDocument()
       await settleNotifyControl()
+    })
+
+    // The counts and the names come from different queries on different intervals — the session
+    // every 10-15s, the users list every 30s — and they disagree in a direction that loses votes.
+    // A newcomer who joins and has not voted lands in votersSubmitted/voterCount up to 30s before
+    // the users list knows they exist. Gating the confirm on the names alone meant no confirm, an
+    // immediate close, and precisely the silently-discarded vote this feature exists to prevent.
+    it('should still confirm when the counts know about someone the roster does not', async () => {
+      const user = userEvent.setup()
+      // Both known users are done, so outstandingNames is empty — but the session has already seen
+      // a third person join who has not voted.
+      renderRoundOne({ voterCount: 3, votersSubmitted: 2 }, [doneUser, alex])
+
+      await user.click(screen.getByText('Start round 2'))
+
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+      expect(api.closeRound).not.toHaveBeenCalled()
     })
 
     // The roster names other people, never you — "Alex and Jordan are here" cannot be misread as
@@ -728,13 +747,11 @@ describe('WaitingPhase', () => {
       await waitFor(() => expect(api.setExpectedVoters).toHaveBeenCalledWith('test-session', 20))
     })
 
-    // The route raises four errorCode-less 400s and only one of them is about crowd size. Relaying
-    // the server's own sentence is what stops a Choosee that already has a winner — reachable when
-    // someone else presses "See the winner" while this stepper is open — being explained as too
-    // many people.
-    it('should relay the reason a count was refused', async () => {
+    // Four errorCode-less 400s share this branch and the client cannot tell them apart, so it must
+    // not name a cause. It also must not relay the server's own strings, which say "session" — the
+    // one word this product never shows a user. One honest sentence, no retry invitation.
+    it('should not invite a retry when the count is refused', async () => {
       jest.mocked(api.hasStatusCode).mockReturnValueOnce(false).mockReturnValueOnce(true)
-      jest.mocked(api.apiErrorMessage).mockReturnValueOnce('Session already has a winner')
       jest.mocked(api.setExpectedVoters).mockRejectedValueOnce(new Error('nope'))
       const user = userEvent.setup()
       renderRoundOne()
@@ -742,7 +759,11 @@ describe('WaitingPhase', () => {
       await user.click(screen.getByText('Wait for others'))
       await user.click(screen.getByText('Done'))
 
-      await waitFor(() => expect(toast.danger).toHaveBeenCalledWith('Session already has a winner'))
+      await waitFor(() =>
+        expect(toast.danger).toHaveBeenCalledWith(
+          "Couldn't save that — this Choosee has moved on. Refreshed to catch you up.",
+        ),
+      )
     })
 
     it('should not send the count twice on a double tap', async () => {
