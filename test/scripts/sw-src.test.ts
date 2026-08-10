@@ -79,6 +79,35 @@ describe('sw-src', () => {
       })
     })
 
+    // `readyRound` is the round that did NOT open — everyone present voted and nothing advanced it.
+    // Index 0 is round 1, so the round a tap would open is round 2.
+    it('should announce a round that is ready to close', () => {
+      expect(
+        buildNotification({ readyRound: 0, sessionId: 'fuzzy-penguin', totalRounds: 4, userId: 'brave-tiger' }),
+      ).toEqual({ body: 'Tap to start round 2.', title: "Everyone's voted" })
+    })
+
+    it('should point at the winner when the ready round is the last one', () => {
+      expect(
+        buildNotification({ readyRound: 3, sessionId: 'fuzzy-penguin', totalRounds: 4, userId: 'brave-tiger' }),
+      ).toEqual({ body: 'Tap to see the winner.', title: "Everyone's voted" })
+    })
+
+    // Without a bracket length there is nothing to compare against, so the next round is named rather
+    // than guessing at a winner that may not be one tap away.
+    it('should name the next round when the bracket length is missing', () => {
+      expect(buildNotification({ readyRound: 1, sessionId: 'fuzzy-penguin', userId: 'brave-tiger' })).toEqual({
+        body: 'Tap to start round 3.',
+        title: "Everyone's voted",
+      })
+    })
+
+    it('should still announce a round that did open', () => {
+      expect(
+        buildNotification({ round: 1, sessionId: 'fuzzy-penguin', totalRounds: 4, userId: 'brave-tiger' }),
+      ).toEqual({ body: 'Tap to vote.', title: 'Round 2 of 4 is open' })
+    })
+
     it('should announce a winner by name', () => {
       expect(
         buildNotification({ sessionId: 'fuzzy-penguin', userId: 'brave-tiger', winnerName: "Kim's Diner" }),

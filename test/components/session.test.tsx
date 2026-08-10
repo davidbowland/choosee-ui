@@ -33,7 +33,11 @@ jest.mock('@components/session/voting', () => ({
 }))
 jest.mock('@components/session/waiting', () => ({
   __esModule: true,
-  default: () => <div data-testid="waiting-phase">Waiting</div>,
+  default: ({ users }: { users: User[] }) => (
+    <div data-testid="waiting-phase">
+      Waiting<span data-testid="waiting-user-names">{users.map((u) => u.name).join(', ')}</span>
+    </div>
+  ),
 }))
 jest.mock('@components/session/winner', () => ({
   __esModule: true,
@@ -215,6 +219,18 @@ describe('Session', () => {
     jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
     renderWithClient(<Session sessionId="test-session" />)
     await waitFor(() => expect(screen.getByTestId('waiting-phase')).toBeInTheDocument())
+  })
+
+  // The waiting screen names who is here, which it can only do from the users list.
+  it('should give the waiting phase the users list', async () => {
+    setup('user-1')
+    const votedUser = { ...mockUser, votes: [['a']] }
+    jest.mocked(api.fetchSession).mockResolvedValue(baseSession)
+    jest.mocked(api.fetchUsers).mockResolvedValue([votedUser])
+    jest.mocked(api.fetchChoices).mockResolvedValue(mockChoices)
+    renderWithClient(<Session sessionId="test-session" />)
+    await waitFor(() => expect(screen.getByTestId('waiting-phase')).toBeInTheDocument())
+    expect(screen.getByTestId('waiting-user-names')).toHaveTextContent('Test User')
   })
 
   it('should use query param id when available', async () => {

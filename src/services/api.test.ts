@@ -14,6 +14,7 @@ import {
   hasStatusCode,
   patchUser,
   postPushSubscription,
+  setExpectedVoters,
 } from './api'
 import { apiError } from '@test/__mocks__'
 import { ErrorCode } from '@types'
@@ -187,6 +188,20 @@ describe('API service', () => {
         body: undefined,
         headers: undefined,
         method: 'POST',
+      })
+      expect(result).toEqual(updatedSession)
+    })
+  })
+
+  describe('setExpectedVoters', () => {
+    it('should patch the session endpoint with the expected count', async () => {
+      const updatedSession = { expectedVoters: 4, sessionId }
+      mockFetch.mockResolvedValueOnce(jsonResponse(updatedSession))
+      const result = await setExpectedVoters(sessionId, 4)
+      expect(mockFetch).toHaveBeenCalledWith(`${baseUrl}/sessions/${encodeURIComponent(sessionId)}`, {
+        body: JSON.stringify({ expectedVoters: 4 }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
       })
       expect(result).toEqual(updatedSession)
     })
