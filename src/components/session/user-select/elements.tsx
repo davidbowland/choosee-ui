@@ -66,8 +66,13 @@ export const ConfirmButton = ({
   />
 )
 
+// role="alert" because this appears in response to an action the user just took. Without it a join
+// failure was announced to nobody: the button returned to its resting state and the only signal that
+// anything had happened was a colour.
 export const ErrorMessage = ({ message }: { message: string }): React.ReactNode => (
-  <p className="text-sm text-red-400">{message}</p>
+  <p className="text-sm text-red-400" role="alert">
+    {message}
+  </p>
 )
 
 // A quiet section break — "Let's go" stays the only primary action on this screen.
