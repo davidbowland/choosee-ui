@@ -56,6 +56,12 @@ const mockSession: SessionData = {
   radius: 5000,
   rankBy: 'DISTANCE',
   voterCount: 2,
+  // Deliberately 1, not 2, and it must stay consistent with whichever users a test renders.
+  // votersSubmitted IS the count of users who have answered every matchup this round, so the API
+  // cannot produce `votersSubmitted: 1` alongside two users who both hold complete votes. An
+  // earlier version of this fixture did exactly that, and the impossible state hid a real bug:
+  // round 1 with everyone present done fell through to "Waiting for others to finish voting..."
+  // over a full bar. Pair this with `[doneUser, alexStillVoting]`, or raise it when both are done.
   votersSubmitted: 1,
 }
 
@@ -140,7 +146,7 @@ describe('WaitingPhase', () => {
   })
 
   it('should display voting progress', async () => {
-    renderWithClient(<WaitingPhase {...defaultProps} />)
+    renderWithClient(<WaitingPhase {...defaultProps} session={laterRoundSession} />)
     expect(screen.getByText(/Voted/i)).toBeInTheDocument()
     expect(screen.getByText(/1/)).toBeInTheDocument()
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
@@ -334,7 +340,7 @@ describe('WaitingPhase', () => {
   })
 
   it('should show "Waiting for others" when voterCount > 1', async () => {
-    renderWithClient(<WaitingPhase {...defaultProps} />)
+    renderWithClient(<WaitingPhase {...defaultProps} session={laterRoundSession} />)
     expect(screen.getByText(/Waiting for others to finish voting/i)).toBeInTheDocument()
     expect(screen.queryByText(/Wrapping up this round/i)).not.toBeInTheDocument()
     await settleNotifyControl()
@@ -566,6 +572,21 @@ describe('WaitingPhase', () => {
       await settleNotifyControl()
     })
 
+    // The state this whole feature creates, and the one it got wrong: unarmed round 1 where
+    // everyone present HAS voted used to fall through to the rounds-2+ default and print
+    // "Waiting for others to finish voting..." beneath a full bar and directly above "Anyone else
+    // coming?" — three sentences contradicting each other, the middle one flatly untrue. Nobody
+    // present is still voting; that is precisely why the question is being asked.
+    it('should not claim it is waiting on anyone once everyone here has voted', async () => {
+      renderRoundOne({ votersSubmitted: 2 })
+
+      expect(screen.queryByText(/Waiting for others to finish voting/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/still voting/i)).not.toBeInTheDocument()
+      expect(screen.getByText('Alex is here.')).toBeInTheDocument()
+      expect(screen.getByText('Anyone else coming?')).toBeInTheDocument()
+      await settleNotifyControl()
+    })
+
     // The roster names other people, never you — "Alex and Jordan are here" cannot be misread as
     // including the reader, and any count can.
     it('should name who else is here', async () => {
@@ -707,16 +728,21 @@ describe('WaitingPhase', () => {
       await waitFor(() => expect(api.setExpectedVoters).toHaveBeenCalledWith('test-session', 20))
     })
 
-    it('should say so when the count is refused as too large', async () => {
+    // The route raises four errorCode-less 400s and only one of them is about crowd size. Relaying
+    // the server's own sentence is what stops a Choosee that already has a winner — reachable when
+    // someone else presses "See the winner" while this stepper is open — being explained as too
+    // many people.
+    it('should relay the reason a count was refused', async () => {
       jest.mocked(api.hasStatusCode).mockReturnValueOnce(false).mockReturnValueOnce(true)
-      jest.mocked(api.setExpectedVoters).mockRejectedValueOnce(new Error('too many'))
+      jest.mocked(api.apiErrorMessage).mockReturnValueOnce('Session already has a winner')
+      jest.mocked(api.setExpectedVoters).mockRejectedValueOnce(new Error('nope'))
       const user = userEvent.setup()
       renderRoundOne()
 
       await user.click(screen.getByText('Wait for others'))
       await user.click(screen.getByText('Done'))
 
-      await waitFor(() => expect(toast.danger).toHaveBeenCalledWith("That's more people than one Choosee can hold."))
+      await waitFor(() => expect(toast.danger).toHaveBeenCalledWith('Session already has a winner'))
     })
 
     it('should not send the count twice on a double tap', async () => {

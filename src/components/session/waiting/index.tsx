@@ -31,7 +31,7 @@ import {
 import BracketView from '@components/bracket-view'
 import { FilterClosingSoonBadge, SoloVoterHint } from '@components/session/elements'
 import Share from '@components/share'
-import { closeRound, hasErrorCode, hasStatusCode, setExpectedVoters } from '@services/api'
+import { apiErrorMessage, closeRound, hasErrorCode, hasStatusCode, setExpectedVoters } from '@services/api'
 import { isSubscribedToPush, subscribeToPush, unsubscribeFromPush } from '@services/push'
 import { ChoicesMap, ErrorCode, SessionData, User } from '@types'
 import { PushCapability, readCapabilityEnv, resolvePushCapability } from '@utils/push-capability'
@@ -201,10 +201,19 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
         void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
         return
       }
-      // A plain 400 is the server's own ceiling on the count. The stepper stops below it, so this
-      // is the drift case — and "try again" would be a lie, because trying again cannot help.
+      // The route raises four errorCode-less 400s — over the cap, a non-positive count, a Choosee
+      // that is not ready, and one that already has a winner. Answering all of them with a sentence
+      // about crowd size told the wrong story for the reachable one: another participant pressing
+      // "See the winner" on a one-round bracket while this stepper is open. The server already
+      // says which it was, so relay that rather than guessing.
       if (hasStatusCode(err, 400)) {
-        toast.danger("That's more people than one Choosee can hold.")
+        toast.danger(apiErrorMessage(err, "Couldn't save that."))
+        return
+      }
+      // A 404 is terminal — the Choosee expired out from under a screen people sit on for hours —
+      // so it must not invite a retry that cannot work.
+      if (hasStatusCode(err, 404)) {
+        toast.danger('This Choosee has expired. They only last 24 hours.')
         return
       }
       toast.danger("Couldn't save that. Please try again.")
@@ -233,15 +242,39 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
     outstandingNames.length > 0
       ? `${joinNames(outstandingNames)} ${outstandingNames.length === 1 ? 'is' : 'are'} still voting.`
       : ''
-  const subtitle =
-    (isArmed && armedSubtitle) ||
-    (isRoundOne && outstandingSubtitle) ||
-    (solo ? 'Wrapping up this round...' : 'Waiting for others to finish voting...')
+  // Unarmed round 1 with everyone present done: state who is here and stop. The roster is the only
+  // fact worth reporting at that moment — whether anyone else is coming is the question below, and
+  // the screen must not answer it on the user's behalf.
+  const presentSubtitle =
+    otherNames.length > 0 ? `${joinNames(otherNames)} ${otherNames.length === 1 ? 'is' : 'are'} here.` : ''
+  // Round 1 must never fall through to the later-round default. Unarmed, with everyone present
+  // already voted, that default put "Waiting for others to finish voting..." under a full bar and
+  // directly above "Anyone else coming?" — three sentences contradicting each other, and the
+  // progress line simply false: nobody present is still voting, which is exactly why the card is
+  // asking. That state is not an edge case, it is the one this whole feature creates. So round 1
+  // says who is here, or says nothing, and lets the question carry the screen.
+  const roundOneSubtitle = (isArmed && armedSubtitle) || outstandingSubtitle || presentSubtitle
+  const subtitle = isRoundOne
+    ? roundOneSubtitle
+    : solo
+      ? 'Wrapping up this round...'
+      : 'Waiting for others to finish voting...'
 
   const morePhrase = moreVoters === 1 ? '1 more person has' : `${moreVoters} more people have`
   const stepperHelper = isFinalRound(session)
     ? `The winner is announced once ${morePhrase} voted.`
     : `Round ${currentRound + 2} starts once ${morePhrase} voted.`
+
+  // Seeded on every open, never left where it was last. `moreVoters` is a delta, so a stale one
+  // means something different each time the roster changes: armed for 4 with 2 here, "Change how
+  // many" opening on 1 silently proposes LOWERING the target, and after a third person joins the
+  // same displayed number commits a larger one. Deriving it from the live gap makes the number on
+  // screen mean what it says, and makes Cancel actually discard.
+  const openStepper = (): void => {
+    const gap = (session.expectedVoters ?? 0) - session.voterCount
+    setMoreVoters(Math.max(1, gap))
+    setStepperOpen(true)
+  }
 
   // Closing the round throws away the votes of anyone mid-matchup, so it asks first — and names
   // them, because "not everyone has voted" is what makes that decision impossible to weigh.
@@ -280,13 +313,13 @@ const WaitingPhase = ({ sessionId, session, currentUser, choices, users }: Waiti
               label={`${nextLabel} now`}
               onPress={handleNextRound}
             />
-            <ChangeCountLink onPress={() => setStepperOpen(true)} />
+            <ChangeCountLink onPress={openStepper} />
           </ActionRow>
         ) : (
           <RoundOneQuestion
             roster={otherNames.length > 0 ? <RosterLine names={otherNames} /> : <FinishedRoundOneTitle />}
           >
-            <WaitForOthersButton onPress={() => setStepperOpen(true)} />
+            <WaitForOthersButton onPress={openStepper} />
             <NextRoundButton isLoading={closeMutation.isPending} label={nextLabel} onPress={handleNextRound} />
           </RoundOneQuestion>
         ))}
