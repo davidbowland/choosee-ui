@@ -9,11 +9,21 @@ export interface ShareProps {
 }
 
 const SHARE_TITLE = 'Choosee'
-const SHARE_TEXT = 'Help me pick a place to eat'
 const COPIED_RESET_MS = 2000
+
+/** Hyphenated in storage and in the URL, spoken and read as words. */
+const displayCode = (sessionId: string): string => sessionId.replace(/-/g, ' ')
+
+// navigator.share sends `text` and `url` as separate fields, so this sentence never contains the
+// link. That is why the code is introduced by the condition it matters under rather than offered as
+// an alternative to the request -- "help me pick, or enter this code" contrasts two things that
+// aren't alternatives, against an antecedent the recipient cannot see.
+const shareText = (sessionId: string): string =>
+  `Help me pick a place to eat. If the link won't open, enter the code "${displayCode(sessionId)}" in Choosee.`
 
 const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode => {
   const [copied, setCopied] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
 
@@ -27,11 +37,17 @@ const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode =>
     return () => clearTimeout(timer)
   }, [copied])
 
+  useEffect(() => {
+    if (!codeCopied) return undefined
+    const timer = setTimeout(() => setCodeCopied(false), COPIED_RESET_MS)
+    return () => clearTimeout(timer)
+  }, [codeCopied])
+
   const sessionUrl = `${typeof window === 'undefined' ? '' : window.location.origin}/s/${sessionId}`
 
   const handleShare = async (): Promise<void> => {
     try {
-      await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: sessionUrl })
+      await navigator.share({ title: SHARE_TITLE, text: shareText(sessionId), url: sessionUrl })
     } catch {
       // User canceled or the share failed; copy and QR remain available.
     }
@@ -46,6 +62,16 @@ const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode =>
     }
   }
 
+  // Copies the words, not the URL. Someone who wanted the URL has a button for that one row up.
+  const handleCopyCode = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(displayCode(sessionId))
+      setCodeCopied(true)
+    } catch {
+      toast.danger("Couldn't copy the code. Read it out instead.")
+    }
+  }
+
   const Group = variant === 'bare' ? ShareBareGroup : ShareGroup
 
   return (
@@ -55,7 +81,14 @@ const Share = ({ sessionId, variant = 'group' }: ShareProps): React.ReactNode =>
         <CopyButton copied={copied} onPress={handleCopy} />
         <QrButton onPress={() => setQrOpen(true)} />
       </Group>
-      <QrModal isOpen={qrOpen} onClose={() => setQrOpen(false)} url={sessionUrl} />
+      <QrModal
+        code={displayCode(sessionId)}
+        codeCopied={codeCopied}
+        isOpen={qrOpen}
+        onClose={() => setQrOpen(false)}
+        onCopyCode={handleCopyCode}
+        url={sessionUrl}
+      />
     </>
   )
 }

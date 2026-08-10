@@ -105,7 +105,7 @@ describe('UserSelectPhase', () => {
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
     expect(screen.getByText(/Invite someone/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Show QR code' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show code and QR' })).toBeInTheDocument()
   })
 
   it('should copy invite link to clipboard', async () => {
@@ -120,9 +120,9 @@ describe('UserSelectPhase', () => {
   it('should show the QR code in a modal', async () => {
     const user = userEvent.setup()
     renderWithClient(<UserSelectPhase onUserSelected={onUserSelected} sessionId="s1" users={mockUsers} />)
-    expect(screen.queryByText('Scan to join')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Show QR code' }))
-    await waitFor(() => expect(screen.getByText('Scan to join')).toBeInTheDocument())
+    expect(screen.queryByText('Two ways in')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Show code and QR' }))
+    await waitFor(() => expect(screen.getByText('Two ways in')).toBeInTheDocument())
   })
 
   it('should show generic error when createUser fails with non-400', async () => {
