@@ -1,9 +1,11 @@
 import { Utensils } from 'lucide-react'
 import Head from 'next/head'
-import React from 'react'
+import React, { useState } from 'react'
 
 import ActiveSessions from '@components/active-sessions'
 import AppBar from '@components/app-bar'
+import JoinSheet from '@components/join-sheet'
+import { JoinTrigger } from '@components/join-sheet/elements'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
 import { useJoinedSessions } from '@hooks/useJoinedSessions'
@@ -12,6 +14,7 @@ import { useJoinedSessions } from '@hooks/useJoinedSessions'
 // would be a second copy that a dismissal could leave disagreeing with the first.
 const Index = (): React.ReactNode => {
   const { entries, hasLoaded, onDismiss, onGone } = useJoinedSessions()
+  const [joinOpen, setJoinOpen] = useState(false)
 
   return (
     <>
@@ -58,6 +61,12 @@ const Index = (): React.ReactNode => {
                 below the headline to push anything. ActiveSessions renders nothing at all when there
                 are none, so a first-time visitor sees this page exactly as it was. */}
             <ActiveSessions entries={entries} onDismiss={onDismiss} onGone={onGone} />
+            {/* Unconditional, and deliberately so. It ships in the prerendered markup in both home
+                settings — no storage gate, no `length > 0`, no CSS toggle — which keeps it entirely
+                outside the pre-paint layout contract the hero and the resume list negotiate. A
+                first-time visitor is exactly as likely to have been handed a code as a returning one,
+                so there is nothing to gate it on anyway. */}
+            <JoinTrigger onPress={() => setJoinOpen(true)} />
           </div>
           {/* Form right column. The label demotes the create card while there is something else on
               the page to pick back up, and it has to satisfy two things that pull apart.
@@ -89,6 +98,7 @@ const Index = (): React.ReactNode => {
         </div>
       </main>
       <PrivacyLink />
+      <JoinSheet isOpen={joinOpen} onClose={() => setJoinOpen(false)} />
     </>
   )
 }
