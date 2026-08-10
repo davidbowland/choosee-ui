@@ -1,6 +1,12 @@
 import { AlertDialog, Button, Modal, ProgressBar, Spinner } from '@heroui/react'
-import { BellOff, BellRing, Check, Eye } from 'lucide-react'
+import { BellOff, BellRing, Check, Eye, Minus, Plus } from 'lucide-react'
 import React from 'react'
+
+// Names, never a count. "Sam and Alex are here" cannot be misread as including you; "2 others"
+// always can. displayName falls back to the generated adjective-noun, so an un-named player reads
+// as "brave otter" rather than an ID.
+const joinNames = (names: string[]): string =>
+  names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 
 export const WaitingContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
   <div className="mx-auto flex w-full max-w-md flex-col items-center gap-5 p-4">{children}</div>
@@ -62,55 +68,66 @@ export const ConfirmDialog = ({
   onCancel,
   onConfirm,
   open,
+  outstandingNames,
 }: {
   isLoading: boolean
   onCancel: () => void
   onConfirm: () => void
   open: boolean
-}): React.ReactNode => (
-  <AlertDialog isOpen={open} onOpenChange={(isOpen: boolean) => !isOpen && onCancel()}>
-    {/* Container must nest inside Backdrop: the backdrop is the fixed, full-screen positioned
-        layer, so a sibling container renders in its own unpositioned portal — invisible behind
-        the blur. AlertDialog defaults to blocking Escape; dismissing this prompt does nothing
-        destructive, so allow it. */}
-    <AlertDialog.Backdrop isKeyboardDismissDisabled={false} variant="blur">
-      <AlertDialog.Container size="sm">
-        <AlertDialog.Dialog>
-          <AlertDialog.Header>
-            {/* Echoes the link that opened this, and stays true on the last round,
-                where skipping ahead produces a winner rather than another round. */}
-            <AlertDialog.Heading>Skip ahead without them?</AlertDialog.Heading>
-          </AlertDialog.Header>
-          <AlertDialog.Body>
-            <p className="text-sm text-default-600">
-              Not everyone has voted. Their votes won&apos;t count in this round.
-            </p>
-          </AlertDialog.Body>
-          <AlertDialog.Footer className="flex justify-end gap-2">
-            <Button
-              className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-600 hover:bg-white/[0.09]"
-              isDisabled={isLoading}
-              onPress={onCancel}
-              slot="close"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
-              isDisabled={isLoading}
-              onPress={onConfirm}
-              variant="primary"
-            >
-              {isLoading && <Spinner color="current" size="sm" />}
-              Skip ahead
-            </Button>
-          </AlertDialog.Footer>
-        </AlertDialog.Dialog>
-      </AlertDialog.Container>
-    </AlertDialog.Backdrop>
-  </AlertDialog>
-)
+  outstandingNames?: string[]
+}): React.ReactNode => {
+  // Names when the caller has them, today's copy when it does not. Rounds 2+ pass none, so that path
+  // renders exactly what it renders now — this dialog is shared, and the round-1 screen is the only
+  // one that knows who it would be cutting off.
+  const named = outstandingNames !== undefined && outstandingNames.length > 0
+  const heading = named ? `Start round 2 without ${joinNames(outstandingNames)}?` : 'Skip ahead without them?'
+  const body = named
+    ? `${joinNames(outstandingNames)} ${outstandingNames.length === 1 ? "hasn't" : "haven't"} finished voting. Their votes in this round won't count.`
+    : "Not everyone has voted. Their votes won't count in this round."
+
+  return (
+    <AlertDialog isOpen={open} onOpenChange={(isOpen: boolean) => !isOpen && onCancel()}>
+      {/* Container must nest inside Backdrop: the backdrop is the fixed, full-screen positioned
+          layer, so a sibling container renders in its own unpositioned portal — invisible behind
+          the blur. AlertDialog defaults to blocking Escape; dismissing this prompt does nothing
+          destructive, so allow it. */}
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false} variant="blur">
+        <AlertDialog.Container size="sm">
+          <AlertDialog.Dialog>
+            <AlertDialog.Header>
+              {/* Echoes the link that opened this, and stays true on the last round,
+                  where skipping ahead produces a winner rather than another round. */}
+              <AlertDialog.Heading>{heading}</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <p className="text-sm text-default-600">{body}</p>
+            </AlertDialog.Body>
+            <AlertDialog.Footer className="flex justify-end gap-2">
+              <Button
+                className="rounded-full border-white/[0.09] bg-white/[0.05] text-default-600 hover:bg-white/[0.09]"
+                isDisabled={isLoading}
+                onPress={onCancel}
+                slot="close"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button
+                className="rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+                isDisabled={isLoading}
+                onPress={onConfirm}
+                variant="primary"
+              >
+                {isLoading && <Spinner color="current" size="sm" />}
+                {named ? 'Start round 2' : 'Skip ahead'}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </AlertDialog>
+  )
+}
 
 // The switch survives the move from email to push deliberately. A pill was rejected because this
 // app already uses non-interactive pill badges (FilterClosingSoonBadge, SoloVoterHint), so a pill
@@ -280,5 +297,128 @@ export const BracketButton = ({ onPress }: { onPress: () => void }): React.React
   >
     <Eye className="h-4 w-4" />
     View bracket
+  </button>
+)
+
+// The roster answers "who is in the room", which is a different question from the progress bar's
+// "how many have voted" — so the two never share a number. See joinNames above for why it is names.
+export const RosterLine = ({ names, stillVoting }: { names: string[]; stillVoting: string[] }): React.ReactNode => (
+  <p className="text-[13px] text-default-700">
+    <span className="font-medium text-foreground">{joinNames(names)}</span> {names.length === 1 ? 'is' : 'are'} here.
+    {stillVoting.length > 0 && ` ${joinNames(stillVoting)} ${stillVoting.length === 1 ? 'is' : 'are'} still voting.`}
+  </p>
+)
+
+export const RoundOneQuestion = ({
+  children,
+  roster,
+}: {
+  children: React.ReactNode
+  roster: React.ReactNode
+}): React.ReactNode => (
+  <div className="flex w-full flex-col gap-3 rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-4">
+    {roster}
+    <p className="text-xs text-default-500">Anyone else coming?</p>
+    {children}
+  </div>
+)
+
+export const WaitForOthersButton = ({ onPress }: { onPress: () => void }): React.ReactNode => (
+  <Button
+    className="w-full rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+    onPress={onPress}
+    variant="primary"
+  >
+    Wait for others
+  </Button>
+)
+
+export const NextRoundButton = ({
+  isLoading,
+  label,
+  onPress,
+}: {
+  isLoading: boolean
+  label: string
+  onPress: () => void
+}): React.ReactNode => (
+  <Button
+    className="w-full rounded-full border-white/[0.09] bg-white/[0.05] text-default-600 hover:bg-white/[0.09]"
+    isDisabled={isLoading}
+    onPress={onPress}
+    variant="outline"
+  >
+    {isLoading && <Spinner color="current" size="sm" />}
+    {label}
+  </Button>
+)
+
+// Deliberately NOT the 9px uppercase field label used by MaxChoicesSlider: that slot carries noun
+// phrases ("Maximum distance"), and a tracked-out uppercase question reads shouty. The slider needs
+// its value echoed because the thumb shows none — this stepper shows its own.
+export const MoreVotersStepper = ({
+  helper,
+  onCancel,
+  onChange,
+  onCommit,
+  value,
+}: {
+  helper: string
+  onCancel: () => void
+  onChange: (value: number) => void
+  onCommit: () => void
+  value: number
+}): React.ReactNode => (
+  <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full flex-col gap-3 rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-4">
+      <p className="text-sm font-medium text-default-800">How many more?</p>
+      <div className="flex items-center justify-center gap-5">
+        <Button
+          aria-label="One fewer"
+          className="h-11 w-11 rounded-full border-white/[0.12] bg-white/[0.05] text-default-800"
+          isDisabled={value <= 1}
+          onPress={() => onChange(value - 1)}
+          variant="outline"
+        >
+          <Minus className="h-5 w-5" />
+        </Button>
+        <span aria-live="polite" className="choosee-brand min-w-[2ch] text-center text-4xl text-[#F59E0B]">
+          {value}
+        </span>
+        <Button
+          aria-label="One more"
+          className="h-11 w-11 rounded-full border-white/[0.12] bg-white/[0.05] text-default-800"
+          onPress={() => onChange(value + 1)}
+          variant="outline"
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
+      </div>
+      <p className="text-xs text-default-500">{helper}</p>
+      <Button
+        className="w-full rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+        onPress={onCommit}
+        variant="primary"
+      >
+        Done
+      </Button>
+    </div>
+    <button
+      className="self-center text-[13px] text-default-600 underline decoration-white/15 underline-offset-4 transition-colors hover:text-default-700 focus:outline-none"
+      onClick={onCancel}
+      type="button"
+    >
+      Cancel
+    </button>
+  </div>
+)
+
+export const ChangeCountLink = ({ onPress }: { onPress: () => void }): React.ReactNode => (
+  <button
+    className="text-[13px] text-default-600 underline decoration-white/15 underline-offset-4 transition-colors hover:text-default-700 focus:outline-none"
+    onClick={onPress}
+    type="button"
+  >
+    Change how many
   </button>
 )
