@@ -2,15 +2,28 @@ import { hasStatusCode } from '@services/api'
 import { SessionData, User } from '@types'
 
 /**
- * Message for a session request that failed before any data arrived. A 404 is
- * terminal — the session is gone — so it says so instead of inviting a retry.
+ * Message for a session request that failed before any data arrived.
+ *
+ * Deliberately says nothing about a link. A person can arrive here having typed a code someone read
+ * out to them, so "check the link" names a thing they may never have had. The two exits are named by
+ * the controls beneath it instead — enter the code again, or start a new Choosee.
+ *
+ * Subjectless, like every other failure in the app ("Couldn't join.", "Couldn't save that."), and the
+ * same words the entry sheet uses for the same failure, so it reads identically whichever door the
+ * user came through.
+ *
  * Users never see the word "session": everywhere else the thing is a Choosee.
  */
 export function sessionLoadErrorMessage(error: unknown): string {
   if (hasStatusCode(error, 404)) {
-    return "We can't find this Choosee. They expire 24 hours after they start — check the link, or start a new one."
+    return "Couldn't find this Choosee. They only last 24 hours."
   }
-  return "We couldn't load this Choosee. Check your connection and try again."
+  return "Couldn't load this Choosee. Check your connection and try again."
+}
+
+/** True when the failure is the Choosee being gone, rather than the network being unavailable. */
+export function isSessionNotFound(error: unknown): boolean {
+  return hasStatusCode(error, 404)
 }
 
 /**
