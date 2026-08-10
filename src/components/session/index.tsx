@@ -216,7 +216,15 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
         )
       case 'waiting':
         return (
-          <WaitingPhase choices={choices ?? {}} currentUser={currentUser!} session={session!} sessionId={sessionId} />
+          <WaitingPhase
+            choices={choices ?? {}}
+            currentUser={currentUser!}
+            session={session!}
+            sessionId={sessionId}
+            // Reaching this phase already required a loaded users list, exactly as VotingPhase's
+            // voterCount does — the waiting screen needs it to name who is here.
+            users={users!}
+          />
         )
       default:
         return null

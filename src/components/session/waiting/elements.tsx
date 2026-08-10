@@ -5,7 +5,7 @@ import React from 'react'
 // Names, never a count. "Sam and Alex are here" cannot be misread as including you; "2 others"
 // always can. displayName falls back to the generated adjective-noun, so an un-named player reads
 // as "brave otter" rather than an ID.
-const joinNames = (names: string[]): string =>
+export const joinNames = (names: string[]): string =>
   names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 
 export const WaitingContainer = ({ children }: { children: React.ReactNode }): React.ReactNode => (
@@ -64,12 +64,14 @@ export const ForceRoundButton = ({
 )
 
 export const ConfirmDialog = ({
+  actionLabel = 'Start round 2',
   isLoading,
   onCancel,
   onConfirm,
   open,
   outstandingNames,
 }: {
+  actionLabel?: string
   isLoading: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -79,8 +81,12 @@ export const ConfirmDialog = ({
   // Names when the caller has them, today's copy when it does not. Rounds 2+ pass none, so that path
   // renders exactly what it renders now — this dialog is shared, and the round-1 screen is the only
   // one that knows who it would be cutting off.
+  //
+  // The action comes from the caller rather than being written here: on a one-round bracket closing
+  // round 1 crowns a winner instead of opening round 2, so a hardcoded "Start round 2 without Alex?"
+  // would name the wrong consequence. The caller already computes the button label; this echoes it.
   const named = outstandingNames !== undefined && outstandingNames.length > 0
-  const heading = named ? `Start round 2 without ${joinNames(outstandingNames)}?` : 'Skip ahead without them?'
+  const heading = named ? `${actionLabel} without ${joinNames(outstandingNames)}?` : 'Skip ahead without them?'
   const body = named
     ? `${joinNames(outstandingNames)} ${outstandingNames.length === 1 ? "hasn't" : "haven't"} finished voting. Their votes in this round won't count.`
     : "Not everyone has voted. Their votes won't count in this round."
@@ -95,8 +101,9 @@ export const ConfirmDialog = ({
         <AlertDialog.Container size="sm">
           <AlertDialog.Dialog>
             <AlertDialog.Header>
-              {/* Echoes the link that opened this, and stays true on the last round,
-                  where skipping ahead produces a winner rather than another round. */}
+              {/* Echoes the control that opened this — the unnamed link keeps its own wording, the
+                  named variant repeats the caller's action label verbatim so the heading and the
+                  confirm button cannot disagree with the button the user just pressed. */}
               <AlertDialog.Heading>{heading}</AlertDialog.Heading>
             </AlertDialog.Header>
             <AlertDialog.Body>
@@ -119,7 +126,7 @@ export const ConfirmDialog = ({
                 variant="primary"
               >
                 {isLoading && <Spinner color="current" size="sm" />}
-                {named ? 'Start round 2' : 'Skip ahead'}
+                {named ? actionLabel : 'Skip ahead'}
               </Button>
             </AlertDialog.Footer>
           </AlertDialog.Dialog>
@@ -300,13 +307,24 @@ export const BracketButton = ({ onPress }: { onPress: () => void }): React.React
   </button>
 )
 
-// The roster answers "who is in the room", which is a different question from the progress bar's
-// "how many have voted" — so the two never share a number. See joinNames above for why it is names.
-export const RosterLine = ({ names, stillVoting }: { names: string[]; stillVoting: string[] }): React.ReactNode => (
-  <p className="text-[13px] text-default-700">
-    <span className="font-medium text-foreground">{joinNames(names)}</span> {names.length === 1 ? 'is' : 'are'} here.
-    {stillVoting.length > 0 && ` ${joinNames(stillVoting)} ${stillVoting.length === 1 ? 'is' : 'are'} still voting.`}
-  </p>
+// The roster answers "who ELSE is in the room", which is a different question from the progress
+// bar's "how many have voted" — so the two never share a number, and this one never counts you.
+// See joinNames above for why it is names. Who is still voting belongs to the progress subtitle,
+// not here: naming the same person in two consecutive sentences reads as a stutter.
+//
+// An empty list is the solo voter, the commonest Choosee there is. Rendering it would produce a
+// subjectless " are here.", so it renders nothing at all and the caller supplies the alone copy.
+export const RosterLine = ({ names }: { names: string[] }): React.ReactNode =>
+  names.length === 0 ? null : (
+    <p className="text-[13px] text-default-700">
+      <span className="font-medium text-foreground">{joinNames(names)}</span> {names.length === 1 ? 'is' : 'are'} here.
+    </p>
+  )
+
+// The alone frame has no roster — the roster is other people — so the slot carries the one thing
+// that is true instead.
+export const FinishedRoundOneTitle = (): React.ReactNode => (
+  <p className="text-[13px] font-medium text-foreground">You&apos;ve finished round 1.</p>
 )
 
 export const RoundOneQuestion = ({
@@ -318,7 +336,9 @@ export const RoundOneQuestion = ({
 }): React.ReactNode => (
   <div className="flex w-full flex-col gap-3 rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-4">
     {roster}
-    <p className="text-xs text-default-500">Anyone else coming?</p>
+    {/* The question the card exists to ask, so it carries the same weight as the stepper's "How
+        many more?" one step later — not the dim caption treatment reserved for helper text. */}
+    <p className="text-sm font-medium text-default-800">Anyone else coming?</p>
     {children}
   </div>
 )
@@ -358,12 +378,16 @@ export const NextRoundButton = ({
 // its value echoed because the thumb shows none — this stepper shows its own.
 export const MoreVotersStepper = ({
   helper,
+  isLoading,
+  max,
   onCancel,
   onChange,
   onCommit,
   value,
 }: {
   helper: string
+  isLoading: boolean
+  max: number
   onCancel: () => void
   onChange: (value: number) => void
   onCommit: () => void
@@ -388,6 +412,10 @@ export const MoreVotersStepper = ({
         <Button
           aria-label="One more"
           className="h-11 w-11 rounded-full border-white/[0.12] bg-white/[0.05] text-default-800"
+          // The API rejects a count above its own per-Choosee ceiling, and nothing on the wire tells
+          // this screen what that ceiling is. Stopping the control there turns a bare 400 nobody can
+          // act on into a button that simply will not go further.
+          isDisabled={value >= max}
           onPress={() => onChange(value + 1)}
           variant="outline"
         >
@@ -397,9 +425,11 @@ export const MoreVotersStepper = ({
       <p className="text-xs text-default-500">{helper}</p>
       <Button
         className="w-full rounded-full bg-gradient-to-r from-[#F59E0B] to-[#D97706] font-bold text-[#0A0A0B]"
+        isDisabled={isLoading}
         onPress={onCommit}
         variant="primary"
       >
+        {isLoading && <Spinner color="current" size="sm" />}
         Done
       </Button>
     </div>
@@ -411,6 +441,29 @@ export const MoreVotersStepper = ({
       Cancel
     </button>
   </div>
+)
+
+// The armed state's two exits sit side by side, so the advance has to be a link like the one beside
+// it — the full-width bordered NextRoundButton belongs to the question card, where it is one of two
+// choices being offered rather than a way out of a screen that is working as intended.
+export const StartRoundNowLink = ({
+  isLoading,
+  label,
+  onPress,
+}: {
+  isLoading: boolean
+  label: string
+  onPress: () => void
+}): React.ReactNode => (
+  <button
+    className="inline-flex items-center gap-1.5 text-[13px] text-default-600 underline decoration-white/15 underline-offset-4 transition-colors hover:text-default-700 focus:outline-none disabled:opacity-50"
+    disabled={isLoading}
+    onClick={onPress}
+    type="button"
+  >
+    {isLoading && <Spinner color="current" size="sm" />}
+    {label}
+  </button>
 )
 
 export const ChangeCountLink = ({ onPress }: { onPress: () => void }): React.ReactNode => (
