@@ -7,6 +7,8 @@ import SessionPage, { getStaticPaths, getStaticProps } from '@pages/s/[sessionId
 import '@testing-library/jest-dom'
 import { render } from '@testing-library/react'
 
+const mockAsPath = jest.fn()
+jest.mock('next/router', () => ({ useRouter: () => ({ asPath: mockAsPath() }) }))
 jest.mock('@components/app-bar')
 jest.mock('@components/privacy-link')
 jest.mock('@components/session')
@@ -16,11 +18,13 @@ describe('Session page', () => {
     jest.mocked(AppBar).mockReturnValue(<>AppBar</>)
     jest.mocked(PrivacyLink).mockReturnValue(<></>)
     jest.mocked(Session).mockReturnValue(<></>)
+    mockAsPath.mockReturnValue('/s/aeio/')
   })
 
   /** Points the page at `pathname`, which is where the sessionId is read from. */
   const setup = (pathname = '/s/aeio/'): void => {
     Object.defineProperty(window, 'location', { value: { pathname }, writable: true })
+    mockAsPath.mockReturnValue(pathname)
   }
 
   it('should render AppBar', () => {
@@ -45,6 +49,20 @@ describe('Session page', () => {
     setup('/')
     render(<SessionPage />)
     expect(Session).not.toHaveBeenCalled()
+  })
+
+  // Next reuses this component between two instances of the same dynamic route, so without a
+  // dependency on the path the identifier would stay whatever it was on mount — and a corrected code
+  // submitted from a failed Choosee's error screen would redraw that same error.
+  it('should re-read the sessionId when the route changes', () => {
+    setup('/s/aeio/')
+    const { rerender } = render(<SessionPage />)
+    expect(Session).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 'aeio' }), undefined)
+
+    setup('/s/fuzzy-penguin/')
+    rerender(<SessionPage />)
+
+    expect(Session).toHaveBeenLastCalledWith(expect.objectContaining({ sessionId: 'fuzzy-penguin' }), undefined)
   })
 
   it('should return blocking fallback with empty paths in development', () => {
