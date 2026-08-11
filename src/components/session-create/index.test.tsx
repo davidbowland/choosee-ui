@@ -732,4 +732,49 @@ describe('SessionCreate component', () => {
       expect(reloadMock).toHaveBeenCalled()
     })
   })
+
+  describe('accessibility', () => {
+    // AC-033. There was no <form> anywhere in this app and the submit had no type, so this form has
+    // never been completable from the keyboard. Nobody noticed because the submit is also a mouse
+    // target -- which is the shape of a defect that only affects people not using a mouse.
+    it('should submit when Enter is pressed in the address field', async () => {
+      const user = userEvent.setup()
+      renderWithClient(<SessionCreate />)
+      const address = await screen.findByLabelText('Your location')
+
+      await act(async () => {
+        await user.type(address, '90210{Enter}')
+      })
+
+      await waitFor(() => expect(api.createSession).toHaveBeenCalled())
+    })
+
+    // AC-023. The field already had an accessible name; what it lacked was any relationship between
+    // itself and the reason it was rejected. Colour was the entire signal.
+    it('should associate a validation error with the field it describes', async () => {
+      const user = userEvent.setup()
+      renderWithClient(<SessionCreate />)
+      const address = await screen.findByLabelText('Your location')
+
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: /Find restaurants/ }))
+      })
+
+      await waitFor(() => expect(address).toHaveAttribute('aria-invalid', 'true'))
+      expect(address.getAttribute('aria-describedby')).toEqual('address-error')
+    })
+
+    // AC-024.
+    it('should announce a validation error', async () => {
+      const user = userEvent.setup()
+      renderWithClient(<SessionCreate />)
+      await screen.findByLabelText('Your location')
+
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: /Find restaurants/ }))
+      })
+
+      expect(await screen.findByRole('alert')).toBeInTheDocument()
+    })
+  })
 })

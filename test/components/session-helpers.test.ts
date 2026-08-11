@@ -1,4 +1,9 @@
-import { firstUnvotedIndex, isFinalRound, sessionLoadErrorMessage } from '@components/session/helpers'
+import {
+  firstUnvotedIndex,
+  isFinalRound,
+  isSessionNotFound,
+  sessionLoadErrorMessage,
+} from '@components/session/helpers'
 import { apiError } from '@test/__mocks__'
 import { SessionData, User } from '@types'
 
@@ -76,14 +81,36 @@ describe('isFinalRound', () => {
 
 describe('sessionLoadErrorMessage', () => {
   it('should report a missing session on 404', () => {
-    expect(sessionLoadErrorMessage(apiError(404))).toContain("can't find this Choosee")
+    expect(sessionLoadErrorMessage(apiError(404))).toBe("Couldn't find this Choosee. They only last 24 hours.")
   })
 
   it('should report a load failure on other status codes', () => {
-    expect(sessionLoadErrorMessage(apiError(500))).toContain("couldn't load this Choosee")
+    expect(sessionLoadErrorMessage(apiError(500))).toContain("Couldn't load this Choosee")
   })
 
   it('should report a load failure for non-API errors', () => {
-    expect(sessionLoadErrorMessage(new Error('Network down'))).toContain("couldn't load this Choosee")
+    expect(sessionLoadErrorMessage(new Error('Network down'))).toContain("Couldn't load this Choosee")
+  })
+
+  // A person can arrive here having typed a code somebody read out to them, so naming a link points
+  // at something they may never have had.
+  it('should not assume the user followed a link', () => {
+    expect(sessionLoadErrorMessage(apiError(404))).not.toContain('link')
+  })
+})
+
+describe('isSessionNotFound', () => {
+  it('should be true when the Choosee is gone', () => {
+    expect(isSessionNotFound(apiError(404))).toBe(true)
+  })
+
+  // The distinction decides which recovery is offered: re-entering a code over a dead connection is
+  // not a recovery, so the network branch gets a retry instead of the entry sheet.
+  it.each([[500], [400]])('should be false for a status %p failure', (status) => {
+    expect(isSessionNotFound(apiError(status))).toBe(false)
+  })
+
+  it('should be false for a non-API error', () => {
+    expect(isSessionNotFound(new Error('Network down'))).toBe(false)
   })
 })

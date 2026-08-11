@@ -119,6 +119,39 @@ html.dark {
   color: #f59e0b;
 }
 
+/* ---- Clickable things point ----
+   No browser has ever given <button> the hand cursor. The UA default is an arrow; only <a href>
+   gets a pointer for free. So every native button in this app was opting in by hand, one
+   `cursor-pointer` at a time, and the join banner on the home page was what a missed one looks
+   like — the entire way in for an invited guest, hovering like a paragraph.
+
+   A base rule rather than a utility per element, because the failure mode is forgetting, and
+   nothing about "remember it next time" survives the next component. The values are HeroUI's own
+   tokens, not literals: its .button already paints `--cursor-interactive` and its disabled state
+   `--cursor-disabled`, so reading the same two here gives the app one cursor vocabulary instead of
+   two that agree by coincidence — and native buttons stop being the only disabled controls in the
+   app that fail to say so under the pointer.
+
+   Base is also what keeps this out of the way. Every `cursor-*` utility compiles into `utilities`,
+   which wins over `base` wholesale, so an element that wants grab, text, or default still says so
+   on the element and this yields. Labels and clickable divs are deliberately not in here: <label>
+   is pointer-worthy only when it fronts a control, and a div is only ever clickable by way of a
+   handler this stylesheet cannot see. Both still ask by hand. */
+@layer base {
+  button:not(:disabled):not([aria-disabled='true']),
+  summary,
+  [role='button']:not([aria-disabled='true']),
+  input:where([type='checkbox'], [type='radio']):not(:disabled) {
+    cursor: var(--cursor-interactive, pointer);
+  }
+
+  button:disabled,
+  button[aria-disabled='true'],
+  [role='button'][aria-disabled='true'] {
+    cursor: var(--cursor-disabled, not-allowed);
+  }
+}
+
 /* Hide reCAPTCHA floating badge — branding text is shown inline in the form */
 .grecaptcha-badge {
   visibility: hidden !important;

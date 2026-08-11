@@ -8,6 +8,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
+jest.mock('@components/join-sheet')
 jest.mock('next/router', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
@@ -115,8 +116,10 @@ describe('Session phase router', () => {
     jest.mocked(api.hasStatusCode).mockReturnValue(true)
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
-    expect(await screen.findByText(/can.t find this Choosee/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Couldn.t find this Choosee/i)).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    // The failure is announced now, which it never was.
+    expect(screen.getByRole('alert')).toBeInTheDocument()
   })
 
   it('should render a generic message when the session request fails for another reason', async () => {
@@ -125,7 +128,7 @@ describe('Session phase router', () => {
     jest.mocked(api.hasStatusCode).mockReturnValue(false)
     renderWithClient(<SessionWithErrorBoundary sessionId="test-session" />)
 
-    expect(await screen.findByText(/couldn.t load this Choosee/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Couldn.t load this Choosee/i)).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 

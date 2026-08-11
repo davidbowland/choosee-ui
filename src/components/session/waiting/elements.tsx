@@ -157,7 +157,7 @@ export const NotifyCheckbox = ({
   <button
     aria-checked={subscribed}
     aria-live="polite"
-    className={`flex w-full items-center gap-3 rounded-lg text-left ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+    className="flex w-full items-center gap-3 rounded-lg text-left"
     disabled={disabled}
     onClick={onChange}
     role="switch"

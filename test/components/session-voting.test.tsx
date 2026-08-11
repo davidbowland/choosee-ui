@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
 import VotingPhase from '@components/session/voting'
+import { InlineNameEditor } from '@components/session/voting/elements'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -602,5 +603,30 @@ describe('VotingPhase', () => {
       />,
     )
     expect(screen.queryByText(/You're the only one here/i)).not.toBeInTheDocument()
+  })
+
+  describe('InlineNameEditor', () => {
+    // WCAG 4.1.2, level A. Before this the edit box had no label, no aria-label and no
+    // placeholder, so assistive technology announced an edit box and nothing else.
+    it('exposes an accessible name while editing', async () => {
+      const user = userEvent.setup()
+      render(<InlineNameEditor name="Dana" onSave={jest.fn()} />)
+
+      await user.click(screen.getByRole('button', { name: /Dana/ }))
+
+      expect(screen.getByRole('textbox', { name: 'Your name' })).toBeInTheDocument()
+    })
+
+    it('saves the edited name', async () => {
+      const user = userEvent.setup()
+      const onSave = jest.fn()
+      render(<InlineNameEditor name="Dana" onSave={onSave} />)
+      await user.click(screen.getByRole('button', { name: /Dana/ }))
+
+      await user.clear(screen.getByRole('textbox', { name: 'Your name' }))
+      await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Priya{Enter}')
+
+      expect(onSave).toHaveBeenCalledWith('Priya')
+    })
   })
 })

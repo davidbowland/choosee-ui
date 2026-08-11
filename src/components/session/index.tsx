@@ -1,14 +1,16 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import { ClosingSoonErrorAlert, ErrorBanner } from './elements'
-import { firstUnvotedIndex, sessionLoadErrorMessage } from './helpers'
+import { ClosingSoonErrorAlert, ErrorBanner, RetryLoadButton, StartAnotherLink } from './elements'
+import { firstUnvotedIndex, isSessionNotFound, sessionLoadErrorMessage } from './helpers'
 import LoadingPhase from './loading'
 import UserSelectPhase from './user-select'
 import VotingPhase from './voting'
 import WaitingPhase from './waiting'
 import WinnerPhase from './winner'
 import ErrorBoundary from '@components/error-boundary'
+import JoinSheet from '@components/join-sheet'
+import { JoinRecoveryButton } from '@components/join-sheet/elements'
 import { usePushResubscribe } from '@hooks/usePushResubscribe'
 import { useSessionIdentity } from '@hooks/useSessionIdentity'
 import { useSessionRefresh } from '@hooks/useSessionRefresh'
@@ -88,6 +90,7 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
   // Expose derived phase to refetchInterval via ref so the callback sees the latest phase
   // without duplicating phase logic or needing access to users state.
   const phaseRef = useRef<Phase>('loading')
+  const [joinOpen, setJoinOpen] = useState(false)
 
   // Same trick for the subscription: refetchInterval is called by React Query outside the render
   // cycle, so it reads a ref rather than state.
@@ -192,7 +195,36 @@ const Session = ({ sessionId }: SessionProps): React.ReactNode => {
       case 'loading':
         return <LoadingPhase session={session} />
       case 'error':
-        if (!session) return <ErrorBanner message={sessionLoadErrorMessage(sessionError)} />
+        // The surface a mistyped code actually lands on. CloudFront rewrites every /s/<segment> to
+        // this page, so a wrong code never reaches 404.tsx — it reaches here, and until now it
+        // stopped here.
+        //
+        // A Choosee that is gone gets the entry sheet, prefilled with the identifier that failed and
+        // suppressed from the already-joined shortcut so a stale local record cannot hand the user
+        // straight back to this screen. A network failure gets the retry its copy has always named,
+        // and deliberately not the sheet: re-entering the same code over the same dead connection is
+        // not a recovery.
+        if (!session)
+          return (
+            <ErrorBanner message={sessionLoadErrorMessage(sessionError)}>
+              {isSessionNotFound(sessionError) ? (
+                <>
+                  <JoinRecoveryButton label="Enter a Choosee code" onPress={() => setJoinOpen(true)} />
+                  <StartAnotherLink />
+                  <JoinSheet
+                    blockedCode={sessionId}
+                    initialValue={sessionId}
+                    isOpen={joinOpen}
+                    onClose={() => setJoinOpen(false)}
+                  />
+                </>
+              ) : (
+                <RetryLoadButton
+                  onPress={() => void queryClient.invalidateQueries({ queryKey: ['session', sessionId] })}
+                />
+              )}
+            </ErrorBanner>
+          )
         return isClosingSoonError(session?.errorMessage) ? (
           <ClosingSoonErrorAlert />
         ) : (

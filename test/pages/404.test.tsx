@@ -1,15 +1,21 @@
 import React from 'react'
 
 import AppBar from '@components/app-bar'
+import JoinSheet from '@components/join-sheet'
+import { JoinRecoveryButton } from '@components/join-sheet/elements'
 import NotFound from '@pages/404'
 import '@testing-library/jest-dom'
 import { act, render, screen, waitFor } from '@testing-library/react'
 
 jest.mock('@components/app-bar')
+jest.mock('@components/join-sheet')
+jest.mock('@components/join-sheet/elements', () => ({ JoinRecoveryButton: jest.fn() }))
 
 describe('404 error page', () => {
   beforeAll(() => {
     jest.mocked(AppBar).mockReturnValue(<nav data-testid="app-bar" />)
+    jest.mocked(JoinSheet).mockReturnValue(<></>)
+    jest.mocked(JoinRecoveryButton).mockReturnValue(<>JoinRecoveryButton</>)
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { pathname: '' },
@@ -69,5 +75,22 @@ describe('404 error page', () => {
       render(<NotFound />)
     })
     await waitFor(() => expect(screen.getByRole('link', { name: /go home/i })).toHaveAttribute('href', '/'))
+  })
+
+  // AC-029's sibling case. This page told the user their link may have been mistyped and then
+  // offered them nothing but the door.
+  it('should offer a way to enter a code instead of dead-ending', () => {
+    setup()
+    render(<NotFound />)
+    expect(JoinRecoveryButton).toHaveBeenCalledWith(
+      expect.objectContaining({ label: 'Enter a Choosee code' }),
+      undefined,
+    )
+  })
+
+  it('should not prefill the sheet from a mistyped page path', () => {
+    setup()
+    render(<NotFound />)
+    expect(JoinSheet).toHaveBeenCalledWith(expect.not.objectContaining({ initialValue: expect.anything() }), undefined)
   })
 })

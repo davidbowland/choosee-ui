@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
+import JoinSheet from '@components/join-sheet'
+import { JoinRecoveryButton } from '@components/join-sheet/elements'
 import Session, { waitingInterval } from '@components/session'
 import * as api from '@services/api'
 import '@testing-library/jest-dom'
@@ -9,6 +11,8 @@ import userEvent from '@testing-library/user-event'
 import { ChoicesMap, SessionData, User } from '@types'
 
 jest.mock('@services/api')
+jest.mock('@components/join-sheet')
+jest.mock('@components/join-sheet/elements', () => ({ JoinRecoveryButton: jest.fn() }))
 
 // Mock child phases to keep tests focused on Session orchestration
 jest.mock('@components/session/loading', () => ({
@@ -130,6 +134,8 @@ describe('Session', () => {
   /** Starts each test with no identified user in the stored record. */
   const setup = (userId: string | null = null): void => {
     mockUserId = userId
+    jest.mocked(JoinSheet).mockReturnValue(<></>)
+    jest.mocked(JoinRecoveryButton).mockReturnValue(<>JoinRecoveryButton</>)
   }
 
   it('should show loading phase when session is not yet loaded', () => {
@@ -361,5 +367,84 @@ describe('Session', () => {
     await user.click(screen.getByText('Select user'))
 
     await waitFor(() => expect(jest.mocked(api.fetchSession).mock.calls.length).toBeGreaterThan(callsBeforeJoin))
+  })
+
+  // AC-029. CloudFront rewrites every /s/<segment> to this page, so a mistyped code lands here and
+  // never on 404.tsx. This is the screen the whole feature exists for.
+  describe('when the Choosee is gone', () => {
+    const renderGone = async (): Promise<void> => {
+      setup()
+      jest.mocked(api.fetchSession).mockRejectedValue(Object.assign(new Error('nope'), { body: '{}', statusCode: 404 }))
+      jest
+        .mocked(api.hasStatusCode)
+        .mockImplementation((err, code) => (err as { statusCode?: number })?.statusCode === code)
+      renderWithClient(<Session sessionId="test-session" />)
+      await screen.findByText(/Couldn't find this Choosee/)
+    }
+
+    it('should offer the code entry rather than dead-ending', async () => {
+      await renderGone()
+
+      expect(JoinRecoveryButton).toHaveBeenCalledWith(
+        expect.objectContaining({ label: 'Enter a Choosee code' }),
+        undefined,
+      )
+    })
+
+    it('should prefill the sheet with the identifier that failed', async () => {
+      await renderGone()
+
+      expect(JoinSheet).toHaveBeenCalledWith(expect.objectContaining({ initialValue: 'test-session' }), undefined)
+    })
+
+    // Without this a stale local record hands the user straight back to the screen they are trying
+    // to leave -- forgetSession never fires from this page, so the record can outlive the Choosee.
+    it('should suppress the already-joined shortcut for the code that just failed', async () => {
+      await renderGone()
+
+      expect(JoinSheet).toHaveBeenCalledWith(expect.objectContaining({ blockedCode: 'test-session' }), undefined)
+    })
+
+    it('should still offer a way to start a new one', async () => {
+      await renderGone()
+
+      expect(screen.getByText('Start another Choosee')).toBeInTheDocument()
+    })
+
+    // The copy no longer says "check the link": a person can arrive here having typed a code that
+    // somebody read out to them.
+    it('should not tell the user to check a link', async () => {
+      await renderGone()
+
+      expect(screen.queryByText(/check the link/i)).not.toBeInTheDocument()
+    })
+  })
+
+  // AC-035. The copy has always ended on "try again" while offering only "Go home".
+  describe('when the Choosee cannot be loaded', () => {
+    it('should offer the retry its copy names', async () => {
+      setup()
+      jest.mocked(api.fetchSession).mockRejectedValue(Object.assign(new Error('nope'), { body: '{}', statusCode: 500 }))
+      jest
+        .mocked(api.hasStatusCode)
+        .mockImplementation((err, code) => (err as { statusCode?: number })?.statusCode === code)
+      renderWithClient(<Session sessionId="test-session" />)
+      await screen.findByText(/Couldn't load this Choosee/)
+
+      expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+    })
+
+    // Re-entering the same code over the same dead connection is not a recovery.
+    it('should not offer the code entry for a network failure', async () => {
+      setup()
+      jest.mocked(api.fetchSession).mockRejectedValue(Object.assign(new Error('nope'), { body: '{}', statusCode: 500 }))
+      jest
+        .mocked(api.hasStatusCode)
+        .mockImplementation((err, code) => (err as { statusCode?: number })?.statusCode === code)
+      renderWithClient(<Session sessionId="test-session" />)
+      await screen.findByText(/Couldn't load this Choosee/)
+
+      expect(JoinRecoveryButton).not.toHaveBeenCalled()
+    })
   })
 })

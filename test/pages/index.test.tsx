@@ -2,6 +2,8 @@ import React from 'react'
 
 import ActiveSessions from '@components/active-sessions'
 import AppBar from '@components/app-bar'
+import JoinSheet from '@components/join-sheet'
+import { JoinTrigger } from '@components/join-sheet/elements'
 import PrivacyLink from '@components/privacy-link'
 import SessionCreate from '@components/session-create'
 import { useJoinedSessions } from '@hooks/useJoinedSessions'
@@ -10,6 +12,8 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 
 jest.mock('@components/active-sessions')
+jest.mock('@components/join-sheet')
+jest.mock('@components/join-sheet/elements', () => ({ JoinTrigger: jest.fn() }))
 jest.mock('@components/app-bar')
 jest.mock('@components/privacy-link')
 jest.mock('@components/session-create')
@@ -163,5 +167,42 @@ describe('Index page', () => {
   it('should render PrivacyLink', () => {
     render(<Index />)
     expect(PrivacyLink).toHaveBeenCalledTimes(1)
+  })
+
+  // AC-001 through AC-004. The trigger is the only thing on this page that a first-time visitor and
+  // a returning one need equally, so it is the only thing here that is gated on nothing at all.
+  describe('the way in for someone who was invited', () => {
+    it('offers the trigger to a first-time visitor', () => {
+      jest.mocked(useJoinedSessions).mockReturnValueOnce({ entries: [], hasLoaded: true, onDismiss, onGone })
+
+      render(<Index />)
+
+      expect(JoinTrigger).toHaveBeenCalled()
+    })
+
+    it('offers the same trigger to a returning visitor', () => {
+      jest.mocked(useJoinedSessions).mockReturnValueOnce({ entries, hasLoaded: true, onDismiss, onGone })
+
+      render(<Index />)
+
+      expect(JoinTrigger).toHaveBeenCalled()
+    })
+
+    // AC-004: present before storage has been read, so revealing it can never shift the layout.
+    it('offers it before storage has been read at all', () => {
+      jest.mocked(useJoinedSessions).mockReturnValueOnce({ entries: [], hasLoaded: false, onDismiss, onGone })
+
+      render(<Index />)
+
+      expect(JoinTrigger).toHaveBeenCalled()
+    })
+
+    it('opens the sheet closed', () => {
+      jest.mocked(useJoinedSessions).mockReturnValueOnce({ entries: [], hasLoaded: true, onDismiss, onGone })
+
+      render(<Index />)
+
+      expect(JoinSheet).toHaveBeenCalledWith(expect.objectContaining({ isOpen: false }), undefined)
+    })
   })
 })
