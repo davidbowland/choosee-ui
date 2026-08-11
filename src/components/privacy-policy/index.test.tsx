@@ -15,21 +15,14 @@ describe('privacy-policy component', () => {
     expect(screen.getByRole('heading', { level: 1, name: /privacy policy/i })).toBeVisible()
   })
 
-  it.each([
-    'What We Collect',
-    'Why We Collect It',
-    "What We Don't Do",
-    'When We Share Your Data',
-    'Your Rights',
-    'Data Retention',
-    'Age',
-    'Changes',
-    'Contact',
-  ])('should render the %s section', (title) => {
-    setup()
+  it.each(['What We Collect', 'Notifications', 'On Your Device', 'Questions And Requests'])(
+    'should render the %s section',
+    (title) => {
+      setup()
 
-    expect(screen.getByRole('heading', { level: 2, name: title })).toBeVisible()
-  })
+      expect(screen.getByRole('heading', { level: 2, name: title })).toBeVisible()
+    },
+  )
 
   it('should link to the Google privacy policy', () => {
     setup()
@@ -43,7 +36,7 @@ describe('privacy-policy component', () => {
   it('should link to the privacy contact address', () => {
     setup()
 
-    expect(screen.getAllByRole('link', { name: 'privacy@dbowland.com' })[0]).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'privacy@dbowland.com' })).toHaveAttribute(
       'href',
       'mailto:privacy@dbowland.com',
     )
